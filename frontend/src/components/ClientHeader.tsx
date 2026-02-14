@@ -1,0 +1,149 @@
+import { Link, useLocation } from 'wouter-preact'
+import { useEffect, useMemo, useState } from 'preact/hooks'
+import type { MenuVisibility } from '../lib/types'
+import { useI18n } from '../lib/i18n'
+import { cdnUrl } from '../lib/cdn'
+
+type NavItem = {
+  href: string
+  labelKey: string
+  visibilityKey?: string
+}
+
+export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
+  const [location] = useLocation()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { lang, setLang, t } = useI18n()
+
+  const isHome = location === '/'
+  const solidHeader = !isHome || scrolled
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location])
+
+  useEffect(() => {
+    const cls = 'vc-overflow-hidden'
+    document.body.classList.toggle(cls, mobileOpen)
+    return () => document.body.classList.remove(cls)
+  }, [mobileOpen])
+
+  useEffect(() => {
+    let raf = 0
+    const onScroll = () => {
+      if (raf) return
+      raf = window.requestAnimationFrame(() => {
+        raf = 0
+        setScrolled(window.scrollY > 12)
+      })
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (raf) window.cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  const items = useMemo<NavItem[]>(
+    () => [
+      { href: '/', labelKey: 'nav.home' },
+      { href: '/menufindesemana', labelKey: 'nav.weekendMenu', visibilityKey: 'menufindesemana' },
+      { href: '/menudeldia', labelKey: 'nav.dailyMenu', visibilityKey: 'menudeldia' },
+      { href: '/menusdegrupos', labelKey: 'nav.groupMenus' },
+      { href: '/postres', labelKey: 'nav.desserts' },
+      { href: '/vinos', labelKey: 'nav.wines' },
+      { href: '/reservas', labelKey: 'nav.reservations' },
+      { href: '/menusanvalentin', labelKey: 'nav.valentine' },
+      { href: '/regala', labelKey: 'nav.gift' },
+      { href: '/contacto', labelKey: 'nav.contact' },
+    ],
+    []
+  )
+
+  const visibleItems = items.filter((item) => {
+    if (!item.visibilityKey) return true
+    if (!props.menuVisibility) return true
+    return props.menuVisibility[item.visibilityKey] !== false
+  })
+
+  return (
+    <header class="header" data-solid={solidHeader ? '1' : '0'}>
+      <div class="container header-bar">
+        <button
+          type="button"
+          class={mobileOpen ? 'header__menuBurger open' : 'header__menuBurger'}
+          aria-label="Menu"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((v) => !v)}
+        >
+          <i />
+          <i />
+          <i />
+        </button>
+
+        <div class="header__logo">
+          <Link href="/" className="brand" aria-label={t('home.hero.title')}>
+            <img
+              class="brand-logo"
+              src={cdnUrl('images/icons/logoblancopng.PNG')}
+              alt={t('home.hero.title')}
+              decoding="async"
+              loading="eager"
+            />
+          </Link>
+        </div>
+
+        <div class="header__callAction">
+          <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
+            {t('nav.menus')}
+          </a>
+          <Link href="/reservas" className="link link--center reservaBttn">
+            {t('nav.reserve')}
+          </Link>
+        </div>
+      </div>
+
+      <nav class={mobileOpen ? 'navMenuBurger open' : 'navMenuBurger'} aria-hidden={!mobileOpen}>
+        <div class="navMenuBurger__backdrop" onClick={() => setMobileOpen(false)} />
+        <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
+          <ul class="navMenuBurger__links" aria-label="Principal">
+            {visibleItems.map((item) => {
+              const isActive = item.href === '/' ? location === '/' : location.startsWith(item.href)
+              return (
+                <li>
+                  <Link href={item.href} className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}>
+                    {t(item.labelKey)}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div class="navMenuBurger__bottom">
+            <span class="navMenuBurger__langLabel">{t('nav.lang')}</span>
+            <div class="navMenuBurger__lang">
+              <button
+                type="button"
+                class={lang === 'es' ? 'langBtn active' : 'langBtn'}
+                onClick={() => setLang('es')}
+              >
+                ES
+              </button>
+              <span class="langSep">/</span>
+              <button
+                type="button"
+                class={lang === 'en' ? 'langBtn active' : 'langBtn'}
+                onClick={() => setLang('en')}
+              >
+                EN
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+  )
+}
