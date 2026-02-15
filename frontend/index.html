@@ -3,14 +3,100 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/media/logos/logo-negro.png" />
+    <link rel="preconnect" href="https://villacarmenmedia.b-cdn.net" crossorigin />
+    <link rel="dns-prefetch" href="https://villacarmenmedia.b-cdn.net" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
       content="Alqueria Villa Carmen. Restaurante en Catarroja (Valencia). Menú del día, fin de semana, grupos y experiencias gastronómicas."
     />
     <title>Alqueria Villa Carmen</title>
+    <style>
+      /* Minimal first-load screen (keeps UX clean while BunnyCDN media warms up) */
+      #vc-boot {
+        position: fixed;
+        inset: 0;
+        background: #fff;
+        display: grid;
+        place-items: center;
+        z-index: 9999;
+      }
+      #vc-boot[data-done='1'] {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 360ms ease;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #vc-boot[data-done='1'] {
+          transition: none;
+        }
+      }
+      .vcBoot__inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        padding: 24px;
+      }
+      .vcBoot__logo {
+        width: clamp(140px, 18vw, 220px);
+        height: auto;
+        filter: invert(1);
+      }
+      .vcBoot__meter {
+        width: min(360px, 72vw);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .vcBoot__bar {
+        width: 100%;
+        height: 2px;
+        background: #e7e7e7;
+        overflow: hidden;
+      }
+      .vcBoot__barFill {
+        height: 100%;
+        width: 0%;
+        background: #111;
+        transition: width 120ms linear;
+      }
+      .vcBoot__pct {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+          monospace;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #111;
+      }
+    </style>
   </head>
   <body>
+    <div
+      id="vc-boot"
+      role="progressbar"
+      aria-label="Cargando"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    >
+      <div class="vcBoot__inner">
+        <img
+          class="vcBoot__logo"
+          src="https://villacarmenmedia.b-cdn.net/images/icons/logoblancopng.PNG"
+          alt="Alqueria Villa Carmen"
+          loading="eager"
+          decoding="async"
+        />
+        <div class="vcBoot__meter">
+          <div class="vcBoot__bar" aria-hidden="true">
+            <div id="vc-boot-bar" class="vcBoot__barFill"></div>
+          </div>
+          <div id="vc-boot-pct" class="vcBoot__pct">0%</div>
+        </div>
+      </div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

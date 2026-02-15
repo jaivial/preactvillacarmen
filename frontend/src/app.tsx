@@ -9,6 +9,10 @@ import { MenuFinde } from './routes/client/MenuFinde.tsx'
 import { MenusDeGrupos } from './routes/client/MenusDeGrupos.tsx'
 import { Postres } from './routes/client/Postres.tsx'
 import { Placeholder } from './routes/client/Placeholder.tsx'
+import { Reservas } from './routes/client/Reservas.tsx'
+import { AvisoLegal } from './routes/client/AvisoLegal.tsx'
+import { BookingPolicies } from './routes/client/BookingPolicies.tsx'
+import { ProteccionDatos } from './routes/client/ProteccionDatos.tsx'
 import { Vinos } from './routes/client/Vinos.tsx'
 
 function ClientApp() {
@@ -23,7 +27,11 @@ function ClientApp() {
         <Route path="/menusdegrupos" component={MenusDeGrupos} />
         <Route path="/postres" component={Postres} />
         <Route path="/vinos" component={Vinos} />
-        <Route path="/reservas" component={() => <Placeholder titleKey="nav.reservations" />} />
+        <Route path="/reservas" component={Reservas} />
+        <Route path="/reservas.php" component={Reservas} />
+        <Route path="/avisolegal.html" component={AvisoLegal} />
+        <Route path="/booking_policies.php" component={BookingPolicies} />
+        <Route path="/protecciondatos.html" component={ProteccionDatos} />
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
 

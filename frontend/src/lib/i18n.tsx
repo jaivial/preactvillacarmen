@@ -19,9 +19,23 @@ const DICT: Dictionary = {
   'nav.valentine': { es: 'San Valent\u00edn', en: "Valentine's" },
   'nav.gift': { es: 'Regala', en: 'Gift' },
   'nav.contact': { es: 'Contacto', en: 'Contact' },
+  'nav.menusSection': { es: 'Men\u00fas', en: 'Menus' },
+  'nav.weddingsEvents': { es: 'Bodas y eventos', en: 'Weddings and events' },
   'nav.menus': { es: 'Carta', en: 'Menu' },
   'nav.reserve': { es: 'Reservar', en: 'Reserve' },
   'nav.lang': { es: 'Idioma', en: 'Language' },
+
+  'common.ok': { es: 'Aceptar', en: 'OK' },
+
+  'reservations.people.label': { es: 'Personas', en: 'Guests' },
+  'reservations.people.suffix': { es: 'personas', en: 'guests' },
+  'reservations.confirm.title': { es: '\u00a1Reserva confirmada!', en: 'Reservation confirmed!' },
+  'reservations.confirm.lead': {
+    es: 'Reserva completada. Dentro de nada recibir\u00e1s una confirmaci\u00f3n por email y a tu n\u00famero de tel\u00e9fono.',
+    en: 'Reservation completed. You will soon receive a confirmation by email and to your phone number.',
+  },
+  'reservations.confirm.fine': { es: 'Por favor no contestes a estos mensajes.', en: 'Please do not reply to these messages.' },
+  'reservations.confirm.elegant': { es: 'Te esperamos pronto.', en: 'We look forward to seeing you soon.' },
 
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
   'home.hero.title': { es: 'Alquer\u00eda Villacarmen', en: 'Alqueria Villacarmen' },
@@ -42,6 +56,8 @@ const DICT: Dictionary = {
 
   'home.scrollfx.line1': { es: 'Descubrir', en: 'Discover' },
   'home.scrollfx.line2': { es: 'Gastronomia', en: 'Gastronomy' },
+  'home.scrollfx.line3': { es: 'Jardines', en: 'Gardens' },
+  'home.scrollfx.line4': { es: 'Eventos', en: 'Events' },
 
   'home.showcase.kicker': { es: 'Especialidades', en: 'Specialties' },
   'home.showcase.title': { es: 'Arroces, producto y calma', en: 'Paellas, produce, and calm' },
@@ -114,6 +130,53 @@ const DICT: Dictionary = {
   'menus.preview.price': { es: 'Precio', en: 'Price' },
 
   'menu.section.rice': { es: 'Arroces', en: 'Rice dishes' },
+  'menu.rice.lead': {
+    es: 'O si prefieres, puedes elegir uno de nuestros arroces como principal.',
+    en: 'Or, if you prefer, you can choose one of our rice dishes as your main course.',
+  },
+  'menu.rice.note1': { es: 'Arroces mínimo para 2 personas.', en: 'Rice dishes: minimum for 2 people.' },
+  'menu.rice.note2': {
+    es: 'Solamente un tipo de arroz en mesa completa para mesas de menos de 9 personas.',
+    en: 'Only one type of rice per table for tables of fewer than 9 people.',
+  },
+  'menu.rice.note3': {
+    es: 'En mesas a partir de 9 personas se podrán pedir dos arroces distintos, siendo uno de ellos seco y otro meloso.',
+    en: 'For tables of 9 or more, two different rice dishes may be ordered: one dry and one creamy (meloso).',
+  },
+  'menu.rice.note4': {
+    es: 'Si en mesas inferiores de 9 personas desean pedir dos tipos de arroces distintos, siendo uno seco y otro meloso, tendrían un suplemento de 12€ en la cuenta total, por servicio extra.',
+    en: 'For tables of fewer than 9 wishing to order two different rice dishes (one dry and one creamy), there is a 12€ supplement on the total bill due to extra service.',
+  },
+  'menu.price.dessertOrCoffee': { es: 'Postre o café a elegir', en: 'Dessert or coffee (choose one)' },
+  'menu.price.drinkNotIncluded': { es: 'Bebida no incluida', en: 'Drinks not included' },
+  'menu.important.title': { es: 'Información importante', en: 'Important information' },
+  'menu.important.minConsumption': {
+    es: 'Consumo mínimo: 1 menú por plaza reservada en la mesa, independientemente de la edad de los comensales.',
+    en: 'Minimum consumption: 1 menu per reserved seat at the table, regardless of guests’ age.',
+  },
+  'menu.important.noKidsMenu': { es: 'No hay menú infantil.', en: 'No kids menu.' },
+  'menu.takeaway.note': {
+    es: 'Envases para llevar: 1€ (Cobro obligatorio por Ley de Residuos 7/2020).',
+    en: 'Takeaway containers: 1€ (Mandatory charge under Waste Law 7/2020).',
+  },
+
+  'menu.pick.add': { es: 'A\u00f1adir a tu lista', en: 'Add to your list' },
+  'menu.pick.open': { es: 'Ver tu lista', en: 'View your list' },
+  'menu.pick.title': { es: 'Tu lista', en: 'Your list' },
+  'menu.pick.total.aria': { es: 'Total de platos', en: 'Total items' },
+  'menu.pick.empty': { es: 'A\u00fan no has a\u00f1adido nada.', en: "You haven't added anything yet." },
+  'menu.pick.clear': { es: 'Vaciar', en: 'Clear' },
+  'menu.pick.close': { es: 'Cerrar', en: 'Close' },
+  'menu.pick.qty.decrease': { es: 'Disminuir', en: 'Decrease' },
+  'menu.pick.qty.increase': { es: 'Aumentar', en: 'Increase' },
+
+  'menu.allergens.aria': { es: 'Alérgenos', en: 'Allergens' },
+  'menu.allergens.legend.title': { es: 'Leyenda de alérgenos', en: 'Allergen legend' },
+  'menu.slider.aria': { es: 'Imágenes de comida', en: 'Food images' },
+  'menu.slider.prev': { es: 'Imagen anterior', en: 'Previous image' },
+  'menu.slider.next': { es: 'Imagen siguiente', en: 'Next image' },
+  'menu.slider.goto': { es: 'Ir a imagen', en: 'Go to image' },
+  'menu.slider.dots': { es: 'Selector de imágenes', en: 'Image selector' },
   'menu.error': { es: 'No se pudo cargar el contenido.', en: 'Could not load content.' },
   'menu.empty': { es: 'No hay contenido disponible.', en: 'No content available.' },
   'menu.postres.subtitle': { es: 'Dulces de temporada y clásicos.', en: 'Seasonal sweets and classics.' },

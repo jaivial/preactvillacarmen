@@ -2,7 +2,7 @@
 
 ## Pull Zone (CDN p\u00fablico)
 
-- Base URL: `https://villacarmen.b-cdn.net`
+- Base URL: `https://villacarmenmedia.b-cdn.net`
 - Los assets est\u00e1n organizados por secciones y ratios:
   - `images/<seccion>/{16:9|9:16}/<archivo>`
   - `videos/<seccion>/{16:9|9:16}/<archivo>`
@@ -42,4 +42,3 @@ curl --request GET \
 - Port: `21`
 - Password: `<STORAGE_ZONE_PASSWORD>`
 - Read-only password: `<READ_ONLY_PASSWORD>`
-

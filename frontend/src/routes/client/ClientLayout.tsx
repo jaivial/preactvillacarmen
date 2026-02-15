@@ -11,6 +11,11 @@ export function ClientLayout(props: { children: ComponentChildren }) {
   const [menuVisibility, setMenuVisibility] = useState<MenuVisibility | null>(null)
   const [location] = useLocation()
   const isTopPage = location === '/'
+  const isWinePage = location.startsWith('/vinos')
+
+  let mainClass = 'client-main'
+  if (isTopPage) mainClass += ' main--topPage'
+  if (isWinePage) mainClass += ' main--wine'
 
   useEffect(() => {
     let cancelled = false
@@ -33,7 +38,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     <MenuVisibilityContext.Provider value={menuVisibility}>
       <div class="client-shell">
         <ClientHeader menuVisibility={menuVisibility} />
-        <main class={isTopPage ? 'client-main main--topPage' : 'client-main'}>{props.children}</main>
+        <main class={mainClass}>{props.children}</main>
         <ClientFooter />
       </div>
     </MenuVisibilityContext.Provider>
