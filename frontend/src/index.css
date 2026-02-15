@@ -1215,6 +1215,263 @@ svg {
   color: var(--muted);
 }
 
+/* Menu pages */
+.menuPage {
+  padding-bottom: 72px;
+}
+
+.menuBody {
+  padding: 14px 0 74px;
+}
+
+.menuState {
+  padding: 22px 0;
+  color: var(--muted);
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.menuGrid--single {
+  grid-template-columns: 1fr;
+}
+
+.menuSectionCard {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 18px;
+}
+
+.menuSectionCard--price {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(20, 37, 32, 0.06));
+}
+
+.menuSectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 22px;
+  margin: 0;
+}
+
+.menuSubTitle {
+  margin: 16px 0 0;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 20px;
+}
+
+.menuDishList {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menuDishText {
+  color: rgba(0, 0, 0, 0.78);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.menuMuted {
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.allergenRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.allergenChip {
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 37, 32, 0.18);
+  background: rgba(20, 37, 32, 0.06);
+  color: rgba(20, 37, 32, 0.92);
+}
+
+.menuPrice {
+  margin-top: 12px;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(30px, 4vw, 42px);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 860px) {
+  .menuGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}
+
+/* Group menus */
+.groupTabs {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+
+.groupTab {
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  padding: 10px 12px;
+  color: rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.groupTab.active {
+  background: rgba(20, 37, 32, 0.1);
+  border-color: rgba(20, 37, 32, 0.22);
+}
+
+.groupPanel {
+  margin-top: 12px;
+}
+
+.groupSubtitles {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.menuSubSection + .menuSubSection {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Wines */
+.wineFilters {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+
+.wineFilter {
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  padding: 10px 12px;
+  color: rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.wineFilter.active {
+  background: rgba(20, 37, 32, 0.1);
+  border-color: rgba(20, 37, 32, 0.22);
+}
+
+.wineList {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
+}
+
+@media (min-width: 860px) {
+  .wineList {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.wineCard {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 18px;
+}
+
+.wineMeta {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(20, 37, 32, 0.84);
+}
+
+.wineName {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+
+.wineDesc {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.wineFooter {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.winePrice {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 30px;
+  letter-spacing: -0.01em;
+}
+
+.wineMinor {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.wineMedia {
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.04);
+  aspect-ratio: 4 / 3;
+}
+
+.wineMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wineMediaPlaceholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(700px 380px at 16% 18%, rgba(20, 37, 32, 0.12), transparent 60%),
+    rgba(0, 0, 0, 0.04);
+}
+
 /* Contact */
 .contact-grid {
   display: grid;

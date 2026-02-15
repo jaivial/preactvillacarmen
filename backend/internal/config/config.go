@@ -17,6 +17,9 @@ type Config struct {
 	StaticDir        string
 	CORSAllowOrigins string
 	AdminToken       string
+	BunnyPullBaseURL string
+	BunnyStorageZone string
+	BunnyStorageKey  string
 	MySQL            MySQLConfig
 }
 
@@ -28,6 +31,9 @@ func Load() Config {
 		StaticDir:        os.Getenv("STATIC_DIR"),
 		CORSAllowOrigins: os.Getenv("CORS_ALLOW_ORIGINS"),
 		AdminToken:       os.Getenv("ADMIN_TOKEN"),
+		BunnyPullBaseURL: getenv("BUNNY_PULL_BASE_URL", "https://villacarmen.b-cdn.net"),
+		BunnyStorageZone: getenv("BUNNY_STORAGE_ZONE", "villacarmen"),
+		BunnyStorageKey:  os.Getenv("BUNNY_STORAGE_ACCESS_KEY"),
 		MySQL: MySQLConfig{
 			Host:     getenv("DB_HOST", "127.0.0.1"),
 			Port:     getenv("DB_PORT", "3306"),

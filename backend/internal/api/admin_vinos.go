@@ -166,7 +166,21 @@ func (s *Server) handleVinosUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hasImg {
-		if _, err := s.db.ExecContext(r.Context(), "UPDATE VINOS SET foto = ? WHERE restaurant_id = ? AND NUM = ?", img, restaurantID, wineID); err != nil {
+		var wineTipo string
+		if err := s.db.QueryRowContext(r.Context(), "SELECT COALESCE(tipo,'') FROM VINOS WHERE restaurant_id = ? AND num = ? LIMIT 1", restaurantID, wineID).Scan(&wineTipo); err != nil || strings.TrimSpace(wineTipo) == "" {
+			wineTipo = "OTROS"
+		}
+
+		objectPath, err := s.UploadWineImage(r.Context(), wineTipo, wineID, img)
+		if err != nil {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"warning": "Vino actualizado pero la imagen no se pudo subir",
+			})
+			return
+		}
+
+		if _, err := s.db.ExecContext(r.Context(), "UPDATE VINOS SET foto_path = ?, foto = NULL WHERE restaurant_id = ? AND NUM = ?", objectPath, restaurantID, wineID); err != nil {
 			httpx.WriteJSON(w, http.StatusOK, map[string]any{
 				"success": true,
 				"warning": "Vino actualizado pero la imagen no se pudo actualizar",
@@ -252,7 +266,17 @@ func (s *Server) handleVinosAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hasImg {
-		if _, err := s.db.ExecContext(r.Context(), "UPDATE VINOS SET foto = ? WHERE restaurant_id = ? AND num = ?", img, restaurantID, uniqueNum); err != nil {
+		objectPath, err := s.UploadWineImage(r.Context(), tipo, uniqueNum, img)
+		if err != nil {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"wineId":  uniqueNum,
+				"warning": "Vino añadido, pero la imagen no se pudo subir",
+			})
+			return
+		}
+
+		if _, err := s.db.ExecContext(r.Context(), "UPDATE VINOS SET foto_path = ?, foto = NULL WHERE restaurant_id = ? AND num = ?", objectPath, restaurantID, uniqueNum); err != nil {
 			httpx.WriteJSON(w, http.StatusOK, map[string]any{
 				"success": true,
 				"wineId":  uniqueNum,
