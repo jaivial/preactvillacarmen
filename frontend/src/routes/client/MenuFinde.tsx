@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { MenuResponse } from '../../lib/types'
-import { DishList } from './MenuShared'
+import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
 
 export function MenuFinde() {
   const { t } = useI18n()
@@ -33,6 +33,12 @@ export function MenuFinde() {
         </div>
       </section>
 
+      <section class="menuHeroMedia">
+        <div class="container">
+          <MenuHeroSlider />
+        </div>
+      </section>
+
       <section class="menuBody">
         <div class="container">
           {data === undefined ? (
@@ -40,31 +46,35 @@ export function MenuFinde() {
           ) : data === null ? (
             <div class="menuState">{t('menu.error')}</div>
           ) : (
-            <div class="menuGrid">
-              <article class="menuSectionCard">
-                <h2 class="menuSectionTitle">{t('menus.preview.starters')}</h2>
-                <DishList dishes={data.entrantes} />
-              </article>
+            <>
+              <div class="menuMain">
+                <MenuSection title={t('menus.preview.starters')} dishes={data.entrantes} pickCategory="entrantes" />
+                <MenuSection title={t('menus.preview.mains')} dishes={data.principales} pickCategory="principales" />
+                {data.arroces.length > 0 ? <p class="menuSectionLead">{t('menu.rice.lead')}</p> : null}
+                <MenuSection
+                  title={t('menu.section.rice')}
+                  dishes={data.arroces}
+                  pickCategory="arroces"
+                  notes={[
+                    t('menu.rice.note1'),
+                    t('menu.rice.note2'),
+                    t('menu.rice.note3'),
+                    t('menu.rice.note4'),
+                  ]}
+                />
 
-              <article class="menuSectionCard">
-                <h2 class="menuSectionTitle">{t('menus.preview.mains')}</h2>
-                <DishList dishes={data.principales} />
-              </article>
+                {data.entrantes.length === 0 && data.principales.length === 0 && data.arroces.length === 0 ? (
+                  <div class="menuState">{t('menu.empty')}</div>
+                ) : null}
 
-              <article class="menuSectionCard">
-                <h2 class="menuSectionTitle">{t('menu.section.rice')}</h2>
-                <DishList dishes={data.arroces} />
-              </article>
+                <MenuPriceCard precio={data.precio} />
+              </div>
 
-              <article class="menuSectionCard menuSectionCard--price">
-                <h2 class="menuSectionTitle">{t('menus.preview.price')}</h2>
-                <div class="menuPrice">{data.precio ? `${data.precio} €` : '—'}</div>
-              </article>
-            </div>
+              <AllergensLegend />
+            </>
           )}
         </div>
       </section>
     </div>
   )
 }
-

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { motion, useReducedMotion } from 'motion/react'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Vino, VinosResponse } from '../../lib/types'
@@ -14,11 +15,16 @@ const WINE_TYPES: { tipo: WineType; labelKey: string }[] = [
 
 export function Vinos() {
   const { t } = useI18n()
+  const reduceMotion = useReducedMotion()
   const [tipo, setTipo] = useState<WineType>('TINTO')
-  const [vinos, setVinos] = useState<Vino[] | null | undefined>(undefined)
+  const [vinosByTipo, setVinosByTipo] = useState<Record<WineType, Vino[] | null | undefined>>(() => ({
+    TINTO: undefined,
+    BLANCO: undefined,
+    CAVA: undefined,
+  }))
   const [fotoUrls, setFotoUrls] = useState<Record<number, string | null>>({})
 
-  const seqRef = useRef(0)
+  const inflightListRef = useRef<Set<WineType>>(new Set())
   const vinosRef = useRef<Vino[]>([])
   const fotoUrlsRef = useRef<Record<number, string | null>>({})
   const inflightRef = useRef<Set<number>>(new Set())
@@ -28,30 +34,37 @@ export function Vinos() {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
 
+  const vinos = vinosByTipo[tipo]
+
   useEffect(() => {
     fotoUrlsRef.current = fotoUrls
   }, [fotoUrls])
 
   useEffect(() => {
-    const nextSeq = seqRef.current + 1
-    seqRef.current = nextSeq
-    setVinos(undefined)
-    setFotoUrls({})
-    fotoUrlsRef.current = {}
-    inflightRef.current.clear()
+    if (vinosByTipo[tipo] !== undefined) return
+    if (inflightListRef.current.has(tipo)) return
+
+    let cancelled = false
+    inflightListRef.current.add(tipo)
 
     apiGetJson<VinosResponse>(`/api/vinos?tipo=${encodeURIComponent(tipo)}&include_image=0`)
       .then((res) => {
-        if (seqRef.current !== nextSeq) return
+        if (cancelled) return
         const list = res.vinos || []
-        vinosRef.current = list
-        setVinos(list)
+        setVinosByTipo((prev) => ({ ...prev, [tipo]: list }))
       })
       .catch(() => {
-        if (seqRef.current !== nextSeq) return
-        setVinos(null)
+        if (cancelled) return
+        setVinosByTipo((prev) => ({ ...prev, [tipo]: null }))
       })
-  }, [tipo])
+      .finally(() => {
+        inflightListRef.current.delete(tipo)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [tipo, vinosByTipo])
 
   useEffect(() => {
     const list = vinos || []
@@ -71,17 +84,14 @@ export function Vinos() {
       return
     }
 
-    const seq = seqRef.current
     inflightRef.current.add(num)
 
     apiGetJson<VinosResponse>(`/api/vinos?num=${encodeURIComponent(String(num))}&include_image=1`)
       .then((res) => {
-        if (seqRef.current !== seq) return
         const url = res.vinos && res.vinos[0] && typeof res.vinos[0].foto_url === 'string' ? res.vinos[0].foto_url : null
         setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: url }))
       })
       .catch(() => {
-        if (seqRef.current !== seq) return
         setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: null }))
       })
       .finally(() => {
@@ -145,31 +155,47 @@ export function Vinos() {
   const hasContent = useMemo(() => Array.isArray(vinos) && vinos.length > 0, [vinos])
 
   return (
-    <div class="page menuPage">
+    <div class="page menuPage winePage">
       <section class="page-hero">
         <div class="container">
           <h1 class="page-title">{t('nav.wines')}</h1>
           <p class="page-subtitle">{t('menu.wines.subtitle')}</p>
-
-          <div class="wineFilters" role="tablist" aria-label={t('nav.wines')}>
-            {WINE_TYPES.map((wt) => (
-              <button
-                key={wt.tipo}
-                type="button"
-                class={wt.tipo === tipo ? 'wineFilter active' : 'wineFilter'}
-                onClick={() => setTipo(wt.tipo)}
-                role="tab"
-                aria-selected={wt.tipo === tipo}
-              >
-                {t(wt.labelKey)}
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 
-      <section class="menuBody">
+      <section class="menuBody wineBody">
         <div class="container">
+          <div class="wineTabsSticky" role="tablist" aria-label={t('nav.wines')}>
+            <div class="wineTabs">
+              {WINE_TYPES.map((wt) => {
+                const active = wt.tipo === tipo
+                return (
+                  <button
+                    key={wt.tipo}
+                    type="button"
+                    class={active ? 'wineTab is-active' : 'wineTab'}
+                    onClick={() => setTipo(wt.tipo)}
+                    role="tab"
+                    aria-selected={active}
+                  >
+                    {active ? (
+                      <motion.span
+                        class="wineTabBubble"
+                        layoutId="wineTabBubble"
+                        transition={
+                          reduceMotion
+                            ? { duration: 0 }
+                            : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }
+                        }
+                      />
+                    ) : null}
+                    <span class="wineTabLabel">{t(wt.labelKey)}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {vinos === undefined ? (
             <div class="menuState">{t('menus.preview.loading')}</div>
           ) : vinos === null ? (
@@ -178,36 +204,47 @@ export function Vinos() {
             <div class="menuState">{t('wines.empty')}</div>
           ) : (
             <div class="wineList">
-              {vinos.map((v) => {
+              {vinos.map((v, idx) => {
                 const foto = fotoUrls[v.num]
                 return (
-                  <article class="wineCard" key={v.num} ref={register(v.num)} data-wine-num={v.num}>
-                    <div class="wineMeta">{v.bodega}</div>
-                    <h2 class="wineName">{v.nombre}</h2>
-
-                    {v.denominacion_origen ? <div class="wineMinor">{`D.O. ${v.denominacion_origen}`}</div> : null}
-
-                    {v.descripcion ? <p class="wineDesc">{v.descripcion}</p> : null}
-
-                    <div class="wineFooter">
-                      <div class="winePrice">{formatEuro(v.precio)}</div>
-                      <div class="wineMinor">
-                        {v.anyo ? <span>{v.anyo}</span> : null}
-                        {v.graduacion ? <span>{`${v.graduacion}%`}</span> : null}
-                      </div>
-                    </div>
-
-                    {v.has_foto ? (
-                      foto === undefined ? (
-                        <div class="wineMedia" aria-hidden="true">
-                          <div class="wineMediaPlaceholder" />
-                        </div>
-                      ) : foto ? (
-                        <div class="wineMedia" aria-hidden="true">
+                  <article class="wineCardWrap" key={v.num} ref={register(v.num)} data-wine-num={v.num}>
+                    <motion.div
+                      class="wineCard"
+                      initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{
+                        duration: reduceMotion ? 0 : 0.6,
+                        ease: 'easeOut',
+                        delay: reduceMotion ? 0 : Math.min(0.22, idx * 0.025),
+                      }}
+                    >
+                      <div class="winePhoto" aria-hidden="true">
+                        {v.has_foto && foto ? (
                           <img src={foto} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                          <div class={v.has_foto && foto === undefined ? 'winePhotoPlaceholder is-loading' : 'winePhotoPlaceholder'} />
+                        )}
+                      </div>
+
+                      <div class="wineInfo">
+                        <div class="wineMeta">{v.bodega}</div>
+                        <h2 class="wineName">{v.nombre}</h2>
+
+                        {v.denominacion_origen ? <div class="wineOrigin">{`D.O. ${v.denominacion_origen}`}</div> : null}
+
+                        {v.descripcion ? <p class="wineDesc">{v.descripcion}</p> : null}
+
+                        <div class="wineFacts">
+                          {v.anyo ? <span>{v.anyo}</span> : null}
+                          {v.graduacion ? <span>{`${v.graduacion}%`}</span> : null}
                         </div>
-                      ) : null
-                    ) : null}
+                      </div>
+
+                      <div class="winePriceTag" aria-label={t('menus.preview.price')}>
+                        {formatEuro(v.precio)}
+                      </div>
+                    </motion.div>
                   </article>
                 )
               })}

@@ -7,8 +7,13 @@ import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
 import type { MenuResponse } from '../../lib/types'
 
-const HERO_VIDEO_COUNT = 5
+const HERO_VIDEO_FILES = {
+  '16:9': ['herosection16:9_1.mp4', 'herosection16:9_2.mp4', 'herosection16:9_3.mp4', 'herosection16:9_4.mp4', 'herosection16:9_5.mp4'],
+  '9:16': ['herosection9:16_1.mp4', 'herosection9:16_2.mp4', 'herosection9:16_3.mp4', 'herosection9:16_4.mp4', 'herosection9:16_5.mp4'],
+}
+const HERO_VIDEO_COUNT = HERO_VIDEO_FILES['16:9'].length
 const HERO_FADE_MS = 1200
+const HERO_PRE_TRANSITION_MS = 700
 
 const IO_THRESHOLDS = Array.from({ length: 101 }, (_, i) => i / 100)
 
@@ -27,9 +32,9 @@ function clamp01(value: number) {
 }
 
 function heroVideoSrc(index: number, ratio: '16:9' | '9:16') {
-  const n = index + 1
-  if (ratio === '16:9') return cdnUrl(`videos/herosection/16:9/herosection16:9_${n}.mp4`)
-  return cdnUrl(`videos/herosection/9:16/herosection9:16_${n}.mp4`)
+  const n = index
+  const files = HERO_VIDEO_FILES[ratio]
+  return cdnUrl(`videos/herosection/${ratio}/${files[n % files.length]}`)
 }
 
 function ResponsiveImage(props: {
@@ -37,7 +42,6 @@ function ResponsiveImage(props: {
   src16x9: string
   src9x16: string
   class?: string
-  loading?: 'eager' | 'lazy'
 }) {
   return (
     <picture>
@@ -46,7 +50,7 @@ function ResponsiveImage(props: {
         src={cdnUrl(props.src16x9)}
         alt={props.alt}
         class={props.class}
-        loading={props.loading}
+        loading="eager"
         decoding="async"
       />
     </picture>
@@ -57,6 +61,8 @@ function HeroVideoCycle() {
   const reduced = useReducedMotion()
   const video0Ref = useRef<HTMLVideoElement>(null)
   const video1Ref = useRef<HTMLVideoElement>(null)
+
+  const preTransitionScheduledRef = useRef<Record<0 | 1, boolean>>({ 0: false, 1: false })
 
   const [activeSlot, setActiveSlot] = useState<0 | 1>(0)
   const [slotIndex, setSlotIndex] = useState<[number, number]>(() => [0, 1])
@@ -97,10 +103,31 @@ function HeroVideoCycle() {
     const activeVideo = activeSlot === 0 ? video0Ref.current : video1Ref.current
     if (!activeVideo) return
 
+    preTransitionScheduledRef.current[activeSlot] = false
+
     const onEnded = () => startTransition()
+    const onTimeUpdate = () => {
+      if (reduced) return
+      if (preTransitionScheduledRef.current[activeSlot]) return
+
+      const duration = activeVideo.duration
+      if (!Number.isFinite(duration) || duration <= 0) return
+
+      const threshold = Math.max(0, duration - HERO_PRE_TRANSITION_MS / 1000)
+      if (activeVideo.currentTime >= threshold) {
+        preTransitionScheduledRef.current[activeSlot] = true
+        startTransition()
+      }
+    }
+
     activeVideo.addEventListener('ended', onEnded)
-    return () => activeVideo.removeEventListener('ended', onEnded)
-  }, [activeSlot, startTransition])
+    activeVideo.addEventListener('timeupdate', onTimeUpdate)
+
+    return () => {
+      activeVideo.removeEventListener('ended', onEnded)
+      activeVideo.removeEventListener('timeupdate', onTimeUpdate)
+    }
+  }, [activeSlot, startTransition, reduced])
 
   useEffect(() => {
     if (phase !== 'loading') return
@@ -225,11 +252,6 @@ function ScrollFxAlqueria() {
     reduced ? [24, 24, 24, 24, 24] : [999, 999, 42, 42, 26]
   )
   const imgY = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [-10, 10])
-  const imgOpacity = useTransform(
-    scrollYProgress,
-    [0, openStart, openStart + 0.12],
-    reduced ? [1, 1, 1] : [0.3, 0.3, 1]
-  )
   const contentScaleX = useTransform(maskScaleX, (v) => (v ? 1 / v : 1))
   const contentScaleY = useTransform(maskScaleY, (v) => (v ? 1 / v : 1))
 
@@ -244,19 +266,22 @@ function ScrollFxAlqueria() {
           <motion.div style={{ x: leftX }}>{t('home.scrollfx.line1')}</motion.div>
           <motion.div style={{ x: rightX }}>{t('home.scrollfx.line2')}</motion.div>
         </div>
+        <div class="scrollFx__sides scrollFx__sides--bottom">
+          <motion.div style={{ x: leftX }}>{t('home.scrollfx.line3')}</motion.div>
+          <motion.div style={{ x: rightX }}>{t('home.scrollfx.line4')}</motion.div>
+        </div>
 
         <motion.div
           class="scrollFx__mask"
           style={{ scaleX: maskScaleX, scaleY: maskScaleY, borderRadius: maskRadius }}
         >
           <motion.div class="scrollFx__content" style={{ scaleX: contentScaleX, scaleY: contentScaleY }}>
-            <motion.div class="scrollFx__photo" style={{ y: imgY, opacity: imgOpacity }}>
+            <motion.div class="scrollFx__photo" style={{ y: imgY }}>
               <ResponsiveImage
                 alt=""
                 src16x9="images/salones/16:9/IMG_0073.jpg"
                 src9x16="images/salones/9:16/IMG_0137.jpg"
                 class="scrollFx__img"
-                loading="lazy"
               />
             </motion.div>
           </motion.div>
@@ -331,7 +356,6 @@ function StickyShowcase() {
                     src16x9={item.img16x9}
                     src9x16={item.img9x16}
                     class="vc-project-img"
-                    loading="lazy"
                   />
                 </div>
               </div>
@@ -392,7 +416,8 @@ function BentoShowcase() {
       const firstRect = first.getBoundingClientRect()
       const firstRatio = rectRatio(firstRect, rh)
       if (firstRatio > 0) {
-        topFactor.current = firstRect.bottom > rh ? clamp01(firstRatio) : 1
+        // Fade in as soon as the section becomes visible.
+        topFactor.current = 1
       } else {
         topFactor.current = firstRect.top >= rh ? 0 : 1
       }
@@ -417,8 +442,8 @@ function BentoShowcase() {
 
           if (entry.target === first) {
             if (entry.isIntersecting) {
-              topFactor.current =
-                entry.boundingClientRect.bottom > rh ? clamp01(entry.intersectionRatio) : 1
+              // Fade in as soon as the section becomes visible.
+              topFactor.current = 1
             } else {
               topFactor.current = entry.boundingClientRect.top >= rh ? 0 : 1
             }
@@ -436,7 +461,11 @@ function BentoShowcase() {
 
         update()
       },
-      { threshold: IO_THRESHOLDS }
+      {
+        threshold: IO_THRESHOLDS,
+        // Trigger the fade-in well before the section reaches the viewport.
+        rootMargin: '0px 0px 45% 0px',
+      }
     )
 
     observer.observe(first)
@@ -452,23 +481,28 @@ function BentoShowcase() {
     }
   }, [reduced])
 
+  const y = reduced ? 0 : Math.round((1 - opacity) * -14)
+
   return (
-    <motion.section class="vc-bento" style={{ opacity }} aria-label={t('home.story.title')}>
+    <motion.section
+      class="vc-bento"
+      style={{ opacity, transform: reduced ? 'none' : `translate3d(0, ${y}px, 0)` }}
+      aria-label={t('home.story.title')}
+    >
       <div class="container">
-        <div class="vc-bentoHead">
+        <div class="vc-bentoHead" ref={firstTileRef}>
           <p class="vc-kicker">{t('home.story.kicker')}</p>
           <h2 class="vc-h2">{t('home.story.title')}</h2>
           <p class="vc-body">{t('home.story.body')}</p>
         </div>
 
         <div class="vc-bentoGrid" aria-hidden="true">
-          <div class="vc-bentoTile vc-bentoTile--main" ref={firstTileRef}>
+          <div class="vc-bentoTile vc-bentoTile--main">
             <ResponsiveImage
               alt=""
               src16x9="images/salones/16:9/IMG_0073.jpg"
               src9x16="images/salones/9:16/IMG_0137.jpg"
               class="vc-bentoImg"
-              loading="lazy"
             />
           </div>
 
@@ -477,7 +511,7 @@ function BentoShowcase() {
               src={cdnUrl('images/salones/16:9/IMG_0076.jpg')}
               alt=""
               class="vc-bentoImg"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -487,7 +521,7 @@ function BentoShowcase() {
               src={cdnUrl('images/comida/16:9/croquetas16:9.jpeg')}
               alt=""
               class="vc-bentoImg"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -497,7 +531,7 @@ function BentoShowcase() {
               src={cdnUrl('images/comida/16:9/arroz16:9_1.png')}
               alt=""
               class="vc-bentoImg"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -507,7 +541,7 @@ function BentoShowcase() {
               src={cdnUrl('images/comida/16:9/comida16:9_3.png')}
               alt=""
               class="vc-bentoImg"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -517,7 +551,7 @@ function BentoShowcase() {
               src={cdnUrl('images/salones/16:9/IMG_0080.jpg')}
               alt=""
               class="vc-bentoImg"
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -551,6 +585,7 @@ function EventsSection() {
   return (
     <motion.section
       class="vc-events"
+      id="bodas-y-eventos"
       initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.35 }}
@@ -564,7 +599,7 @@ function EventsSection() {
                 src={cdnUrl(path)}
                 alt=""
                 class={idx === active ? 'vc-events-shot on' : 'vc-events-shot'}
-                loading={idx === 0 ? 'eager' : 'lazy'}
+                loading="eager"
                 decoding="async"
               />
             ))}
