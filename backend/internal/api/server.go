@@ -3,7 +3,6 @@ package api
 import (
 	"crypto/md5"
 	"database/sql"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -505,9 +504,9 @@ func (s *Server) handleVinos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Surrogate-Control", "max-age=300")
 	w.Header().Set("Vary", "Accept-Encoding")
 
-	fields := "num, nombre, precio, descripcion, bodega, denominacion_origen, tipo, graduacion, anyo, active, (foto IS NOT NULL AND LENGTH(foto) > 0) AS has_foto"
+	fields := "num, nombre, precio, descripcion, bodega, denominacion_origen, tipo, graduacion, anyo, active, (foto_path IS NOT NULL AND LENGTH(foto_path) > 0) AS has_foto"
 	if includeImage {
-		fields += ", foto"
+		fields += ", foto_path"
 	}
 
 	query := "SELECT " + fields + " FROM VINOS WHERE restaurant_id = ? AND active = ?"
@@ -544,26 +543,23 @@ func (s *Server) handleVinos(w http.ResponseWriter, r *http.Request) {
 		Anyo               string  `json:"anyo"`
 		Active             int     `json:"active"`
 		HasFoto            bool    `json:"has_foto"`
-		Foto               *string `json:"foto,omitempty"`
-		FotoMIME           *string `json:"foto_mime,omitempty"`
+		FotoURL            *string `json:"foto_url,omitempty"`
 	}
 
 	var vinos []Vino
 	for rows.Next() {
 		var v Vino
 		var hasFotoInt int
-		var fotoBytes []byte
+		var fotoPath sql.NullString
 
 		if includeImage {
-			if err := rows.Scan(&v.Num, &v.Nombre, &v.Precio, &v.Descripcion, &v.Bodega, &v.DenominacionOrigen, &v.Tipo, &v.Graduacion, &v.Anyo, &v.Active, &hasFotoInt, &fotoBytes); err != nil {
+			if err := rows.Scan(&v.Num, &v.Nombre, &v.Precio, &v.Descripcion, &v.Bodega, &v.DenominacionOrigen, &v.Tipo, &v.Graduacion, &v.Anyo, &v.Active, &hasFotoInt, &fotoPath); err != nil {
 				httpx.WriteError(w, http.StatusInternalServerError, "Error leyendo VINOS")
 				return
 			}
-			if len(fotoBytes) > 0 {
-				encoded := base64.StdEncoding.EncodeToString(fotoBytes)
-				mime := "image/jpeg"
-				v.Foto = &encoded
-				v.FotoMIME = &mime
+			if fotoPath.Valid && strings.TrimSpace(fotoPath.String) != "" {
+				u := s.bunnyPullURL(fotoPath.String)
+				v.FotoURL = &u
 			}
 		} else {
 			if err := rows.Scan(&v.Num, &v.Nombre, &v.Precio, &v.Descripcion, &v.Bodega, &v.DenominacionOrigen, &v.Tipo, &v.Graduacion, &v.Anyo, &v.Active, &hasFotoInt); err != nil {

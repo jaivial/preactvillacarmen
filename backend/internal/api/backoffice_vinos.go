@@ -11,17 +11,17 @@ import (
 )
 
 type boVino struct {
-	Num                int      `json:"num"`
-	Tipo               string   `json:"tipo"`
-	Nombre             string   `json:"nombre"`
-	Precio             float64  `json:"precio"`
-	Descripcion        string   `json:"descripcion"`
-	Bodega             string   `json:"bodega"`
-	DenominacionOrigen string   `json:"denominacion_origen"`
-	Graduacion         float64  `json:"graduacion"`
-	Anyo               string   `json:"anyo"`
-	Active             bool     `json:"active"`
-	HasFoto            bool     `json:"has_foto"`
+	Num                int     `json:"num"`
+	Tipo               string  `json:"tipo"`
+	Nombre             string  `json:"nombre"`
+	Precio             float64 `json:"precio"`
+	Descripcion        string  `json:"descripcion"`
+	Bodega             string  `json:"bodega"`
+	DenominacionOrigen string  `json:"denominacion_origen"`
+	Graduacion         float64 `json:"graduacion"`
+	Anyo               string  `json:"anyo"`
+	Active             bool    `json:"active"`
+	HasFoto            bool    `json:"has_foto"`
 }
 
 func (s *Server) handleBOVinosList(w http.ResponseWriter, r *http.Request) {
@@ -59,22 +59,22 @@ func (s *Server) handleBOVinosList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := s.db.QueryContext(r.Context(), `
-		SELECT
-			num,
-			COALESCE(tipo, ''),
-			COALESCE(nombre, ''),
-			COALESCE(precio, 0),
-			COALESCE(descripcion, ''),
-			COALESCE(bodega, ''),
-			COALESCE(denominacion_origen, ''),
-			COALESCE(graduacion, 0),
-			COALESCE(anyo, ''),
-			active,
-			(foto IS NOT NULL AND LENGTH(foto) > 0) AS has_foto
-		FROM VINOS
-	`+where+`
-		ORDER BY tipo ASC, nombre ASC, num ASC
-	`, args...)
+			SELECT
+				num,
+				COALESCE(tipo, ''),
+				COALESCE(nombre, ''),
+				COALESCE(precio, 0),
+				COALESCE(descripcion, ''),
+				COALESCE(bodega, ''),
+				COALESCE(denominacion_origen, ''),
+				COALESCE(graduacion, 0),
+				COALESCE(anyo, ''),
+				active,
+				(foto_path IS NOT NULL AND LENGTH(foto_path) > 0) AS has_foto
+			FROM VINOS
+		`+where+`
+			ORDER BY tipo ASC, nombre ASC, num ASC
+		`, args...)
 	if err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "Error consultando VINOS")
 		return
@@ -84,8 +84,8 @@ func (s *Server) handleBOVinosList(w http.ResponseWriter, r *http.Request) {
 	var out []boVino
 	for rows.Next() {
 		var (
-			v        boVino
-			activeInt int
+			v          boVino
+			activeInt  int
 			hasFotoInt int
 		)
 		if err := rows.Scan(
@@ -170,7 +170,7 @@ func (s *Server) handleBOVinoCreate(w http.ResponseWriter, r *http.Request) {
 		activeInt = 0
 	}
 
-	var img any = nil
+	var img []byte
 	if req.ImageBase64 != nil && strings.TrimSpace(*req.ImageBase64) != "" {
 		b, err := decodeBase64Image(*req.ImageBase64)
 		if err != nil {
@@ -185,10 +185,10 @@ func (s *Server) handleBOVinoCreate(w http.ResponseWriter, r *http.Request) {
 
 	restaurantID := a.ActiveRestaurantID
 	res, err := s.db.ExecContext(r.Context(), `
-		INSERT INTO VINOS
-			(restaurant_id, tipo, nombre, precio, descripcion, bodega, denominacion_origen, graduacion, anyo, active, foto)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, restaurantID,
+			INSERT INTO VINOS
+				(restaurant_id, tipo, nombre, precio, descripcion, bodega, denominacion_origen, graduacion, anyo, active, foto_path, foto)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+		`, restaurantID,
 		tipo,
 		nombre,
 		precio,
@@ -198,13 +198,33 @@ func (s *Server) handleBOVinoCreate(w http.ResponseWriter, r *http.Request) {
 		derefFloat(req.Graduacion),
 		strings.TrimSpace(derefString(req.Anyo)),
 		activeInt,
-		img,
 	)
 	if err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "Error insertando VINOS")
 		return
 	}
 	newID, _ := res.LastInsertId()
+
+	if len(img) > 0 {
+		objectPath, err := s.UploadWineImage(r.Context(), tipo, int(newID), img)
+		if err != nil {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"num":     int(newID),
+				"warning": "Vino creado, pero la imagen no se pudo subir",
+			})
+			return
+		}
+
+		if _, err := s.db.ExecContext(r.Context(), "UPDATE VINOS SET foto_path = ?, foto = NULL WHERE num = ? AND restaurant_id = ?", objectPath, int(newID), restaurantID); err != nil {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"num":     int(newID),
+				"warning": "Vino creado, pero no se pudo guardar la imagen",
+			})
+			return
+		}
+	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -242,6 +262,7 @@ func (s *Server) handleBOVinoPatch(w http.ResponseWriter, r *http.Request) {
 		sets []string
 		args []any
 	)
+	imageWarning := ""
 	if req.Tipo != nil {
 		t := strings.ToUpper(strings.TrimSpace(*req.Tipo))
 		if t == "" {
@@ -314,11 +335,11 @@ func (s *Server) handleBOVinoPatch(w http.ResponseWriter, r *http.Request) {
 		args = append(args, activeInt)
 	}
 	if req.ImageBase64 != nil {
-		// Empty string clears the photo.
-		if strings.TrimSpace(*req.ImageBase64) == "" {
-			sets = append(sets, "foto = NULL")
+		raw := strings.TrimSpace(*req.ImageBase64)
+		if raw == "" {
+			sets = append(sets, "foto_path = NULL", "foto = NULL")
 		} else {
-			b, err := decodeBase64Image(*req.ImageBase64)
+			b, err := decodeBase64Image(raw)
 			if err != nil {
 				httpx.WriteJSON(w, http.StatusOK, map[string]any{
 					"success": false,
@@ -326,8 +347,29 @@ func (s *Server) handleBOVinoPatch(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			sets = append(sets, "foto = ?")
-			args = append(args, b)
+
+			wineTipo := strings.ToUpper(strings.TrimSpace(derefString(req.Tipo)))
+			if wineTipo == "" {
+				if err := s.db.QueryRowContext(r.Context(), "SELECT COALESCE(tipo,'') FROM VINOS WHERE num = ? AND restaurant_id = ? LIMIT 1", id, a.ActiveRestaurantID).Scan(&wineTipo); err != nil || strings.TrimSpace(wineTipo) == "" {
+					wineTipo = "OTROS"
+				}
+			}
+
+			objectPath, err := s.UploadWineImage(r.Context(), wineTipo, id, b)
+			if err != nil {
+				imageWarning = "Vino actualizado, pero la imagen no se pudo subir"
+			} else {
+				sets = append(sets, "foto_path = ?", "foto = NULL")
+				args = append(args, objectPath)
+			}
+		}
+
+		if len(sets) == 0 && imageWarning != "" {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{
+				"success": false,
+				"message": imageWarning,
+			})
+			return
 		}
 	}
 	if len(sets) == 0 {
@@ -355,9 +397,13 @@ func (s *Server) handleBOVinoPatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+	out := map[string]any{
 		"success": true,
-	})
+	}
+	if imageWarning != "" {
+		out["warning"] = imageWarning
+	}
+	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleBOVinoDelete(w http.ResponseWriter, r *http.Request) {

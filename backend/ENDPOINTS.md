@@ -60,7 +60,7 @@ Response:
 Query params:
 - `tipo` (required unless `num` is provided): `TINTO|BLANCO|CAVA`
 - `active` (optional, default `1`)
-- `include_image` (optional, default `true`)
+- `include_image` (optional, default `true`; includes `foto_url` when `1`)
 - `num` (optional): returns a single wine by id (overrides `tipo`)
 
 Response:
@@ -71,7 +71,7 @@ Response:
 - `num` (int), `nombre` (string), `precio` (number), `descripcion` (string), `bodega` (string)
 - `denominacion_origen` (string), `tipo` (string), `graduacion` (number), `anyo` (string)
 - `active` (0|1), `has_foto` (bool)
-- If `include_image=1`: `foto` (base64 string), `foto_mime` (string)
+- If `include_image=1`: `foto_url` (string, BunnyCDN URL)
 
 ### `GET /api/api_vinos.php` (legacy GET alias)
 Same behavior as `GET /api/vinos`.
