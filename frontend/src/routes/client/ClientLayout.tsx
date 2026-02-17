@@ -10,12 +10,20 @@ import { useLocation } from 'wouter-preact'
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [menuVisibility, setMenuVisibility] = useState<MenuVisibility | null>(null)
   const [location] = useLocation()
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location])
+
   const isTopPage = location === '/'
   const isWinePage = location.startsWith('/vinos')
+  const isEventosPage = location.startsWith('/eventos')
 
   let mainClass = 'client-main'
   if (isTopPage) mainClass += ' main--topPage'
   if (isWinePage) mainClass += ' main--wine'
+  if (isEventosPage) mainClass += ' main--eventos'
 
   useEffect(() => {
     let cancelled = false
@@ -39,7 +47,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <div class="client-shell">
         <ClientHeader menuVisibility={menuVisibility} />
         <main class={mainClass}>{props.children}</main>
-        <ClientFooter />
+        {isEventosPage ? null : <ClientFooter />}
       </div>
     </MenuVisibilityContext.Provider>
   )

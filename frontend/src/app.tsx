@@ -3,6 +3,7 @@ import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
 import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
+import { Eventos } from './routes/client/Eventos.tsx'
 import { Home } from './routes/client/Home.tsx'
 import { MenuDia } from './routes/client/MenuDia.tsx'
 import { MenuFinde } from './routes/client/MenuFinde.tsx'
@@ -21,6 +22,7 @@ function ClientApp() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/contacto" component={Contacto} />
+        <Route path="/eventos" component={Eventos} />
 
         <Route path="/menufindesemana" component={MenuFinde} />
         <Route path="/menudeldia" component={MenuDia} />

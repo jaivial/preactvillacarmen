@@ -67,6 +67,10 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
+function mediaSrc(path: string) {
+  return /^https?:\/\//i.test(path) ? path : cdnUrl(path)
+}
+
 function observeRevealOnce(el: Element, onReveal: () => void) {
   if (typeof window === 'undefined') {
     onReveal()
@@ -267,13 +271,11 @@ export function MenuHeroSlider() {
 
   const paths = useMemo(
     () => [
-      'images/comida/16:9/arroz16:9_1.png',
-      'images/comida/16:9/croquetas16:9.jpeg',
-      'images/comida/16:9/comida16:9_2.jpg',
-      'images/comida/16:9/comida16:9_3.png',
-      // If you add more photos in Bunny Storage, keep the naming consistent and extend this list.
-      'images/comida/16:9/comida16:9_4.jpg',
-      'images/comida/16:9/comida16:9_5.jpg',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_04%20%281%29.webp',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_32_50.webp',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comid9_16_4.webp',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comida9_16_2.webp',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp',
     ],
     []
   )
@@ -325,7 +327,7 @@ export function MenuHeroSlider() {
     if (paths.length <= 1) return
     const next = findNextIndex(active)
     if (next === active) return
-    const url = cdnUrl(paths[next])
+    const url = mediaSrc(paths[next])
     const img = new Image()
     img.decoding = 'async'
     img.src = url
@@ -348,7 +350,7 @@ export function MenuHeroSlider() {
         {prev !== null && !bad[prev] ? (
           <img
             key={`prev-${paths[prev]}`}
-            src={cdnUrl(paths[prev])}
+            src={mediaSrc(paths[prev])}
             alt=""
             class="menuHeroShot is-prev"
             loading="eager"
@@ -360,7 +362,7 @@ export function MenuHeroSlider() {
         {!bad[active] ? (
           <img
             key={`active-${paths[active]}`}
-            src={cdnUrl(paths[active])}
+            src={mediaSrc(paths[active])}
             alt=""
             class={reduced ? 'menuHeroShot is-active is-reduced' : 'menuHeroShot is-active'}
             loading="eager"

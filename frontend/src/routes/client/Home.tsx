@@ -7,11 +7,23 @@ import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
 import type { MenuResponse } from '../../lib/types'
 
-const HERO_VIDEO_FILES = {
-  '16:9': ['herosection16:9_1.mp4', 'herosection16:9_2.mp4', 'herosection16:9_3.mp4', 'herosection16:9_4.mp4', 'herosection16:9_5.mp4'],
-  '9:16': ['herosection9:16_1.mp4', 'herosection9:16_2.mp4', 'herosection9:16_3.mp4', 'herosection9:16_4.mp4', 'herosection9:16_5.mp4'],
+const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
+  '16:9': [
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/16%3A9/herosection16%3A9_1.mp4?v=20260216-220414',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/16%3A9/herosection16%3A9_2.mp4?v=20260216-220414',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/16%3A9/herosection16%3A9_3.mp4?v=20260216-220414',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/16%3A9/herosection16%3A9_4.mp4?v=20260216-220414',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/16%3A9/herosection16%3A9_5.mp4?v=20260216-220415',
+  ],
+  '9:16': [
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/9%3A16/herosection9%3A16_1.mp4?v=20260216-220515',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/9%3A16/herosection9%3A16_2.mp4?v=20260216-220515',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/9%3A16/herosection9%3A16_3.mp4?v=20260216-220516',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/9%3A16/herosection9%3A16_4.mp4?v=20260216-220516',
+    'https://villacarmenmedia.b-cdn.net/videos/herosection/9%3A16/herosection9%3A16_5.mp4?v=20260216-220517',
+  ],
 }
-const HERO_VIDEO_COUNT = HERO_VIDEO_FILES['16:9'].length
+const HERO_VIDEO_COUNT = HERO_VIDEO_URLS['16:9'].length
 const HERO_FADE_MS = 1200
 const HERO_PRE_TRANSITION_MS = 700
 
@@ -31,10 +43,13 @@ function clamp01(value: number) {
   return value
 }
 
+function mediaSrc(path: string) {
+  return /^https?:\/\//i.test(path) ? path : cdnUrl(path)
+}
+
 function heroVideoSrc(index: number, ratio: '16:9' | '9:16') {
-  const n = index
-  const files = HERO_VIDEO_FILES[ratio]
-  return cdnUrl(`videos/herosection/${ratio}/${files[n % files.length]}`)
+  const files = HERO_VIDEO_URLS[ratio]
+  return files[index % files.length]
 }
 
 function ResponsiveImage(props: {
@@ -45,9 +60,9 @@ function ResponsiveImage(props: {
 }) {
   return (
     <picture>
-      <source media="(max-aspect-ratio: 9/16)" srcSet={cdnUrl(props.src9x16)} />
+      <source media="(max-aspect-ratio: 9/16)" srcSet={mediaSrc(props.src9x16)} />
       <img
-        src={cdnUrl(props.src16x9)}
+        src={mediaSrc(props.src16x9)}
         alt={props.alt}
         class={props.class}
         loading="eager"
@@ -279,8 +294,8 @@ function ScrollFxAlqueria() {
             <motion.div class="scrollFx__photo" style={{ y: imgY }}>
               <ResponsiveImage
                 alt=""
-                src16x9="images/salones/16:9/IMG_0073.jpg"
-                src9x16="images/salones/9:16/IMG_0137.jpg"
+                src16x9="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp"
+                src9x16="https://villacarmenmedia.b-cdn.net/images/salones/9%3A16/salones9-16_1.webp"
                 class="scrollFx__img"
               />
             </motion.div>
@@ -308,22 +323,22 @@ function StickyShowcase() {
         no: '01',
         titleKey: 'home.showcase.items.1.title',
         bodyKey: 'home.showcase.items.1.body',
-        img16x9: 'images/comida/16:9/arroz16:9_1.png',
-        img9x16: 'images/comida/16:9/arroz16:9_1.png',
+        img16x9: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
+        img9x16: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
       },
       {
         no: '02',
         titleKey: 'home.showcase.items.2.title',
         bodyKey: 'home.showcase.items.2.body',
-        img16x9: 'images/comida/16:9/comida16:9_3.png',
-        img9x16: 'images/comida/16:9/comida16:9_3.png',
+        img16x9: 'https://villacarmenmedia.b-cdn.net/images/comida/16%3A9/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_19%20%281%29.webp',
+        img9x16: 'https://villacarmenmedia.b-cdn.net/images/comida/16%3A9/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_19%20%281%29.webp',
       },
       {
         no: '03',
         titleKey: 'home.showcase.items.3.title',
         bodyKey: 'home.showcase.items.3.body',
-        img16x9: 'images/salones/16:9/IMG_0080.jpg',
-        img9x16: 'images/salones/16:9/IMG_0080.jpg',
+        img16x9: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp',
+        img9x16: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp',
       },
     ],
     []
@@ -500,15 +515,15 @@ function BentoShowcase() {
           <div class="vc-bentoTile vc-bentoTile--main">
             <ResponsiveImage
               alt=""
-              src16x9="images/salones/16:9/IMG_0073.jpg"
-              src9x16="images/salones/9:16/IMG_0137.jpg"
+              src16x9="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp"
+              src9x16="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp"
               class="vc-bentoImg"
             />
           </div>
 
           <div class="vc-bentoTile vc-bentoTile--tall">
             <img
-              src={cdnUrl('images/salones/16:9/IMG_0076.jpg')}
+              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/saloncondesa1.webp')}
               alt=""
               class="vc-bentoImg"
               loading="eager"
@@ -518,7 +533,7 @@ function BentoShowcase() {
 
           <div class="vc-bentoTile vc-bentoTile--square">
             <img
-              src={cdnUrl('images/comida/16:9/croquetas16:9.jpeg')}
+              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp')}
               alt=""
               class="vc-bentoImg"
               loading="eager"
@@ -528,7 +543,7 @@ function BentoShowcase() {
 
           <div class="vc-bentoTile vc-bentoTile--square">
             <img
-              src={cdnUrl('images/comida/16:9/arroz16:9_1.png')}
+              src={mediaSrc('images/comida/16:9/arroz16:9_1.png')}
               alt=""
               class="vc-bentoImg"
               loading="eager"
@@ -538,7 +553,7 @@ function BentoShowcase() {
 
           <div class="vc-bentoTile vc-bentoTile--wide">
             <img
-              src={cdnUrl('images/comida/16:9/comida16:9_3.png')}
+              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/fachada/16%3A9/fachada16-9_1.webp')}
               alt=""
               class="vc-bentoImg"
               loading="eager"
@@ -548,7 +563,7 @@ function BentoShowcase() {
 
           <div class="vc-bentoTile vc-bentoTile--wideAlt" ref={lastTileRef}>
             <img
-              src={cdnUrl('images/salones/16:9/IMG_0080.jpg')}
+              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp')}
               alt=""
               class="vc-bentoImg"
               loading="eager"
@@ -566,10 +581,11 @@ function EventsSection() {
   const reduced = useReducedMotion()
   const images = useMemo(
     () => [
-      'images/eventos/bodas/16:9/boda16:9_1.jpg',
-      'images/eventos/bodas/16:9/boda16:9_2.jpg',
-      'images/eventos/bodas/16:9/boda16:9_3.jpg',
-      'images/eventos/bodas/16:9/boda16:9_4.jpg',
+      'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_1.webp',
+      'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_2.webp',
+      'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_3.webp',
+      'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_4.webp',
+      'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_5.webp',
     ],
     []
   )
@@ -596,7 +612,7 @@ function EventsSection() {
           <div class="vc-events-slideshow">
             {images.map((path, idx) => (
               <img
-                src={cdnUrl(path)}
+                src={mediaSrc(path)}
                 alt=""
                 class={idx === active ? 'vc-events-shot on' : 'vc-events-shot'}
                 loading="eager"
@@ -611,8 +627,8 @@ function EventsSection() {
           <h2 class="vc-events-title">{t('home.events.title')}</h2>
           <p class="vc-events-body">{t('home.events.body')}</p>
           <div class="vc-actions">
-            <Link href="/menusdegrupos" className="btn">
-              {t('home.events.cta.groups')}
+            <Link href="/eventos" className="btn">
+              {t('home.events.cta.more')}
             </Link>
             <Link href="/reservas" className="btn primary">
               {t('nav.reserve')}

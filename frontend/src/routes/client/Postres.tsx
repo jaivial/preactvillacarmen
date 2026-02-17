@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Dish, PostresResponse } from '../../lib/types'
-import { DishList } from './MenuShared'
+import { DishCardGrid } from './MenuShared'
 
 export function Postres() {
   const { t } = useI18n()
@@ -45,7 +45,7 @@ export function Postres() {
             <div class="menuGrid">
               <article class="menuSectionCard">
                 <h2 class="menuSectionTitle">{t('nav.desserts')}</h2>
-                <DishList dishes={items} />
+                <DishCardGrid dishes={items} />
               </article>
             </div>
           )}
