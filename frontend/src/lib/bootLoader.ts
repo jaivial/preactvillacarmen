@@ -7,10 +7,13 @@ type BootLoaderOptions = {
   minShowMs?: number
   completeRampMs?: number
   // By default the loader tracks only media near the viewport (to avoid waiting for
-  // below-the-fold content). For the home page we want the opposite: preload/await
-  // all images so the first scroll is instant.
+  // below-the-fold content). For landing-like pages (home/eventos) we preload/await
+  // all images so the first interaction is smooth.
   trackAllImages?: boolean
 }
+
+export const BOOT_LOADER_DONE_EVENT = 'vc:boot:done'
+export const BOOT_LOADER_START_EVENT = 'vc:boot:start'
 
 function clamp01(value: number) {
   if (value < 0) return 0
@@ -86,7 +89,7 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   const percentId = options.percentId || 'vc-boot-pct'
   const rootId = options.rootId || 'app'
   const pathname = (window.location?.pathname || '/').toLowerCase()
-  const defaultTrackAll = pathname === '/' || pathname === '/index.html'
+  const defaultTrackAll = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/eventos')
   const trackAllImages = options.trackAllImages ?? defaultTrackAll
 
   const maxWaitMs = options.maxWaitMs ?? (trackAllImages ? 45000 : 15000)
@@ -98,6 +101,24 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
 
   const bar = document.getElementById(barId) as HTMLDivElement | null
   const percent = document.getElementById(percentId) as HTMLDivElement | null
+  const debugPrefix = '[boot-loader]'
+  let windowLoaded = document.readyState === 'complete'
+
+  console.log(`${debugPrefix} start`, {
+    pathname,
+    overlayId,
+    rootId,
+    trackAllImages,
+    maxWaitMs,
+    minShowMs,
+    completeRampMs,
+    readyState: document.readyState,
+  })
+  window.dispatchEvent(
+    new CustomEvent(BOOT_LOADER_START_EVENT, {
+      detail: { pathname, ts: Date.now(), trackAllImages },
+    })
+  )
 
   const startedAt = performance.now()
 
@@ -141,6 +162,14 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   const finalize = (reason: 'media' | 'load' | 'timeout') => {
     if (finished) return
     finished = true
+    console.log(`${debugPrefix} finalize`, {
+      reason,
+      done,
+      total,
+      desired: Number(desired.toFixed(3)),
+      shown: Number(shown.toFixed(3)),
+      windowLoaded,
+    })
 
     if (maxWaitTimer) window.clearTimeout(maxWaitTimer)
     if (trickleTimer) window.clearInterval(trickleTimer)
@@ -169,7 +198,15 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
         }
 
         overlay.dataset.done = '1'
-        window.setTimeout(() => overlay.remove(), 450)
+        window.setTimeout(() => {
+          overlay.remove()
+          window.dispatchEvent(
+            new CustomEvent(BOOT_LOADER_DONE_EVENT, {
+              detail: { reason, done, total, ts: Date.now() },
+            })
+          )
+          console.log(`${debugPrefix} done event dispatched`, { reason, done, total })
+        }, 450)
       }
 
       window.requestAnimationFrame(step)
@@ -199,6 +236,8 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   }, 260)
 
   const onWindowLoad = () => {
+    windowLoaded = true
+    console.log(`${debugPrefix} window load`, { done, total })
     // Don't let window load hide the overlay early if we're still waiting for tracked media.
     if (total === 0 || done >= total) finalize('load')
   }
@@ -213,20 +252,28 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
 
     const root = document.getElementById(rootId)
     if (!root) {
-      finalize('media')
+      console.warn(`${debugPrefix} root not found`, { rootId, windowLoaded })
+      if (windowLoaded) finalize('media')
       return
     }
 
-    const images = Array.from(root.querySelectorAll('img')).filter(
-      (img) => isCriticalImage(img) && (trackAllImages || isNearViewport(img))
+    const images = Array.from(root.querySelectorAll('img')).filter((img) =>
+      trackAllImages ? true : isCriticalImage(img) && isNearViewport(img)
     )
     const videos = Array.from(root.querySelectorAll('video')).filter(
       (video) => isCriticalVideo(video) && isNearViewport(video)
     )
     const media: Array<HTMLImageElement | HTMLVideoElement> = [...images, ...videos]
+    console.log(`${debugPrefix} scan`, {
+      images: images.length,
+      videos: videos.length,
+      tracked: total,
+      done,
+      windowLoaded,
+    })
 
     if (!media.length && total === 0) {
-      finalize('media')
+      if (windowLoaded) finalize('media')
       return
     }
 
@@ -236,7 +283,10 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
       loaded.add(el)
       done = Math.min(total, done + 1)
       if (total > 0) setDesired(done / total)
-      if (done >= total) finalize('media')
+      if (done >= total) {
+        if (windowLoaded) finalize('media')
+        else console.log(`${debugPrefix} media settled, waiting for window load`, { done, total })
+      }
     }
 
     for (const el of media) {
@@ -264,8 +314,8 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
           continue
         }
 
-        // For the home page we want all images downloaded even if they live inside
-        // offscreen sections that use content-visibility. Preload them explicitly.
+        // For landing-like pages we want all images downloaded even if they live
+        // inside offscreen sections that use content-visibility. Preload explicitly.
         if (trackAllImages) {
           const url = resolveImageURL(img)
           if (!url) {

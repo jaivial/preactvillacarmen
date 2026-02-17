@@ -22,8 +22,13 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
   const { lang, setLang, t } = useI18n()
 
   const isHome = location === '/'
-  const solidHeader = !isHome || scrolled
+  const isEventosPage = location.startsWith('/eventos')
+  const allowTransparentHeader = isHome || isEventosPage
+  const solidHeader = !allowTransparentHeader || scrolled
   const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana')
+  const showHeaderActions = !isEventosPage
+  const logoSrc = cdnUrl('images/icons/logoblancopng.PNG')
+  const logoClass = isEventosPage ? 'brand-logo brand-logo--dark' : 'brand-logo'
 
   useEffect(() => {
     if (!mobileOpen) setMenusOpen(false)
@@ -62,21 +67,40 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
 
   useEffect(() => {
     let raf = 0
+    const eventsHeroUnlockThreshold = () => {
+      const hero = document.querySelector<HTMLElement>('.evrHero')
+      if (!hero) return window.innerHeight * 0.9
+      const top = hero.getBoundingClientRect().top + window.scrollY
+      return top + hero.offsetHeight * 0.9
+    }
+
     const onScroll = () => {
       if (raf) return
       raf = window.requestAnimationFrame(() => {
         raf = 0
+        if (isEventosPage) {
+          const unlocked = window.scrollY >= eventsHeroUnlockThreshold()
+          setScrolled(unlocked)
+          if (!unlocked) setMobileOpen(false)
+          return
+        }
         setScrolled(window.scrollY > 12)
       })
     }
 
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    window.addEventListener('load', onScroll)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('load', onScroll)
       if (raf) window.cancelAnimationFrame(raf)
     }
-  }, [])
+  }, [isEventosPage])
+
+  const eventosHeaderUnlocked = !isEventosPage || scrolled
 
   const items = useMemo<NavItem[]>(
     () => [
@@ -198,13 +222,13 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
           })}
 
           <li>
-            <a
-              href={isHome ? '#bodas-y-eventos' : '/#bodas-y-eventos'}
-              class="navBurgerLink"
+            <Link
+              href="/eventos"
+              className={isEventosPage ? 'navBurgerLink active' : 'navBurgerLink'}
               onClick={() => setMobileOpen(false)}
             >
               {t('nav.weddingsEvents')}
-            </a>
+            </Link>
           </li>
         </ul>
 
@@ -239,10 +263,20 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
           <button
             type="button"
             ref={menuButtonRef}
-            class={mobileOpen ? 'header__menuBurger open' : 'header__menuBurger'}
+            class={[
+              mobileOpen ? 'header__menuBurger open' : 'header__menuBurger',
+              !eventosHeaderUnlocked ? 'header__menuBurger--hidden' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             aria-label="Menu"
             aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((v) => !v)}
+            disabled={!eventosHeaderUnlocked}
+            tabIndex={eventosHeaderUnlocked ? 0 : -1}
+            onClick={() => {
+              if (!eventosHeaderUnlocked) return
+              setMobileOpen((v) => !v)
+            }}
           >
             <i />
             <i />
@@ -252,8 +286,8 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
           <div class="header__logo">
             <Link href="/" className="brand" aria-label={t('home.hero.title')}>
               <img
-                class="brand-logo"
-                src={cdnUrl('images/icons/logoblancopng.PNG')}
+                class={logoClass}
+                src={logoSrc}
                 alt={t('home.hero.title')}
                 decoding="async"
                 loading="eager"
@@ -262,14 +296,16 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
           </div>
 
           <div class="header__tools">
-            <div class="header__callAction">
-              <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
-                {t('nav.menus')}
-              </a>
-              <Link href="/reservas" className="link link--center reservaBttn">
-                {t('nav.reserve')}
-              </Link>
-            </div>
+            {showHeaderActions ? (
+              <div class="header__callAction">
+                <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
+                  {t('nav.menus')}
+                </a>
+                <Link href="/reservas" className="link link--center reservaBttn">
+                  {t('nav.reserve')}
+                </Link>
+              </div>
+            ) : null}
             {showMenuPick ? <MenuPickWidget /> : null}
           </div>
         </div>
