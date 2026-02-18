@@ -790,13 +790,48 @@ svg {
     will-change: clip-path;
 }
 
-.scrollFx__frame {
+.scrollFx__bgWrapper {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+}
+
+.scrollFx__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scrollFx__whiteOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--bg-white, #fff);
+    pointer-events: none;
+}
+
+.scrollFx__windowContainer {
     position: absolute;
     inset: 0;
     z-index: 2;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    box-shadow: 0 36px 90px rgba(0, 0, 0, 0.32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
+}
+
+.scrollFx__window {
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+    pointer-events: auto;
+}
+
+.scrollFx__windowImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .scrollFx__sides {
@@ -956,7 +991,7 @@ svg {
 
 /* Sticky showcase (Adovasio-inspired) */
 .vc-projects {
-    padding: 86px 0 96px;
+    padding: 0 0 96px;
     content-visibility: auto;
     contain-intrinsic-size: 1500px;
 }
@@ -1058,7 +1093,7 @@ svg {
 
 /* Bento grid showcase */
 .vc-bento {
-    padding: 94px 0 96px;
+    padding: 0px 0 96px;
     transition:
         opacity 1000ms ease,
         transform 1000ms ease;
@@ -1207,7 +1242,7 @@ svg {
 
 /* Events (more elegant serif) */
 .vc-events {
-    padding: 94px 0 92px;
+    padding: 44px 0 92px;
     content-visibility: auto;
     contain-intrinsic-size: 880px;
 }
@@ -2394,7 +2429,9 @@ svg {
     border-radius: var(--radius);
     box-shadow: var(--shadow-soft);
     padding: 18px;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    transition:
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
 }
 
 .contact-card:hover {
@@ -2472,8 +2509,12 @@ svg {
 }
 
 @keyframes vc-menuLightbox-fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .vc-menuLightboxClose {

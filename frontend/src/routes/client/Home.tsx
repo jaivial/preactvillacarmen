@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
+import { ScrollReveal } from '../../components/ScrollReveal'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
   '16:9': [
@@ -234,101 +235,6 @@ function HeroVideoCycle() {
       {renderVideo(0)}
       {renderVideo(1)}
     </div>
-  )
-}
-
-function ScrollFxAlqueria() {
-  const { t } = useI18n()
-  const reduced = useReducedMotion()
-  const sectionRef = useRef<HTMLElement>(null)
-
-  // Get viewport aspect ratio
-  const [isPortrait, setIsPortrait] = useState(false)
-  useEffect(() => {
-    const checkAspect = () => setIsPortrait(window.innerWidth / window.innerHeight < 1)
-    checkAspect()
-    window.addEventListener('resize', checkAspect)
-    return () => window.removeEventListener('resize', checkAspect)
-  }, [])
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  })
-
-  // Animation timings (halved distance)
-  const openStart = 0.1
-  const openEnd = 0.4
-  const holdEnd = 0.7
-
-  // Rectangle ratio based on viewport: smaller initial size to show more background
-  const initialRatio = isPortrait ? 0.25 : 0.3
-
-  // Clip-path: starts small and grows to reveal full image
-  const clipPath = useTransform(
-    scrollYProgress,
-    [0, openStart, openEnd, holdEnd, 1],
-    reduced
-      ? ['inset(0)', 'inset(0)', 'inset(0)', 'inset(0)', 'inset(0)']
-      : [
-          `inset(${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}%)`,
-          `inset(${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}%)`,
-          'inset(0)',
-          'inset(0)',
-          'inset(0)',
-        ]
-  )
-
-  // Border radius for the frame when revealed
-  const frameOpacity = useTransform(
-    scrollYProgress,
-    [openEnd, holdEnd],
-    reduced ? [0, 0] : [0, 1]
-  )
-
-  // Words appear later (~100px scroll after)
-  const wordsStart = 0.35
-  const wordsEnd = 0.5
-  const leftX = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [0, 0, 0, 0] : [-100, 0, 0, -200])
-  const rightX = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [0, 0, 0, 0] : [100, 0, 0, 200])
-  const wordsOpacity = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [1, 1, 1, 1] : [0, 1, 1, 0])
-
-  return (
-    <section class="scrollFx" ref={sectionRef}>
-      <div class="scrollFx__sticky">
-        {/* Background image - fixed size */}
-        <img
-          class="scrollFx__bg"
-          src={isPortrait
-            ? 'https://villacarmenmedia.b-cdn.net/images/salones/9%3A16/salones9-16_1.webp'
-            : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp'
-          }
-          alt=""
-        />
-
-        {/* Overlay with clip-path that reveals image */}
-        <motion.div class="scrollFx__overlay" style={{ clipPath }} />
-
-        {/* Border frame with rounded corners */}
-        <motion.div
-          class="scrollFx__frame"
-          style={{
-            opacity: frameOpacity,
-            borderRadius: 12,
-          }}
-        />
-
-        {/* Words on sides */}
-        <div class="scrollFx__sides">
-          <motion.div style={{ x: leftX, opacity: wordsOpacity }}>{t('home.scrollfx.line1')}</motion.div>
-          <motion.div style={{ x: rightX, opacity: wordsOpacity }}>{t('home.scrollfx.line2')}</motion.div>
-        </div>
-        <div class="scrollFx__sides scrollFx__sides--bottom">
-          <motion.div style={{ x: leftX, opacity: wordsOpacity }}>{t('home.scrollfx.line3')}</motion.div>
-          <motion.div style={{ x: rightX, opacity: wordsOpacity }}>{t('home.scrollfx.line4')}</motion.div>
-        </div>
-      </div>
-    </section>
   )
 }
 
@@ -805,7 +711,12 @@ export function Home() {
         </div>
       </section>
 
-      <ScrollFxAlqueria />
+      <ScrollReveal
+        initialSize={40}
+        maxSizePercent={90}
+        height="130vh"
+        borderRadius="1rem"
+      />
 
       <StickyShowcase />
 
