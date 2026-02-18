@@ -11,9 +11,11 @@ export function ClientLayout(props: { children: ComponentChildren }) {
   const [menuVisibility, setMenuVisibility] = useState<MenuVisibility | null>(null)
   const [location] = useLocation()
 
-  // Scroll to top on navigation
+  // Scroll to top on initial load and navigation
   useEffect(() => {
     window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
   }, [location])
 
   const isTopPage = location === '/'

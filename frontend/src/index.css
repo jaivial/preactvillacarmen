@@ -753,7 +753,7 @@ svg {
 
 /* ScrollFx (Voltereta-inspired) */
 .scrollFx {
-    min-height: 320vh;
+    min-height: 130vh;
     padding: 0;
     position: relative;
     background: var(--bg);
@@ -772,6 +772,31 @@ svg {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.scrollFx__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scrollFx__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--bg);
+    will-change: clip-path;
+}
+
+.scrollFx__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 36px 90px rgba(0, 0, 0, 0.32);
+    pointer-events: none;
 }
 
 .scrollFx__sides {
@@ -799,16 +824,20 @@ svg {
 }
 
 .scrollFx__mask {
-    position: relative;
-    width: 95vw;
-    max-width: 1200px;
-    aspect-ratio: 16 / 9;
-    height: auto;
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    box-shadow: 0 36px 90px rgba(0, 0, 0, 0.32);
-    background: rgba(0, 0, 0, 0.04);
-    will-change: transform, border-radius;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: clip-path;
+}
+
+.scrollFx__hole {
+    position: absolute;
+    background: var(--bg);
+    border-radius: 32px;
+    will-change: all;
 }
 
 @media (max-aspect-ratio: 9/16) {
@@ -821,8 +850,8 @@ svg {
 
 @media (min-aspect-ratio: 16/9) {
     .scrollFx__mask {
-        width: 85vw;
-        max-width: 1400px;
+        width: 90vw;
+        max-width: 1600px;
         aspect-ratio: 16 / 9;
     }
 }
@@ -1355,6 +1384,58 @@ svg {
 .vc-menuCard-cta.primary {
     background: rgba(20, 37, 32, 0.6);
     border-color: rgba(20, 37, 32, 0.42);
+}
+
+.vc-menuCard-media {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 16 / 9;
+}
+
+.vc-menuCard-media:focus {
+    outline: 2px solid var(--pine);
+    outline-offset: 2px;
+}
+
+.vc-menuCard-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.vc-menuCard-media:hover .vc-menuCard-img {
+    transform: scale(1.05);
+}
+
+.vc-menuCard-mediaOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.vc-menuCard-media:hover .vc-menuCard-mediaOverlay {
+    opacity: 1;
+}
+
+.vc-menuCard-zoomIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: rgba(20, 37, 32, 0.9);
+    font-weight: 300;
 }
 
 /* CTA */
@@ -2313,6 +2394,12 @@ svg {
     border-radius: var(--radius);
     box-shadow: var(--shadow-soft);
     padding: 18px;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.contact-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
 }
 
 .contact-title {
@@ -2329,10 +2416,17 @@ svg {
 }
 
 .contact-actions {
-    margin-top: 16px;
+    margin-top: 20px;
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
+}
+
+.contact-actions .btn {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    justify-content: center;
 }
 
 .hours {
@@ -2341,6 +2435,8 @@ svg {
     grid-template-columns: 1fr 1fr;
     gap: 6px 10px;
     color: rgba(0, 0, 0, 0.74);
+    font-size: 14px;
+    line-height: 1.6;
 }
 
 .contact-map {
@@ -2350,12 +2446,127 @@ svg {
     box-shadow: var(--shadow-soft);
     min-height: 380px;
     background: rgba(255, 255, 255, 0.6);
+    transition: box-shadow 0.3s ease;
+}
+
+.contact-map:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 .contact-map iframe {
     width: 100%;
     height: 100%;
     min-height: 380px;
+}
+
+/* Menu Lightbox */
+.vc-menuLightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: vc-menuLightbox-fadeIn 0.25s ease-out;
+}
+
+@keyframes vc-menuLightbox-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.vc-menuLightboxClose {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: background 0.2s ease;
+    z-index: 10;
+}
+
+.vc-menuLightboxClose:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.vc-menuLightboxNav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: background 0.2s ease;
+    z-index: 10;
+}
+
+.vc-menuLightboxNav:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.vc-menuLightboxPrev {
+    left: 16px;
+}
+
+.vc-menuLightboxNext {
+    right: 16px;
+}
+
+.vc-menuLightboxContent {
+    max-width: 90vw;
+    max-height: 85vh;
+    cursor: grab;
+    user-select: none;
+}
+
+.vc-menuLightboxContent:active {
+    cursor: grabbing;
+}
+
+.vc-menuLightboxImg {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.vc-menuLightboxCounter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+}
+
+@media (max-width: 640px) {
+    .vc-menuLightboxNav {
+        width: 40px;
+        height: 40px;
+    }
+    .vc-menuLightboxPrev {
+        left: 8px;
+    }
+    .vc-menuLightboxNext {
+        right: 8px;
+    }
 }
 
 /* Footer */
