@@ -93,8 +93,8 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   const trackAllImages = options.trackAllImages ?? defaultTrackAll
 
   const maxWaitMs = options.maxWaitMs ?? (trackAllImages ? 45000 : 15000)
-  const minShowMs = options.minShowMs ?? 450
-  const completeRampMs = options.completeRampMs ?? 2000
+  const minShowMs = options.minShowMs ?? 100
+  const completeRampMs = options.completeRampMs ?? 10
 
   const overlay = document.getElementById(overlayId) as HTMLDivElement | null
   if (!overlay) return

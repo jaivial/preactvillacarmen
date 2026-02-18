@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { Link } from 'wouter-preact'
-import { apiGetJson } from '../../lib/api'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
-import type { MenuResponse } from '../../lib/types'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
   '16:9': [
@@ -35,6 +33,8 @@ type MenuCard = {
   subtitleKey: string
   href: string
   variant?: 'special'
+  image16x9: string
+  image9x16: string
 }
 
 function clamp01(value: number) {
@@ -242,65 +242,91 @@ function ScrollFxAlqueria() {
   const reduced = useReducedMotion()
   const sectionRef = useRef<HTMLElement>(null)
 
+  // Get viewport aspect ratio
+  const [isPortrait, setIsPortrait] = useState(false)
+  useEffect(() => {
+    const checkAspect = () => setIsPortrait(window.innerWidth / window.innerHeight < 1)
+    checkAspect()
+    window.addEventListener('resize', checkAspect)
+    return () => window.removeEventListener('resize', checkAspect)
+  }, [])
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'end start'],
   })
 
-  const openStart = 0.2
-  const openEnd = 0.55
-  const holdEnd = 0.92
+  // Animation timings (halved distance)
+  const openStart = 0.1
+  const openEnd = 0.4
+  const holdEnd = 0.7
 
-  const maskScaleX = useTransform(
-    scrollYProgress,
-    [0, openStart, openEnd, holdEnd, 1],
-    reduced ? [1, 1, 1, 1, 1] : [0.52056, 0.52056, 1, 1, 1]
-  )
-  const maskScaleY = useTransform(
-    scrollYProgress,
-    [0, openStart, openEnd, holdEnd, 1],
-    reduced ? [1, 1, 1, 1, 1] : [0.52056, 0.52056, 1.1, 1.1, 1.1]
-  )
-  const maskRadius = useTransform(
-    scrollYProgress,
-    [0, openStart, openEnd, holdEnd, 1],
-    reduced ? [24, 24, 24, 24, 24] : [999, 999, 42, 42, 26]
-  )
-  const imgY = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [-10, 10])
-  const contentScaleX = useTransform(maskScaleX, (v) => (v ? 1 / v : 1))
-  const contentScaleY = useTransform(maskScaleY, (v) => (v ? 1 / v : 1))
+  // Rectangle ratio based on viewport: smaller initial size to show more background
+  const initialRatio = isPortrait ? 0.25 : 0.3
 
-  const sidesEnd = openStart + 0.12
-  const leftX = useTransform(scrollYProgress, [0, sidesEnd], reduced ? [0, 0] : [-80, 0])
-  const rightX = useTransform(scrollYProgress, [0, sidesEnd], reduced ? [0, 0] : [80, 0])
+  // Clip-path: starts small and grows to reveal full image
+  const clipPath = useTransform(
+    scrollYProgress,
+    [0, openStart, openEnd, holdEnd, 1],
+    reduced
+      ? ['inset(0)', 'inset(0)', 'inset(0)', 'inset(0)', 'inset(0)']
+      : [
+          `inset(${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}%)`,
+          `inset(${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}% ${50 - initialRatio * 50}%)`,
+          'inset(0)',
+          'inset(0)',
+          'inset(0)',
+        ]
+  )
+
+  // Border radius for the frame when revealed
+  const frameOpacity = useTransform(
+    scrollYProgress,
+    [openEnd, holdEnd],
+    reduced ? [0, 0] : [0, 1]
+  )
+
+  // Words appear later (~100px scroll after)
+  const wordsStart = 0.35
+  const wordsEnd = 0.5
+  const leftX = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [0, 0, 0, 0] : [-100, 0, 0, -200])
+  const rightX = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [0, 0, 0, 0] : [100, 0, 0, 200])
+  const wordsOpacity = useTransform(scrollYProgress, [0, wordsStart, wordsEnd, 0.7], reduced ? [1, 1, 1, 1] : [0, 1, 1, 0])
 
   return (
     <section class="scrollFx" ref={sectionRef}>
       <div class="scrollFx__sticky">
+        {/* Background image - fixed size */}
+        <img
+          class="scrollFx__bg"
+          src={isPortrait
+            ? 'https://villacarmenmedia.b-cdn.net/images/salones/9%3A16/salones9-16_1.webp'
+            : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp'
+          }
+          alt=""
+        />
+
+        {/* Overlay with clip-path that reveals image */}
+        <motion.div class="scrollFx__overlay" style={{ clipPath }} />
+
+        {/* Border frame with rounded corners */}
+        <motion.div
+          class="scrollFx__frame"
+          style={{
+            opacity: frameOpacity,
+            borderRadius: 12,
+          }}
+        />
+
+        {/* Words on sides */}
         <div class="scrollFx__sides">
-          <motion.div style={{ x: leftX }}>{t('home.scrollfx.line1')}</motion.div>
-          <motion.div style={{ x: rightX }}>{t('home.scrollfx.line2')}</motion.div>
+          <motion.div style={{ x: leftX, opacity: wordsOpacity }}>{t('home.scrollfx.line1')}</motion.div>
+          <motion.div style={{ x: rightX, opacity: wordsOpacity }}>{t('home.scrollfx.line2')}</motion.div>
         </div>
         <div class="scrollFx__sides scrollFx__sides--bottom">
-          <motion.div style={{ x: leftX }}>{t('home.scrollfx.line3')}</motion.div>
-          <motion.div style={{ x: rightX }}>{t('home.scrollfx.line4')}</motion.div>
+          <motion.div style={{ x: leftX, opacity: wordsOpacity }}>{t('home.scrollfx.line3')}</motion.div>
+          <motion.div style={{ x: rightX, opacity: wordsOpacity }}>{t('home.scrollfx.line4')}</motion.div>
         </div>
-
-        <motion.div
-          class="scrollFx__mask"
-          style={{ scaleX: maskScaleX, scaleY: maskScaleY, borderRadius: maskRadius }}
-        >
-          <motion.div class="scrollFx__content" style={{ scaleX: contentScaleX, scaleY: contentScaleY }}>
-            <motion.div class="scrollFx__photo" style={{ y: imgY }}>
-              <ResponsiveImage
-                alt=""
-                src16x9="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp"
-                src9x16="https://villacarmenmedia.b-cdn.net/images/salones/9%3A16/salones9-16_1.webp"
-                class="scrollFx__img"
-              />
-            </motion.div>
-          </motion.div>
-        </motion.div>
       </div>
     </section>
   )
@@ -644,44 +670,6 @@ export function Home() {
   const menuVisibility = useMenuVisibility()
   const { t } = useI18n()
 
-  const [dia, setDia] = useState<MenuResponse | null | undefined>(undefined)
-  const [finde, setFinde] = useState<MenuResponse | null | undefined>(undefined)
-
-  const showDia = menuVisibility?.menudeldia !== false
-  const showFinde = menuVisibility?.menufindesemana !== false
-
-  useEffect(() => {
-    let cancelled = false
-
-    if (showDia) {
-      apiGetJson<MenuResponse>('/api/menus/dia')
-        .then((data) => {
-          if (cancelled) return
-          setDia(data)
-        })
-        .catch(() => {
-          if (cancelled) return
-          setDia(null)
-        })
-    }
-
-    if (showFinde) {
-      apiGetJson<MenuResponse>('/api/menus/finde')
-        .then((data) => {
-          if (cancelled) return
-          setFinde(data)
-        })
-        .catch(() => {
-          if (cancelled) return
-          setFinde(null)
-        })
-    }
-
-    return () => {
-      cancelled = true
-    }
-  }, [showDia, showFinde])
-
   const menuCards = useMemo<MenuCard[]>(
     () => [
       {
@@ -689,18 +677,24 @@ export function Home() {
         titleKey: 'menus.card.weekend.title',
         subtitleKey: 'menus.card.weekend.subtitle',
         href: '/menufindesemana',
+        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-finde16-9_1.webp',
+        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-finde9-16_1.webp',
       },
       {
         key: 'menudeldia',
         titleKey: 'menus.card.daily.title',
         subtitleKey: 'menus.card.daily.subtitle',
         href: '/menudeldia',
+        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-dia16-9_1.webp',
+        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-dia9-16_1.webp',
       },
       {
         key: 'menusdegrupos',
         titleKey: 'menus.card.groups.title',
         subtitleKey: 'menus.card.groups.subtitle',
         href: '/menusdegrupos',
+        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-grupos16-9_1.webp',
+        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-grupos9-16_1.webp',
       },
       {
         key: 'menusanvalentin',
@@ -708,6 +702,8 @@ export function Home() {
         subtitleKey: 'menus.card.valentine.subtitle',
         href: '/menusanvalentin',
         variant: 'special',
+        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-valentin16-9_1.webp',
+        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-valentin9-16_1.webp',
       },
     ],
     []
@@ -719,6 +715,61 @@ export function Home() {
     if (card.key === 'menufindesemana' && menuVisibility.menufindesemana === false) return false
     return true
   })
+
+  // Lightbox state for menu images
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxStartX, setLightboxStartX] = useState(0)
+
+  const menuImages = filteredCards.map((card) => ({
+    '16x9': card.image16x9,
+    '9x16': card.image9x16,
+  }))
+
+  const handleLightboxPrev = () => {
+    setLightboxIndex((i) => (i > 0 ? i - 1 : menuImages.length - 1))
+  }
+
+  const handleLightboxNext = () => {
+    setLightboxIndex((i) => (i < menuImages.length - 1 ? i + 1 : 0))
+  }
+
+  const handleDragStart = (e: MouseEvent | TouchEvent) => {
+    if ('touches' in e) {
+      setLightboxStartX(e.touches[0].clientX)
+    } else {
+      setLightboxStartX(e.clientX)
+    }
+  }
+
+  const handleDragEnd = (e: MouseEvent | TouchEvent) => {
+    let endX: number
+    if ('changedTouches' in e) {
+      endX = e.changedTouches[0].clientX
+    } else {
+      endX = e.clientX
+    }
+    const diff = endX - lightboxStartX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        handleLightboxPrev()
+      } else {
+        handleLightboxNext()
+      }
+    }
+  }
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') handleLightboxPrev()
+      else if (e.key === 'ArrowRight') handleLightboxNext()
+      else if (e.key === 'Escape') setLightboxOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxOpen])
 
   return (
     <div class="home">
@@ -770,26 +821,37 @@ export function Home() {
           </div>
 
           <div class="vc-menuCards">
-            {filteredCards.map((card) => (
+            {filteredCards.map((card, idx) => (
               <div class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
+                <div
+                  class="vc-menuCard-media"
+                  onClick={() => {
+                    setLightboxIndex(idx)
+                    setLightboxOpen(true)
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setLightboxIndex(idx)
+                      setLightboxOpen(true)
+                    }
+                  }}
+                  aria-label={`Ver imagen de ${t(card.titleKey)}`}
+                >
+                  <ResponsiveImage
+                    alt={t(card.titleKey)}
+                    src16x9={card.image16x9}
+                    src9x16={card.image9x16}
+                    class="vc-menuCard-img"
+                  />
+                  <div class="vc-menuCard-mediaOverlay">
+                    <span class="vc-menuCard-zoomIcon" aria-hidden="true">+</span>
+                  </div>
+                </div>
                 <div class="vc-menuCard-top">
                   <h3 class="vc-menuCard-title">{t(card.titleKey)}</h3>
                   <p class="vc-menuCard-sub">{t(card.subtitleKey)}</p>
-                  <p class="vc-menuCard-meta">
-                    {card.key === 'menufindesemana' && showFinde ? (
-                      finde?.precio ? (
-                        `${t('home.menus.from')} ${finde.precio} €`
-                      ) : finde === undefined ? (
-                        t('home.menus.loadingPrice')
-                      ) : null
-                    ) : card.key === 'menudeldia' && showDia ? (
-                      dia?.precio ? (
-                        `${t('home.menus.from')} ${dia.precio} €`
-                      ) : dia === undefined ? (
-                        t('home.menus.loadingPrice')
-                      ) : null
-                    ) : null}
-                  </p>
                 </div>
                 <Link
                   href={card.href}
@@ -802,6 +864,77 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {lightboxOpen && (
+        <div
+          class="vc-menuLightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Galería de menús"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLightboxOpen(false)
+          }}
+        >
+          <button
+            type="button"
+            class="vc-menuLightboxClose"
+            aria-label="Cerrar"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="vc-menuLightboxNav vc-menuLightboxPrev"
+            aria-label="Imagen anterior"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLightboxPrev()
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div
+            class="vc-menuLightboxContent"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={handleDragStart}
+            onMouseUp={handleDragEnd}
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
+            <ResponsiveImage
+              alt={`Menú ${lightboxIndex + 1} de ${menuImages.length}`}
+              src16x9={menuImages[lightboxIndex]['16x9']}
+              src9x16={menuImages[lightboxIndex]['9x16']}
+              class="vc-menuLightboxImg"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="vc-menuLightboxNav vc-menuLightboxNext"
+            aria-label="Siguiente imagen"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLightboxNext()
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+
+          <div class="vc-menuLightboxCounter">
+            {lightboxIndex + 1} / {menuImages.length}
+          </div>
+        </div>
+      )}
 
       <section class="vc-cta">
         <div class="container vc-cta-inner">

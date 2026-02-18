@@ -28,7 +28,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
   const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana')
   const showHeaderActions = !isEventosPage
   const logoSrc = cdnUrl('images/icons/logoblancopng.PNG')
-  const logoClass = isEventosPage ? 'brand-logo brand-logo--dark' : 'brand-logo'
+  const logoClass = solidHeader ? 'brand-logo brand-logo--inverted' : 'brand-logo'
 
   useEffect(() => {
     if (!mobileOpen) setMenusOpen(false)
