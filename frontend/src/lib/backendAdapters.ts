@@ -57,11 +57,21 @@ function toRecord(value: unknown): Record<string, unknown> {
 }
 
 function normalizePublicMenuType(value: unknown): PublicMenuType {
-  const normalized = toText(value).toLowerCase()
-  if (normalized === 'closed_group') return 'closed_group'
+  const normalized = toText(value)
+    .toLowerCase()
+    .replace(/[.\s-]+/g, '_')
+
   if (normalized === 'a_la_carte') return 'a_la_carte'
-  if (normalized === 'a_la_carte_group') return 'a_la_carte_group'
   if (normalized === 'special') return 'special'
+
+  const isGroupType = normalized === 'group' || normalized.endsWith('_group') || normalized.includes('_group_')
+  if (isGroupType) {
+    if (normalized.includes('a_la_carte') || normalized.includes('carta')) return 'a_la_carte_group'
+    return 'closed_group'
+  }
+
+  if (normalized.includes('a_la_carte')) return 'a_la_carte'
+  if (normalized.includes('special')) return 'special'
   return 'closed_conventional'
 }
 
