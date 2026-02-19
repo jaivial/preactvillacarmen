@@ -4,7 +4,7 @@ import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
-import { usePublicMenus } from '../../lib/publicMenus'
+import { isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
 import { ScrollReveal } from '../../components/ScrollReveal'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
@@ -753,9 +753,7 @@ export function Home() {
 
   const hasGroupMenus = useMemo(() => {
     if (!publicMenus) return null
-    return publicMenus.some(
-      (menu) => menu.active && (menu.menu_type === 'closed_group' || menu.menu_type === 'a_la_carte_group'),
-    )
+    return publicMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
   }, [publicMenus])
 
   const menuCards = useMemo<MenuCard[]>(

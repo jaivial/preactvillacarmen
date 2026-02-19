@@ -5,7 +5,7 @@ import type { MenuVisibility } from '../lib/types'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
 import { MenuPickWidget } from './MenuPickWidget'
-import { buildPublicMenuHref, isNonGroupMenuType, usePublicMenus } from '../lib/publicMenus'
+import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType, usePublicMenus } from '../lib/publicMenus'
 
 type NavItem = {
   href: string
@@ -130,9 +130,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
       label: menu.menu_title,
     }))
 
-    const hasGroupMenus = publicMenus.some(
-      (menu) => menu.active && (menu.menu_type === 'closed_group' || menu.menu_type === 'a_la_carte_group'),
-    )
+    const hasGroupMenus = publicMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
 
     const groupLink = hasGroupMenus ? [{ href: '/menusdegrupos', labelKey: 'nav.groupMenus' }] : []
 

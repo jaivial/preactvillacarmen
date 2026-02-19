@@ -10,8 +10,17 @@ export function usePublicMenus() {
   return useContext(PublicMenusContext)
 }
 
+function normalizeMenuTypeToken(menuType: PublicMenuType | string): string {
+  return String(menuType || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.\s-]+/g, '_')
+}
+
 export function isGroupMenuType(menuType: PublicMenuType | string): boolean {
-  return menuType === 'closed_group' || menuType === 'a_la_carte_group'
+  const normalized = normalizeMenuTypeToken(menuType)
+  if (!normalized) return false
+  return normalized === 'group' || normalized.endsWith('_group') || normalized.includes('_group_')
 }
 
 export function isNonGroupMenuType(menuType: PublicMenuType | string): boolean {
