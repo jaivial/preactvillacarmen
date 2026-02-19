@@ -253,6 +253,17 @@ const DICT: Dictionary = {
   'menu.slider.dots': { es: 'Selector de imágenes', en: 'Image selector' },
   'menu.error': { es: 'No se pudo cargar el contenido.', en: 'Could not load content.' },
   'menu.empty': { es: 'No hay contenido disponible.', en: 'No content available.' },
+  'menu.fallback.title': { es: 'Este menú no está disponible', en: 'This menu is not available' },
+  'menu.fallback.body': {
+    es: 'Ahora mismo no podemos mostrar este contenido. Puedes volver a Inicio para explorar los menús activos.',
+    en: 'We cannot show this content right now. You can go back Home and browse available menus.',
+  },
+  'menu.fallback.groups.title': { es: 'No hay menús de grupos activos', en: 'No active group menus right now' },
+  'menu.fallback.groups.body': {
+    es: 'En este momento no tenemos menús de grupos publicados. Te invitamos a consultar el resto de nuestra carta.',
+    en: 'There are no published group menus at the moment. You can explore the rest of our menu.',
+  },
+  'menu.fallback.home': { es: 'Volver a Inicio', en: 'Back to Home' },
   'menu.postres.subtitle': { es: 'Dulces de temporada y clásicos.', en: 'Seasonal sweets and classics.' },
   'menu.wines.subtitle': { es: 'Una selección para acompañar el arroz.', en: 'A selection to pair with rice.' },
 

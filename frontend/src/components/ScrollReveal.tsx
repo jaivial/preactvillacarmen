@@ -7,6 +7,24 @@ type ScrollRevealProps = {
   borderRadius?: string; // default '1rem'
 };
 
+const FALLBACK_HEADER_HEIGHT = 96;
+const REVEAL_Y_OFFSET_PX = 18;
+const HOLE_EDGE_INSET_PX = 14;
+const MASK_BLEED_PX = 6;
+
+function readHeaderHeight() {
+  if (typeof window === "undefined") return FALLBACK_HEADER_HEIGHT;
+  const header = document.querySelector(".header");
+  if (header instanceof HTMLElement && header.offsetHeight > 0) return header.offsetHeight;
+
+  const cssValue = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue("--header-h")
+    .trim();
+  const parsed = Number.parseFloat(cssValue);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : FALLBACK_HEADER_HEIGHT;
+}
+
 export function ScrollReveal({
   initialSize = 0,
   maxSizePercent = 90,
@@ -20,6 +38,9 @@ export function ScrollReveal({
   );
   const [viewportHeight, setViewportHeight] = useState(
     typeof window !== "undefined" ? window.innerHeight : 1080,
+  );
+  const [headerHeight, setHeaderHeight] = useState(
+    typeof window !== "undefined" ? readHeaderHeight() : FALLBACK_HEADER_HEIGHT,
   );
 
   // Detect portrait vs landscape
@@ -47,6 +68,7 @@ export function ScrollReveal({
       setProgress(p);
       setViewportWidth(window.innerWidth);
       setViewportHeight(window.innerHeight);
+      setHeaderHeight(readHeaderHeight());
     };
 
     updateProgress();
@@ -60,9 +82,14 @@ export function ScrollReveal({
 
   // Calculate hole size: starts at initialSize px, grows to maxSizePercent % of viewport width
   // Apply aspect ratio: portrait = 9:16, landscape = 16:9
+  const maxRevealHeight = Math.max(0, viewportHeight * 0.9 - headerHeight);
+  const maxHoleHeight = Math.max(0, maxRevealHeight - HOLE_EDGE_INSET_PX * 2);
+  const maxHoleWidth = Math.max(0, viewportWidth - HOLE_EDGE_INSET_PX * 2);
   const maxSizePx = (maxSizePercent / 100) * viewportWidth;
-  const holeWidth = initialSize + (maxSizePx - initialSize) * progress;
-  const holeHeight = holeWidth * aspectRatio;
+  const preferredHoleWidth = initialSize + (maxSizePx - initialSize) * progress;
+  const preferredHoleHeight = preferredHoleWidth * aspectRatio;
+  const holeHeight = Math.min(preferredHoleHeight, maxHoleHeight);
+  const holeWidth = Math.min(preferredHoleWidth, maxHoleWidth);
 
   // Text animation calculations
   const textOpacity = 1 - progress;
@@ -80,50 +107,78 @@ export function ScrollReveal({
           overflow: "hidden",
         }}
       >
-        {/* Layer 1: Image below */}
-        <img
-          src={imageSrc}
-          alt=""
+        <div
           style={{
             position: "absolute",
             inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            paddingBottom: "10px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
-
-        {/* Layer 2: bg color layer with SVG mask creating a hole */}
-        <svg
-          width="100%"
-          height="100%"
-          style={{ position: "absolute", inset: 0 }}
         >
-          <defs>
-            <mask id="hole-mask">
-              {/* Full white = visible */}
-              <rect width="100%" height="100%" fill="white" />
-              {/* Black rect = hole (hidden) - grows with scroll */}
-              <rect
-                x="50%"
-                y="50%"
-                width={holeWidth}
-                height={holeHeight}
-                rx={borderRadius}
-                fill="black"
-                transform={`translate(${-holeWidth / 2}, ${-holeHeight / 2})`}
-              />
-            </mask>
-          </defs>
-          {/* bg color rect with mask applied */}
-          <rect
-            width="100%"
-            height="100%"
-            fill="var(--bg)"
-            mask="url(#hole-mask)"
-          />
-        </svg>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: `${maxRevealHeight}px`,
+              transform: `translateY(-${REVEAL_Y_OFFSET_PX}px)`,
+            }}
+          >
+            {/* Layer 1: Image below */}
+            <img
+              src={imageSrc}
+              alt=""
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+
+            {/* Layer 2: bg color layer with SVG mask creating a hole */}
+            <div
+              style={{
+                position: "absolute",
+                top: `-${MASK_BLEED_PX}px`,
+                left: `-${MASK_BLEED_PX}px`,
+                right: `-${MASK_BLEED_PX}px`,
+                bottom: `-${MASK_BLEED_PX}px`,
+              }}
+            >
+              <svg
+                width="100%"
+                height="100%"
+                style={{ position: "absolute", inset: 0 }}
+              >
+                <defs>
+                  <mask id="hole-mask">
+                    {/* Full white = visible */}
+                    <rect width="100%" height="100%" fill="white" />
+                    {/* Black rect = hole (hidden) - grows with scroll */}
+                    <rect
+                      x="50%"
+                      y="50%"
+                      width={holeWidth}
+                      height={holeHeight}
+                      rx={borderRadius}
+                      fill="black"
+                      transform={`translate(${-holeWidth / 2}, ${-holeHeight / 2})`}
+                    />
+                  </mask>
+                </defs>
+                {/* bg color rect with mask applied */}
+                <rect
+                  width="100%"
+                  height="100%"
+                  fill="var(--bg)"
+                  mask="url(#hole-mask)"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
 
         {/* Corner text animations */}
         <div

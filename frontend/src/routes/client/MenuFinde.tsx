@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { MenuResponse } from '../../lib/types'
+import { normalizeMenuResponse } from '../../lib/backendAdapters'
 import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
 
 type GroupMenuGetResponse = {
@@ -68,9 +69,9 @@ export function MenuFinde() {
 
     const loadStandard = async () => {
       try {
-        const res = await apiGetJson<MenuResponse>('/api/menus/finde')
+        const res = await apiGetJson<unknown>('/api/menus/finde')
         if (cancelled) return
-        setData(res)
+        setData(normalizeMenuResponse(res))
       } catch {
         if (cancelled) return
         setData(null)
@@ -97,7 +98,7 @@ export function MenuFinde() {
         setSubtitleOverride(subtitles[0] || '')
         setPrincipalesTitleOverride(asPrincipalesTitle(res.menu.principales))
 
-        setData(toMenuResponse(res.menu))
+        setData(normalizeMenuResponse(toMenuResponse(res.menu)))
       } catch {
         if (cancelled) return
         setData(null)

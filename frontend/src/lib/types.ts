@@ -46,6 +46,69 @@ export type GroupMenusDisplayResponse = {
   menus: GroupMenuDisplay[]
 }
 
+export type PublicMenuType =
+  | 'closed_conventional'
+  | 'closed_group'
+  | 'a_la_carte'
+  | 'a_la_carte_group'
+  | 'special'
+
+export type PublicMenuDish = {
+  id: number
+  title: string
+  description: string
+  allergens: string[]
+  supplement_enabled: boolean
+  supplement_price: number | null
+  price: number | null
+  position: number
+}
+
+export type PublicMenuSection = {
+  id: number
+  title: string
+  kind: string
+  position: number
+  dishes: PublicMenuDish[]
+}
+
+export type PublicMenuSettings = {
+  included_coffee: boolean
+  beverage: Record<string, unknown>
+  comments: string[]
+  min_party_size: number
+  main_dishes_limit: boolean
+  main_dishes_limit_number: number
+}
+
+export type PublicMenu = {
+  id: number
+  slug: string
+  menu_title: string
+  menu_type: PublicMenuType
+  price: string
+  active: boolean
+  menu_subtitle: string[]
+  entrantes: string[]
+  principales: {
+    titulo_principales: string
+    items: string[]
+  }
+  postre: string[]
+  settings: PublicMenuSettings
+  sections: PublicMenuSection[]
+  special_menu_image_url: string
+  legacy_source_table?: string
+  created_at: string
+  modified_at: string
+}
+
+export type PublicMenusResponse = {
+  success: true
+  count: number
+  menus: PublicMenu[]
+}
+
 export type Vino = {
   num: number
   nombre: string

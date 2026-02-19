@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { MenuResponse } from '../../lib/types'
+import { normalizeMenuResponse } from '../../lib/backendAdapters'
 import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
 
 export function MenuDia() {
@@ -10,10 +11,10 @@ export function MenuDia() {
 
   useEffect(() => {
     let cancelled = false
-    apiGetJson<MenuResponse>('/api/menus/dia')
+    apiGetJson<unknown>('/api/menus/dia')
       .then((res) => {
         if (cancelled) return
-        setData(res)
+        setData(normalizeMenuResponse(res))
       })
       .catch(() => {
         if (cancelled) return
