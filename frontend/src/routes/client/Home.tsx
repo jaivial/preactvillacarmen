@@ -4,6 +4,7 @@ import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
+import { usePublicMenus } from '../../lib/publicMenus'
 import { ScrollReveal } from '../../components/ScrollReveal'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
@@ -319,7 +320,56 @@ function BentoShowcase() {
   const reduced = useReducedMotion()
   const firstTileRef = useRef<HTMLDivElement>(null)
   const lastTileRef = useRef<HTMLDivElement>(null)
+  const bentoImages = useMemo(
+    () => [
+      'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp',
+      'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/saloncondesa1.webp',
+      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp',
+      'images/comida/16:9/arroz16:9_1.png',
+      'https://villacarmenmedia.b-cdn.net/images/fachada/16%3A9/fachada16-9_1.webp',
+      'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
+    ],
+    []
+  )
   const [opacity, setOpacity] = useState(() => (reduced ? 1 : 0))
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const lightboxStartX = useRef(0)
+
+  const openLightboxAt = useCallback((index: number) => {
+    setLightboxIndex(index)
+    setLightboxOpen(true)
+  }, [])
+
+  const handleLightboxPrev = useCallback(() => {
+    setLightboxIndex((i) => (i > 0 ? i - 1 : bentoImages.length - 1))
+  }, [bentoImages.length])
+
+  const handleLightboxNext = useCallback(() => {
+    setLightboxIndex((i) => (i < bentoImages.length - 1 ? i + 1 : 0))
+  }, [bentoImages.length])
+
+  const handleDragStart = useCallback((e: MouseEvent | TouchEvent) => {
+    if ('touches' in e) {
+      lightboxStartX.current = e.touches[0].clientX
+      return
+    }
+    lightboxStartX.current = e.clientX
+  }, [])
+
+  const handleDragEnd = useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      const endX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX
+      const diff = endX - lightboxStartX.current
+      if (Math.abs(diff) <= 50) return
+      if (diff > 0) {
+        handleLightboxPrev()
+        return
+      }
+      handleLightboxNext()
+    },
+    [handleLightboxNext, handleLightboxPrev]
+  )
 
   useEffect(() => {
     if (reduced) {
@@ -428,6 +478,17 @@ function BentoShowcase() {
     }
   }, [reduced])
 
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') handleLightboxPrev()
+      else if (e.key === 'ArrowRight') handleLightboxNext()
+      else if (e.key === 'Escape') setLightboxOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleLightboxNext, handleLightboxPrev, lightboxOpen])
+
   const y = reduced ? 0 : Math.round((1 - opacity) * -14)
 
   return (
@@ -443,67 +504,180 @@ function BentoShowcase() {
           <p class="vc-body">{t('home.story.body')}</p>
         </div>
 
-        <div class="vc-bentoGrid" aria-hidden="true">
+        <div class="vc-bentoGrid">
           <div class="vc-bentoTile vc-bentoTile--main">
-            <ResponsiveImage
-              alt=""
-              src16x9="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp"
-              src9x16="https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp"
-              class="vc-bentoImg"
-            />
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(0)}
+              aria-label={`Abrir imagen 1 de ${bentoImages.length}`}
+            >
+              <ResponsiveImage
+                alt=""
+                src16x9={bentoImages[0]}
+                src9x16={bentoImages[0]}
+                class="vc-bentoImg"
+              />
+            </button>
           </div>
 
           <div class="vc-bentoTile vc-bentoTile--tall">
-            <img
-              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/saloncondesa1.webp')}
-              alt=""
-              class="vc-bentoImg"
-              loading="eager"
-              decoding="async"
-            />
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(1)}
+              aria-label={`Abrir imagen 2 de ${bentoImages.length}`}
+            >
+              <img
+                src={mediaSrc(bentoImages[1])}
+                alt=""
+                class="vc-bentoImg"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
           </div>
 
           <div class="vc-bentoTile vc-bentoTile--square">
-            <img
-              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp')}
-              alt=""
-              class="vc-bentoImg"
-              loading="eager"
-              decoding="async"
-            />
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(2)}
+              aria-label={`Abrir imagen 3 de ${bentoImages.length}`}
+            >
+              <img
+                src={mediaSrc(bentoImages[2])}
+                alt=""
+                class="vc-bentoImg"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
           </div>
 
           <div class="vc-bentoTile vc-bentoTile--square">
-            <img
-              src={mediaSrc('images/comida/16:9/arroz16:9_1.png')}
-              alt=""
-              class="vc-bentoImg"
-              loading="eager"
-              decoding="async"
-            />
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(3)}
+              aria-label={`Abrir imagen 4 de ${bentoImages.length}`}
+            >
+              <img
+                src={mediaSrc(bentoImages[3])}
+                alt=""
+                class="vc-bentoImg"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
           </div>
 
           <div class="vc-bentoTile vc-bentoTile--wide">
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(4)}
+              aria-label={`Abrir imagen 5 de ${bentoImages.length}`}
+            >
+              <img
+                src={mediaSrc(bentoImages[4])}
+                alt=""
+                class="vc-bentoImg"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
+          </div>
+
+          <div class="vc-bentoTile vc-bentoTile--wideAlt" ref={lastTileRef}>
+            <button
+              type="button"
+              class="vc-bentoTileButton"
+              onClick={() => openLightboxAt(5)}
+              aria-label={`Abrir imagen 6 de ${bentoImages.length}`}
+            >
+              <img
+                src={mediaSrc(bentoImages[5])}
+                alt=""
+                class="vc-bentoImg"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {lightboxOpen && (
+        <div
+          class="vc-menuLightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Galería de imágenes"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLightboxOpen(false)
+          }}
+        >
+          <button
+            type="button"
+            class="vc-menuLightboxClose"
+            aria-label="Cerrar"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="vc-menuLightboxNav vc-menuLightboxPrev"
+            aria-label="Imagen anterior"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLightboxPrev()
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div
+            class="vc-menuLightboxContent"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={handleDragStart}
+            onMouseUp={handleDragEnd}
+            onTouchStart={handleDragStart}
+            onTouchEnd={handleDragEnd}
+          >
             <img
-              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/fachada/16%3A9/fachada16-9_1.webp')}
-              alt=""
-              class="vc-bentoImg"
-              loading="eager"
+              src={mediaSrc(bentoImages[lightboxIndex])}
+              alt={`Imagen ${lightboxIndex + 1} de ${bentoImages.length}`}
+              class="vc-menuLightboxImg"
               decoding="async"
             />
           </div>
 
-          <div class="vc-bentoTile vc-bentoTile--wideAlt" ref={lastTileRef}>
-            <img
-              src={mediaSrc('https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp')}
-              alt=""
-              class="vc-bentoImg"
-              loading="eager"
-              decoding="async"
-            />
+          <button
+            type="button"
+            class="vc-menuLightboxNav vc-menuLightboxNext"
+            aria-label="Siguiente imagen"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleLightboxNext()
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+
+          <div class="vc-menuLightboxCounter">
+            {lightboxIndex + 1} / {bentoImages.length}
           </div>
         </div>
-      </div>
+      )}
     </motion.section>
   )
 }
@@ -574,7 +748,15 @@ function EventsSection() {
 
 export function Home() {
   const menuVisibility = useMenuVisibility()
+  const publicMenus = usePublicMenus()
   const { t } = useI18n()
+
+  const hasGroupMenus = useMemo(() => {
+    if (!publicMenus) return null
+    return publicMenus.some(
+      (menu) => menu.active && (menu.menu_type === 'closed_group' || menu.menu_type === 'a_la_carte_group'),
+    )
+  }, [publicMenus])
 
   const menuCards = useMemo<MenuCard[]>(
     () => [
@@ -616,6 +798,7 @@ export function Home() {
   )
 
   const filteredCards = menuCards.filter((card) => {
+    if (card.key === 'menusdegrupos' && hasGroupMenus === false) return false
     if (!menuVisibility) return true
     if (card.key === 'menudeldia' && menuVisibility.menudeldia === false) return false
     if (card.key === 'menufindesemana' && menuVisibility.menufindesemana === false) return false

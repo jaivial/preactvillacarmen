@@ -5,9 +5,8 @@ import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
 import { Home } from './routes/client/Home.tsx'
-import { MenuDia } from './routes/client/MenuDia.tsx'
-import { MenuFinde } from './routes/client/MenuFinde.tsx'
-import { MenusDeGrupos } from './routes/client/MenusDeGrupos.tsx'
+import { LegacyMenuRedirect } from './routes/client/LegacyMenuRedirect.tsx'
+import { MenuCatalogRoute } from './routes/client/MenuCatalogRoute.tsx'
 import { Postres } from './routes/client/Postres.tsx'
 import { Placeholder } from './routes/client/Placeholder.tsx'
 import { Reservas } from './routes/client/Reservas.tsx'
@@ -24,9 +23,11 @@ function ClientApp() {
         <Route path="/contacto" component={Contacto} />
         <Route path="/eventos" component={Eventos} />
 
-        <Route path="/menufindesemana" component={MenuFinde} />
-        <Route path="/menudeldia" component={MenuDia} />
-        <Route path="/menusdegrupos" component={MenusDeGrupos} />
+        <Route path="/menu/:menuId/:menuSlug" component={MenuCatalogRoute} />
+        <Route path="/menu/:menuId" component={MenuCatalogRoute} />
+        <Route path="/menufindesemana" component={() => <LegacyMenuRedirect target="finde" />} />
+        <Route path="/menudeldia" component={() => <LegacyMenuRedirect target="dia" />} />
+        <Route path="/menusdegrupos" component={() => <LegacyMenuRedirect target="grupos" />} />
         <Route path="/postres" component={Postres} />
         <Route path="/vinos" component={Vinos} />
         <Route path="/reservas" component={Reservas} />

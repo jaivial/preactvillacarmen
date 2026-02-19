@@ -1142,6 +1142,24 @@ svg {
     height: 100%;
 }
 
+.vc-bentoTileButton {
+    appearance: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    color: inherit;
+    display: block;
+    cursor: zoom-in;
+}
+
+.vc-bentoTileButton:focus-visible {
+    outline: 2px solid rgba(20, 37, 32, 0.9);
+    outline-offset: -2px;
+}
+
 .vc-bentoImg {
     width: 100%;
     height: 100%;
@@ -1536,6 +1554,48 @@ svg {
 .menuState {
     padding: 22px 0;
     color: var(--muted);
+}
+
+.menuUnavailableCard {
+    max-width: 680px;
+    margin: 36px auto 0;
+    text-align: center;
+    padding: clamp(22px, 4vw, 36px);
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.9),
+        rgba(20, 37, 32, 0.08)
+    );
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.menuUnavailableKicker {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(20, 37, 32, 0.64);
+}
+
+.menuUnavailableTitle {
+    margin: 12px 0 0;
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: clamp(30px, 4vw, 46px);
+    color: var(--pine);
+}
+
+.menuUnavailableText {
+    margin: 14px auto 0;
+    max-width: 56ch;
+    color: rgba(0, 0, 0, 0.72);
+    line-height: 1.7;
+}
+
+.menuUnavailableCta {
+    margin-top: 18px;
 }
 
 .menuGrid {
@@ -2505,6 +2565,8 @@ svg {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 18px;
+    overflow: auto;
     animation: vc-menuLightbox-fadeIn 0.25s ease-out;
 }
 
@@ -2571,7 +2633,8 @@ svg {
 
 .vc-menuLightboxContent {
     max-width: 90vw;
-    max-height: 85vh;
+    max-height: 80vh;
+    overflow: auto;
     cursor: grab;
     user-select: none;
 }
@@ -2582,9 +2645,19 @@ svg {
 
 .vc-menuLightboxImg {
     max-width: 100%;
-    max-height: 85vh;
+    max-height: 80vh;
     object-fit: contain;
     border-radius: 4px;
+}
+
+@supports (height: 100dvh) {
+    .vc-menuLightboxContent {
+        max-height: 80dvh;
+    }
+
+    .vc-menuLightboxImg {
+        max-height: 80dvh;
+    }
 }
 
 .vc-menuLightboxCounter {
@@ -3678,6 +3751,7 @@ svg {
     display: grid;
     place-items: center;
     padding: 18px;
+    overflow: auto;
 }
 
 .resvModal__backdrop {
@@ -3689,6 +3763,10 @@ svg {
 .resvModal__card {
     position: relative;
     width: min(560px, calc(100% - 1rem));
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.35);
@@ -3708,6 +3786,9 @@ svg {
     margin-top: 10px;
     color: rgba(0, 0, 0, 0.74);
     line-height: 1.7;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
 }
 
 .resvModal__actions {
@@ -3718,7 +3799,7 @@ svg {
 }
 
 .pickModal__card {
-    max-height: min(82vh, 640px);
+    max-height: min(80vh, 640px);
     overflow: hidden;
     display: flex;
     flex-direction: column;

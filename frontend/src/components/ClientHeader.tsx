@@ -5,10 +5,12 @@ import type { MenuVisibility } from '../lib/types'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
 import { MenuPickWidget } from './MenuPickWidget'
+import { buildPublicMenuHref, isNonGroupMenuType, usePublicMenus } from '../lib/publicMenus'
 
 type NavItem = {
   href: string
-  labelKey: string
+  labelKey?: string
+  label?: string
   visibilityKey?: string
 }
 
@@ -20,29 +22,19 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const { lang, setLang, t } = useI18n()
+  const publicMenus = usePublicMenus()
 
   const isHome = location === '/'
   const isEventosPage = location.startsWith('/eventos')
   const allowTransparentHeader = isHome || isEventosPage
   const solidHeader = !allowTransparentHeader || scrolled
-  const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana')
+  const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana') || location.startsWith('/menu/')
   const showHeaderActions = !isEventosPage
   const logoSrc = cdnUrl('images/icons/logoblancopng.PNG')
   const logoClass = solidHeader ? 'brand-logo brand-logo--inverted' : 'brand-logo'
 
   useEffect(() => {
     if (!mobileOpen) setMenusOpen(false)
-  }, [mobileOpen])
-
-  useEffect(() => {
-    const nav = navRef.current
-    if (!nav) return
-
-    if (mobileOpen) {
-      nav.removeAttribute('inert')
-    } else {
-      nav.setAttribute('inert', '')
-    }
   }, [mobileOpen])
 
   useEffect(() => {
@@ -113,18 +105,56 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
     []
   )
 
+  const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
+    if (publicMenus == null) return null
+
+    const typeOrder: Record<string, number> = {
+      closed_conventional: 1,
+      a_la_carte: 2,
+      special: 3,
+    }
+
+    const nonGroupMenus = publicMenus
+      .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type))
+      .sort((left, right) => {
+        const leftOrder = typeOrder[left.menu_type] || 99
+        const rightOrder = typeOrder[right.menu_type] || 99
+        if (leftOrder !== rightOrder) return leftOrder - rightOrder
+        const leftName = String(left.menu_title || '').toLowerCase()
+        const rightName = String(right.menu_title || '').toLowerCase()
+        return leftName.localeCompare(rightName)
+      })
+
+    const menuLinks = nonGroupMenus.map((menu) => ({
+      href: buildPublicMenuHref(menu),
+      label: menu.menu_title,
+    }))
+
+    const hasGroupMenus = publicMenus.some(
+      (menu) => menu.active && (menu.menu_type === 'closed_group' || menu.menu_type === 'a_la_carte_group'),
+    )
+
+    const groupLink = hasGroupMenus ? [{ href: '/menusdegrupos', labelKey: 'nav.groupMenus' }] : []
+
+    return [
+      ...menuLinks,
+      ...groupLink,
+      { href: '/postres', labelKey: 'nav.desserts' },
+    ]
+  }, [publicMenus])
+
   const menuItems = useMemo<NavItem[]>(
     () => [
       { href: '/menufindesemana', labelKey: 'nav.weekendMenu', visibilityKey: 'menufindesemana' },
       { href: '/menudeldia', labelKey: 'nav.dailyMenu', visibilityKey: 'menudeldia' },
-      { href: '/menusanvalentin', labelKey: 'nav.valentine', visibilityKey: 'menusanvalentin' },
-      { href: '/menusdegrupos', labelKey: 'nav.groupMenus' },
       { href: '/postres', labelKey: 'nav.desserts' },
     ],
     []
   )
 
-  const isMenuSectionActive = menuItems.some((item) => location.startsWith(item.href))
+  const effectiveMenuItems = dynamicMenuItems || menuItems
+
+  const isMenuSectionActive = effectiveMenuItems.some((item) => location.startsWith(item.href))
 
   useEffect(() => {
     if (mobileOpen) setMenusOpen(isMenuSectionActive)
@@ -136,7 +166,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
     return props.menuVisibility[item.visibilityKey] !== false
   })
 
-  const visibleMenuItems = menuItems.filter((item) => {
+  const visibleMenuItems = effectiveMenuItems.filter((item) => {
     if (!item.visibilityKey) return true
     if (!props.menuVisibility) return true
     return props.menuVisibility[item.visibilityKey] !== false
@@ -146,7 +176,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
     <nav
       ref={navRef}
       class={mobileOpen ? 'navMenuBurger open' : 'navMenuBurger'}
-      aria-hidden={!mobileOpen}
+      inert={!mobileOpen}
     >
       <div class="navMenuBurger__backdrop" onClick={() => setMobileOpen(false)} />
       <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +191,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
                   onClick={() => setMobileOpen(false)}
                 >
-                  {t(item.labelKey)}
+                  {item.label || t(item.labelKey || '')}
                 </Link>
               </li>
             )
@@ -189,6 +219,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
               <ul class="navBurgerSubLinks" aria-label={t('nav.menusSection')}>
                 {visibleMenuItems.map((item) => {
                   const isActive = location.startsWith(item.href)
+                  const label = item.label || t(item.labelKey || '')
                   return (
                     <li>
                       <Link
@@ -196,7 +227,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
                         className={isActive ? 'navBurgerLink navBurgerSubLink active' : 'navBurgerLink navBurgerSubLink'}
                         onClick={() => setMobileOpen(false)}
                       >
-                        {t(item.labelKey)}
+                        {label}
                       </Link>
                     </li>
                   )
@@ -215,7 +246,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
                   onClick={() => setMobileOpen(false)}
                 >
-                  {t(item.labelKey)}
+                  {item.label || t(item.labelKey || '')}
                 </Link>
               </li>
             )

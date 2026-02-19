@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { apiGetJson } from '../../lib/api'
+import { normalizeMenuVisibilityResponse, normalizePublicMenusResponse } from '../../lib/backendAdapters'
 import { MenuVisibilityContext } from '../../lib/menuVisibility'
-import type { MenuVisibility, MenuVisibilityResponse } from '../../lib/types'
+import { PublicMenusContext } from '../../lib/publicMenus'
+import type { MenuVisibility, PublicMenu } from '../../lib/types'
 import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [menuVisibility, setMenuVisibility] = useState<MenuVisibility | null>(null)
+  const [publicMenus, setPublicMenus] = useState<PublicMenu[] | null | undefined>(undefined)
   const [location] = useLocation()
 
   // Scroll to top on initial load and navigation
@@ -29,10 +32,27 @@ export function ClientLayout(props: { children: ComponentChildren }) {
 
   useEffect(() => {
     let cancelled = false
-    apiGetJson<MenuVisibilityResponse>('/api/menu-visibility')
-      .then((data) => {
+    const loadMenuVisibility = async () => {
+      const endpoints = [
+        '/api/menuVisibilityBackend/getMenuVisibility.php',
+        '/api/menu-visibility',
+      ]
+
+      for (const endpoint of endpoints) {
+        try {
+          const data = await apiGetJson<unknown>(endpoint)
+          return normalizeMenuVisibilityResponse(data)
+        } catch {
+          // keep trying next endpoint
+        }
+      }
+      return {}
+    }
+
+    loadMenuVisibility()
+      .then((visibility) => {
         if (cancelled) return
-        setMenuVisibility(data.menuVisibility || {})
+        setMenuVisibility(visibility)
       })
       .catch(() => {
         if (cancelled) return
@@ -44,13 +64,33 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+
+    apiGetJson<unknown>('/api/menus/public')
+      .then((data) => {
+        if (cancelled) return
+        setPublicMenus(normalizePublicMenusResponse(data))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPublicMenus(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
-    <MenuVisibilityContext.Provider value={menuVisibility}>
-      <div class="client-shell">
-        <ClientHeader menuVisibility={menuVisibility} />
-        <main class={mainClass}>{props.children}</main>
-        {isEventosPage ? null : <ClientFooter />}
-      </div>
-    </MenuVisibilityContext.Provider>
+    <PublicMenusContext.Provider value={publicMenus}>
+      <MenuVisibilityContext.Provider value={menuVisibility}>
+        <div class="client-shell">
+          <ClientHeader menuVisibility={menuVisibility} />
+          <main class={mainClass}>{props.children}</main>
+          {isEventosPage ? null : <ClientFooter />}
+        </div>
+      </MenuVisibilityContext.Provider>
+    </PublicMenusContext.Provider>
   )
 }
