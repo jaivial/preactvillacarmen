@@ -251,6 +251,7 @@ const DICT: Dictionary = {
   'menu.slider.next': { es: 'Imagen siguiente', en: 'Next image' },
   'menu.slider.goto': { es: 'Ir a imagen', en: 'Go to image' },
   'menu.slider.dots': { es: 'Selector de imágenes', en: 'Image selector' },
+  'menu.image.placeholder': { es: 'Sin imagen disponible', en: 'Image not available' },
   'menu.error': { es: 'No se pudo cargar el contenido.', en: 'Could not load content.' },
   'menu.empty': { es: 'No hay contenido disponible.', en: 'No content available.' },
   'menu.fallback.title': { es: 'Este menú no está disponible', en: 'This menu is not available' },

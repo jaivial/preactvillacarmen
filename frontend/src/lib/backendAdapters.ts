@@ -80,15 +80,22 @@ function normalizePublicMenuDish(value: unknown): PublicMenuDish | null {
   const record = value as Record<string, unknown>
   const title = toText(record.title)
   if (!title) return null
+  const fotoUrl = toText(record.foto_url)
+  const imageUrl = toText(record.image_url)
+  const resolvedImage = fotoUrl || imageUrl
 
   return {
     id: Math.max(0, Math.trunc(toNumber(record.id, 0))),
     title,
     description: toText(record.description),
+    description_enabled: toBool(record.description_enabled) === true,
+    foto_url: resolvedImage,
+    image_url: resolvedImage,
     allergens: toStringArray(record.allergens),
     supplement_enabled: toBool(record.supplement_enabled) === true,
     supplement_price: toNumberOrNull(record.supplement_price),
     price: toNumberOrNull(record.price),
+    active: toBool(record.active) !== false,
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
   }
 }
@@ -164,6 +171,7 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     postre: toStringArray(record.postre),
     settings: normalizePublicMenuSettings(record.settings),
     sections,
+    show_dish_images: toBool(record.show_dish_images) === true,
     special_menu_image_url: toText(record.special_menu_image_url),
     legacy_source_table: legacySource || undefined,
     created_at: toText(record.created_at),
@@ -179,6 +187,14 @@ function normalizeDish(value: unknown): Dish | null {
   return {
     descripcion,
     alergenos: toStringArray(record.alergenos),
+    description: toText(record.description),
+    description_enabled: toBool(record.description_enabled) === true,
+    supplement_enabled: toBool(record.supplement_enabled) === true,
+    supplement_price: toNumberOrNull(record.supplement_price),
+    price: toNumberOrNull(record.price),
+    active: toBool(record.active) !== false,
+    foto_url: toText(record.foto_url) || null,
+    image_url: toText(record.image_url) || null,
   }
 }
 

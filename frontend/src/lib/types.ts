@@ -3,6 +3,14 @@ export type MenuVisibility = Record<string, boolean>
 export type Dish = {
   descripcion: string
   alergenos: string[]
+  description?: string | null
+  description_enabled?: boolean
+  supplement_enabled?: boolean
+  supplement_price?: number | null
+  price?: number | null
+  active?: boolean
+  foto_url?: string | null
+  image_url?: string | null
 }
 
 export type MenuResponse = {
@@ -57,10 +65,14 @@ export type PublicMenuDish = {
   id: number
   title: string
   description: string
+  description_enabled?: boolean
+  foto_url?: string
+  image_url?: string
   allergens: string[]
   supplement_enabled: boolean
   supplement_price: number | null
   price: number | null
+  active?: boolean
   position: number
 }
 
@@ -99,6 +111,7 @@ export type PublicMenu = {
   sections: PublicMenuSection[]
   special_menu_image_url: string
   legacy_source_table?: string
+  show_dish_images: boolean
   created_at: string
   modified_at: string
 }

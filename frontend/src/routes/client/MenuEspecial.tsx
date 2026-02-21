@@ -46,7 +46,12 @@ export function MenuEspecial(props: { menu: PublicMenu }) {
           ) : (
             <div class="menuMain">
               {sections.map((section) => (
-                <MenuSection key={`${section.id}-${section.title}`} title={section.title} dishes={section.dishes} />
+                <MenuSection
+                  key={`${section.id}-${section.title}`}
+                  title={section.title}
+                  dishes={section.dishes}
+                  showImage={props.menu.show_dish_images}
+                />
               ))}
             </div>
           )}
