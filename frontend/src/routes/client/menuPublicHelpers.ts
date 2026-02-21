@@ -11,9 +11,17 @@ function toDishList(section: PublicMenuSection): Dish[] {
   return (section.dishes || [])
     .map((item) => ({
       descripcion: String(item.title || '').trim(),
+      description: String(item.description || '').trim(),
+      description_enabled: item.description_enabled === true,
       alergenos: item.allergens || [],
+      supplement_enabled: item.supplement_enabled === true,
+      supplement_price: item.supplement_price ?? null,
+      price: item.price ?? null,
+      active: item.active !== false,
+      foto_url: item.foto_url || item.image_url || null,
+      image_url: item.image_url || item.foto_url || null,
     }))
-    .filter((dish) => Boolean(dish.descripcion))
+    .filter((dish) => Boolean(dish.descripcion) && dish.active !== false)
 }
 
 export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title'>): boolean {

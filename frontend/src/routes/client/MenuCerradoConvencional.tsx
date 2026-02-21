@@ -20,7 +20,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
   )
 
   return (
-    <div class="page menuPage">
+    <div class="page menuPage menuPage--closedConventional">
       <section class="page-hero">
         <div class="container">
           <h1 class="page-title">{props.menu.menu_title}</h1>
@@ -37,8 +37,18 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
       <section class="menuBody">
         <div class="container">
           <div class="menuMain">
-            <MenuSection title={t('menus.preview.starters')} dishes={sectionData.starters} pickCategory="entrantes" />
-            <MenuSection title={sectionData.mainsTitle || t('menus.preview.mains')} dishes={sectionData.mains} pickCategory="principales" />
+            <MenuSection
+              title={t('menus.preview.starters')}
+              dishes={sectionData.starters}
+              pickCategory="entrantes"
+              showImage={props.menu.show_dish_images}
+            />
+            <MenuSection
+              title={sectionData.mainsTitle || t('menus.preview.mains')}
+              dishes={sectionData.mains}
+              pickCategory="principales"
+              showImage={props.menu.show_dish_images}
+            />
 
             {sectionData.rice.length > 0 ? <p class="menuSectionLead">{t('menu.rice.lead')}</p> : null}
 
@@ -46,6 +56,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
               title={t('menu.section.rice')}
               dishes={sectionData.rice}
               pickCategory="arroces"
+              showImage={props.menu.show_dish_images}
               notes={[
                 t('menu.rice.note1'),
                 t('menu.rice.note2'),
@@ -55,7 +66,12 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             />
 
             {sectionData.others.map((section) => (
-              <MenuSection key={`${section.id}-${section.title}`} title={section.title} dishes={section.dishes} />
+              <MenuSection
+                key={`${section.id}-${section.title}`}
+                title={section.title}
+                dishes={section.dishes}
+                showImage={props.menu.show_dish_images}
+              />
             ))}
 
             {!hasContent ? <div class="menuState">{t('menu.empty')}</div> : null}
