@@ -1,0 +1,79 @@
+.vcDishPreviewCard {
+  aspect-ratio: 9 / 16;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 58%) minmax(0, 42%);
+}
+
+.vcDishPreviewMedia {
+  min-height: 0;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.vcDishPreviewMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vcDishPreviewMediaPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: rgba(0, 0, 0, 0.46);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2)),
+    rgba(0, 0, 0, 0.1);
+}
+
+.vcDishPreviewBody {
+  min-height: 0;
+  padding: 12px 12px 11px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.vcDishPreviewTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--pine);
+}
+
+.vcDishPreviewDescription {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.68);
+  line-height: 1.5;
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.vcDishPreviewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vcDishPreviewTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 37, 32, 0.18);
+  background: rgba(20, 37, 32, 0.08);
+  color: rgba(20, 37, 32, 0.9);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 8px;
+}
