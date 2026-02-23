@@ -1,13 +1,8 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
-import { AllergensLegend, AllergenIcons } from './MenuShared'
-import { formatMenuPrice, getMenuViewSections } from './menuPublicHelpers'
-
-function renderDishPriceLabel(price: number | null) {
-  if (price === null || !Number.isFinite(price)) return ''
-  return `+${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}€`
-}
+import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
+import { getMenuViewSections } from './menuPublicHelpers'
 
 function beverageNote(menu: PublicMenu): string {
   const beverageType = String(menu.settings.beverage.type || 'no_incluida').toLowerCase().trim()
@@ -20,8 +15,8 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
   const { t } = useI18n()
   const subtitle = useMemo(() => props.menu.menu_subtitle[0] || 'Carta convencional', [props.menu.menu_subtitle])
   const sections = useMemo(() => getMenuViewSections(props.menu), [props.menu])
-  const price = useMemo(() => formatMenuPrice(props.menu.price), [props.menu.price])
   const comments = useMemo(() => props.menu.settings.comments || [], [props.menu.settings.comments])
+  const infoLines = useMemo(() => [beverageNote(props.menu), ...comments].filter(Boolean), [comments, props.menu])
 
   return (
     <div class="page menuPage">
@@ -32,38 +27,42 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
         </div>
       </section>
 
+      <section class="menuHeroMedia">
+        <div class="container">
+          <MenuHeroSlider />
+        </div>
+      </section>
+
       <section class="menuBody">
         <div class="container">
           {sections.length === 0 ? (
             <div class="menuState">{t('menu.empty')}</div>
           ) : (
-            <div class="menuGrid">
-              {sections.map((section) => (
-                <article class="menuSectionCard" key={`${section.id}-${section.title}`}>
-                  <h2 class="menuSectionTitle">{section.title}</h2>
-                  <ul class="menuDishList">
-                    {section.dishes.map((dish, index) => (
-                      <li class="menuDish" key={`${section.id}-${index}-${dish.descripcion}`}>
-                        <div class="menuDishText">{dish.descripcion}</div>
-                        <AllergenIcons alergenos={dish.alergenos} />
-                        <div class="menuDishText menuMuted">{renderDishPriceLabel(props.menu.sections.find((row) => row.id === section.id)?.dishes[index]?.price || null)}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-
-              <article class="menuSectionCard menuSectionCard--price">
-                <h2 class="menuSectionTitle">{t('menus.preview.price')}</h2>
-                <p class="menuPrice">{price ? `${price}€` : '—'}</p>
-                <p class="menuDishText menuMuted">{beverageNote(props.menu)}</p>
-                {comments.map((comment, index) => (
-                  <p class="menuDishText menuMuted" key={`${comment}-${index}`}>
-                    {comment}
-                  </p>
+            <article class="menuSectionCard">
+              <div class="menuGrid menuGrid--single">
+                {sections.map((section) => (
+                  <GroupStyleDishSection
+                    key={`${section.id}-${section.title}`}
+                    title={section.title}
+                    dishes={section.dishes}
+                    annotations={section.annotations}
+                    showDishPrice={true}
+                    showAllergens={true}
+                  />
                 ))}
-              </article>
-            </div>
+
+                {infoLines.length > 0 ? (
+                  <section class="menuSubSection">
+                    <h3 class="menuSubTitle">Condiciones</h3>
+                    {infoLines.map((line, index) => (
+                      <p class="menuDishText menuMuted" key={`${line}-${index}`}>
+                        {line}
+                      </p>
+                    ))}
+                  </section>
+                ) : null}
+              </div>
+            </article>
           )}
 
           <AllergensLegend />

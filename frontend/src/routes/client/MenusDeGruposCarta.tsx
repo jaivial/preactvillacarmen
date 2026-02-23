@@ -1,7 +1,7 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
-import { formatEuro } from './MenuShared'
+import { GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 
 function groupCartaBeverage(menu: PublicMenu): string {
@@ -16,7 +16,6 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
   const sections = useMemo(() => getMenuViewSections(props.menu), [props.menu])
   const subtitles = useMemo(() => props.menu.menu_subtitle || [], [props.menu.menu_subtitle])
   const comments = useMemo(() => props.menu.settings.comments || [], [props.menu.settings.comments])
-  const price = useMemo(() => Number(props.menu.price), [props.menu.price])
   const beverage = useMemo(() => groupCartaBeverage(props.menu), [props.menu])
 
   return (
@@ -28,39 +27,73 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
         </div>
       </section>
 
+      <section class="menuHeroMedia">
+        <div class="container">
+          <MenuHeroSlider />
+        </div>
+      </section>
+
       <section class="menuBody">
         <div class="container">
           {sections.length === 0 ? (
             <div class="menuState">{t('menu.empty')}</div>
           ) : (
-            <div class="menuGrid">
-              {sections.map((section) => (
-                <article class="menuSectionCard" key={`${section.id}-${section.title}`}>
-                  <h2 class="menuSectionTitle">{section.title}</h2>
-                  <ul class="menuDishList">
-                    {section.dishes.map((dish, idx) => (
-                      <li class="menuDish" key={`${section.id}-${idx}-${dish.descripcion}`}>
-                        <div class="menuDishText">{dish.descripcion}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
+            <article class="menuSectionCard groupPanel">
+              <div class="menugrupos-decor">
+                <img class="menugrupos-flower-top-left" src="/media/menugrupos/pngegg.png" alt="" loading="lazy" />
+                <img class="menugrupos-flower-bottom-right" src="/media/menugrupos/pngegg2.png" alt="" loading="lazy" />
+                <img class="menugrupos-vine" src="/media/menugrupos/enredadera.png" alt="" loading="lazy" />
+              </div>
 
-              <article class="menuSectionCard menuSectionCard--price">
-                <h2 class="menuSectionTitle">{t('menus.preview.price')}</h2>
-                <p class="menuPrice">{Number.isFinite(price) ? `${formatEuro(price)} / ${t('groupMenus.beverage.pax')}` : props.menu.price}</p>
-                <p class="menuDishText menuMuted">{beverage}</p>
-                <p class="menuDishText menuMuted">
-                  {props.menu.settings.included_coffee ? t('groupMenus.coffee.included') : t('groupMenus.coffee.notIncluded')}
-                </p>
-                {comments.map((comment, idx) => (
-                  <p class="menuDishText menuMuted" key={`${comment}-${idx}`}>
-                    {comment}
-                  </p>
+              <h2 class="menuSectionTitle">{props.menu.menu_title}</h2>
+
+              {subtitles.length > 0 ? (
+                <div class="groupSubtitles">
+                  {subtitles.map((subtitle, idx) => (
+                    <p class="menuDishText menuMuted" key={`${subtitle}-${idx}`}>
+                      {subtitle}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+
+              <div class="menuGrid menuGrid--single">
+                {sections.map((section) => (
+                  <GroupStyleDishSection
+                    key={`${section.id}-${section.title}`}
+                    title={section.title}
+                    dishes={section.dishes}
+                    annotations={section.annotations}
+                    showDishPrice={true}
+                  />
                 ))}
-              </article>
-            </div>
+
+                <section class="menuSubSection">
+                  <h3 class="menuSubTitle">Previsión</h3>
+                  <p class="menuDishText">Cada persona elige sus platos y paga según el precio de cada plato.</p>
+                  <p class="menuDishText menuMuted">No existe un precio total cerrado del menú completo.</p>
+                </section>
+
+                <section class="menuSubSection">
+                  <h3 class="menuSubTitle">{t('groupMenus.section.beverages')}</h3>
+                  <p class="menuDishText menuMuted">{beverage}</p>
+                  <p class="menuDishText menuMuted">
+                    {props.menu.settings.included_coffee ? t('groupMenus.coffee.included') : t('groupMenus.coffee.notIncluded')}
+                  </p>
+                </section>
+
+                {comments.length > 0 ? (
+                  <section class="menuSubSection">
+                    <h3 class="menuSubTitle">{t('groupMenus.section.comments')}</h3>
+                    {comments.map((comment, idx) => (
+                      <p class="menuDishText menuMuted" key={`${comment}-${idx}`}>
+                        {comment}
+                      </p>
+                    ))}
+                  </section>
+                ) : null}
+              </div>
+            </article>
           )}
         </div>
       </section>

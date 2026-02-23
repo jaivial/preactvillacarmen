@@ -1,7 +1,25 @@
 import type { ApiError } from './types'
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://herorestaurant.com' : 'http://localhost:8080')
+).replace(/\/+$/, '')
+
+function isAbsoluteUrl(path: string) {
+  return /^https?:\/\//i.test(path)
+}
+
+export function apiUrl(path: string): string {
+  if (isAbsoluteUrl(path)) return path
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${API_BASE_URL}${normalizedPath}`
+}
+
+export function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(apiUrl(path), init)
+}
+
 export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await apiFetch(path, {
     ...init,
     headers: {
       Accept: 'application/json',
@@ -28,4 +46,3 @@ export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T
 
   return data as T
 }
-

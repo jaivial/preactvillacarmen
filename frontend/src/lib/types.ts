@@ -81,6 +81,7 @@ export type PublicMenuSection = {
   title: string
   kind: string
   position: number
+  annotations: string[]
   dishes: PublicMenuDish[]
 }
 
@@ -110,6 +111,8 @@ export type PublicMenu = {
   settings: PublicMenuSettings
   sections: PublicMenuSection[]
   special_menu_image_url: string
+  show_menu_preview_image: boolean
+  menu_preview_image_url: string
   legacy_source_table?: string
   show_dish_images: boolean
   created_at: string
@@ -166,6 +169,11 @@ export type MonthAvailabilityResponse = {
   availability: Record<string, MonthAvailabilityDay>
 }
 
+export type RiceTypesResponse = {
+  success: true
+  riceTypes: string[]
+}
+
 export type DailyLimitResponse = {
   success: true
   date: string
@@ -204,6 +212,24 @@ export type HourDataResponse = {
 export type SalonCondesaResponse = {
   success: true
   state: number
+}
+
+export type ReservationDayContextFloor = {
+  id: number
+  floorNumber: number
+  name: string
+  isGround: boolean
+  active: boolean
+}
+
+export type ReservationDayContextResponse = {
+  success: true
+  date: string
+  openingMode: 'both' | 'morning' | 'night'
+  morningHours: string[]
+  nightHours: string[]
+  floors: ReservationDayContextFloor[]
+  activeFloors: ReservationDayContextFloor[]
 }
 
 export type ValidGroupMenusForPartySizeResponse = {

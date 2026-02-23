@@ -32,24 +32,8 @@ export function ClientLayout(props: { children: ComponentChildren }) {
 
   useEffect(() => {
     let cancelled = false
-    const loadMenuVisibility = async () => {
-      const endpoints = [
-        '/api/menuVisibilityBackend/getMenuVisibility.php',
-        '/api/menu-visibility',
-      ]
-
-      for (const endpoint of endpoints) {
-        try {
-          const data = await apiGetJson<unknown>(endpoint)
-          return normalizeMenuVisibilityResponse(data)
-        } catch {
-          // keep trying next endpoint
-        }
-      }
-      return {}
-    }
-
-    loadMenuVisibility()
+    apiGetJson<unknown>('/api/menu-visibility')
+      .then((data) => normalizeMenuVisibilityResponse(data))
       .then((visibility) => {
         if (cancelled) return
         setMenuVisibility(visibility)

@@ -4,6 +4,7 @@ export type PublicMenuViewSection = {
   id: number
   kind: string
   title: string
+  annotations: string[]
   dishes: Dish[]
 }
 
@@ -22,6 +23,12 @@ function toDishList(section: PublicMenuSection): Dish[] {
       image_url: item.image_url || item.foto_url || null,
     }))
     .filter((dish) => Boolean(dish.descripcion) && dish.active !== false)
+}
+
+function normalizeSectionAnnotations(section: PublicMenuSection): string[] {
+  return (section.annotations || [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
 }
 
 export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title'>): boolean {
@@ -44,6 +51,7 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
       id: Number.isFinite(row.id) ? row.id : 0,
       kind: String(row.kind || '').toLowerCase().trim() || 'custom',
       title,
+      annotations: normalizeSectionAnnotations(row),
       dishes,
     })
   }
@@ -53,31 +61,40 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
 
 export function splitClosedConventionalSections(menu: PublicMenu): {
   starters: Dish[]
+  starterAnnotations: string[]
   mains: Dish[]
   mainsTitle: string
+  mainsAnnotations: string[]
   rice: Dish[]
+  riceAnnotations: string[]
   others: PublicMenuViewSection[]
 } {
   const sections = getMenuViewSections(menu)
   const starters: Dish[] = []
+  const starterAnnotations: string[] = []
   const mains: Dish[] = []
+  const mainsAnnotations: string[] = []
   const rice: Dish[] = []
+  const riceAnnotations: string[] = []
   const others: PublicMenuViewSection[] = []
   let mainsTitle = menu.principales.titulo_principales || 'Principales'
 
   for (const section of sections) {
     if (section.kind === 'entrantes') {
       starters.push(...section.dishes)
+      starterAnnotations.push(...section.annotations)
       continue
     }
 
     if (isRiceSection(section)) {
       rice.push(...section.dishes)
+      riceAnnotations.push(...section.annotations)
       continue
     }
 
     if (section.kind === 'principales') {
       mains.push(...section.dishes)
+      mainsAnnotations.push(...section.annotations)
       if (section.title) mainsTitle = section.title
       continue
     }
@@ -85,7 +102,7 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
     others.push(section)
   }
 
-  return { starters, mains, mainsTitle, rice, others }
+  return { starters, starterAnnotations, mains, mainsTitle, mainsAnnotations, rice, riceAnnotations, others }
 }
 
 export function formatMenuPrice(priceRaw: string): string {

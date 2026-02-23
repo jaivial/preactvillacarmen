@@ -373,12 +373,34 @@ export function DishCardGridWithImage(props: { dishes: Dish[]; pickCategory?: Me
   )
 }
 
+function normalizeSectionAnnotations(annotations: string[] | undefined): string[] {
+  return (annotations || [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+}
+
+export function SectionAnnotations(props: { annotations?: string[] }) {
+  const items = useMemo(() => normalizeSectionAnnotations(props.annotations), [props.annotations])
+  if (items.length === 0) return null
+
+  return (
+    <ul class="menuSectionAnnotations" role="list">
+      {items.map((annotation, idx) => (
+        <li class="menuSectionAnnotation" key={`${annotation}-${idx}`}>
+          {annotation}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function MenuSection(props: {
   title: string
   dishes: Dish[]
   notes?: string[]
   pickCategory?: MenuPickCategory
   showImage?: boolean
+  annotations?: string[]
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
@@ -400,6 +422,7 @@ export function MenuSection(props: {
           ))}
         </ul>
       ) : null}
+      <SectionAnnotations annotations={props.annotations} />
     </section>
   )
 }
@@ -574,6 +597,40 @@ export function DishList(props: { dishes: Dish[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+function dishPriceLabel(price: number | null | undefined) {
+  if (price == null || !Number.isFinite(price)) return ''
+  return `+${price % 1 === 0 ? price.toFixed(0) : price.toFixed(2)}€`
+}
+
+export function GroupStyleDishSection(props: {
+  title: string
+  dishes: Dish[]
+  showDishPrice?: boolean
+  showAllergens?: boolean
+  annotations?: string[]
+}) {
+  const items = props.dishes || []
+  if (items.length === 0) return null
+
+  return (
+    <section class="menuSubSection">
+      <h3 class="menuSubTitle">{props.title}</h3>
+      <ul class="menuDishList">
+        {items.map((dish, idx) => (
+          <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`}>
+            <div class="menuDishText">{dish.descripcion}</div>
+            {props.showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
+            {props.showDishPrice ? (
+              <div class="menuDishText menuMuted">{dishPriceLabel(dish.price)}</div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <SectionAnnotations annotations={props.annotations} />
+    </section>
   )
 }
 

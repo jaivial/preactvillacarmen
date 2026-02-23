@@ -118,6 +118,7 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
     title,
     kind: toText(record.kind) || 'custom',
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
+    annotations: toStringArray(record.annotations),
     dishes,
   }
 }
@@ -173,6 +174,8 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     sections,
     show_dish_images: toBool(record.show_dish_images) === true,
     special_menu_image_url: toText(record.special_menu_image_url),
+    show_menu_preview_image: toBool(record.show_menu_preview_image) === true,
+    menu_preview_image_url: toText(record.menu_preview_image_url),
     legacy_source_table: legacySource || undefined,
     created_at: toText(record.created_at),
     modified_at: toText(record.modified_at),

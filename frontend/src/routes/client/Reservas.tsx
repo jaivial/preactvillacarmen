@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { apiGetJson } from '../../lib/api'
+import { apiFetch, apiGetJson } from '../../lib/api'
 import { useI18n } from '../../lib/i18n'
 import type {
   ClosedDaysResponse,
-  DailyLimitResponse,
   HourDataResponse,
   InsertBookingResponse,
   MesasDeDosResponse,
   MonthAvailabilityResponse,
-  SalonCondesaResponse,
+  ReservationDayContextFloor,
+  ReservationDayContextResponse,
+  RiceTypesResponse,
   ValidGroupMenusForPartySizeResponse,
   GroupMenuDisplay,
 } from '../../lib/types'
@@ -308,7 +309,10 @@ export function Reservas() {
   const [freeSeats, setFreeSeats] = useState<number | null>(null)
   const [twoTopAvailable, setTwoTopAvailable] = useState<boolean>(true)
   const [hourData, setHourData] = useState<HourDataResponse | null>(null)
-  const [salonCondesa, setSalonCondesa] = useState(false)
+  const [dayContext, setDayContext] = useState<ReservationDayContextResponse | null>(null)
+  const [activeFloors, setActiveFloors] = useState<ReservationDayContextFloor[]>([])
+  const [selectedFloorNumber, setSelectedFloorNumber] = useState<number | null>(null)
+  const [selectedShift, setSelectedShift] = useState<'morning' | 'night' | null>(null)
 
   const [partySize, setPartySize] = useState<number | null>(null)
   const [reservationTime, setReservationTime] = useState<string | null>(null)
@@ -578,11 +582,60 @@ export function Reservas() {
     return out
   }, [partySize])
 
+  const floorOptions = useMemo<PopoverSelectOption[]>(
+    () =>
+      activeFloors.map((floor) => ({
+        value: String(floor.floorNumber),
+        label: floor.name,
+        keywords: `${floor.name} ${floor.floorNumber}`.toLowerCase(),
+      })),
+    [activeFloors]
+  )
+
+  const selectedFloor = useMemo(() => {
+    if (selectedFloorNumber == null) return null
+    return activeFloors.find((floor) => floor.floorNumber === selectedFloorNumber) || null
+  }, [activeFloors, selectedFloorNumber])
+
+  const showUpperFloorWarning = useMemo(() => {
+    if (activeFloors.length === 0) return false
+    const hasGroundOpen = activeFloors.some((floor) => floor.isGround)
+    if (hasGroundOpen) return false
+    return activeFloors.some((floor) => !floor.isGround)
+  }, [activeFloors])
+
+  const shiftOptions = useMemo<PopoverSelectOption[]>(
+    () => [
+      { value: 'morning', label: 'Comida', keywords: 'comida mañana mediodia' },
+      { value: 'night', label: 'Cena', keywords: 'cena noche' },
+    ],
+    []
+  )
+
+  const shiftLabel = useMemo(() => {
+    if (dayContext?.openingMode === 'morning') return 'Comida'
+    if (dayContext?.openingMode === 'night') return 'Cena'
+    if (selectedShift === 'morning') return 'Comida'
+    if (selectedShift === 'night') return 'Cena'
+    return null
+  }, [dayContext?.openingMode, selectedShift])
+
+  const activeShiftHours = useMemo(() => {
+    if (!dayContext) return []
+    if (dayContext.openingMode === 'morning') return Array.isArray(dayContext.morningHours) ? dayContext.morningHours : []
+    if (dayContext.openingMode === 'night') return Array.isArray(dayContext.nightHours) ? dayContext.nightHours : []
+    if (selectedShift === 'morning') return Array.isArray(dayContext.morningHours) ? dayContext.morningHours : []
+    if (selectedShift === 'night') return Array.isArray(dayContext.nightHours) ? dayContext.nightHours : []
+    return []
+  }, [dayContext, selectedShift])
+
   const availableHours = useMemo(() => {
     if (!hourData || !partySize) return []
+    const allowed = new Set(activeShiftHours)
     const out: { hour: string; status: 'available' | 'limited' }[] = []
     const hours = Array.isArray(hourData.activeHours) ? hourData.activeHours : []
     for (const h of hours) {
+      if (allowed.size > 0 && !allowed.has(h)) continue
       const slot = hourData.hourData?.[h]
       if (!slot) continue
       if (slot.isClosed || slot.status === 'closed') continue
@@ -590,7 +643,7 @@ export function Reservas() {
       out.push({ hour: h, status: slot.status === 'limited' ? 'limited' : 'available' })
     }
     return out
-  }, [hourData, partySize])
+  }, [activeShiftHours, hourData, partySize])
 
   const selectedHour = useMemo(() => {
     if (!reservationTime) return null
@@ -598,7 +651,7 @@ export function Reservas() {
   }, [availableHours, reservationTime])
 
   const postForm = async <T,>(path: string, params: Record<string, string>) => {
-    const res = await fetch(path, {
+    const res = await apiFetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
       body: new URLSearchParams(params),
@@ -614,7 +667,10 @@ export function Reservas() {
   // Initial fetch: closed/open days + arroz types.
   useEffect(() => {
     let cancelled = false
-    apiGetJson<ClosedDaysResponse>('/api/fetch_closed_days.php')
+    const closedToISO = isoFromLocalDate(addDaysLocal(today, 35))
+    apiGetJson<ClosedDaysResponse>(
+      `/api/reservations/closed-days?from=${encodeURIComponent(todayISO)}&to=${encodeURIComponent(closedToISO)}`
+    )
       .then((d) => {
         if (cancelled) return
         setClosedDays(new Set(d.closed_days || []))
@@ -626,13 +682,10 @@ export function Reservas() {
         setOpenedDays(new Set())
       })
 
-    fetch('/api/fetch_arroz.php', { headers: { Accept: 'application/json' } })
-      .then((r) => r.json())
+    apiGetJson<RiceTypesResponse>('/api/reservations/rice-types')
       .then((d) => {
         if (cancelled) return
-        if (Array.isArray(d)) {
-          setRiceTypes(d.map(String).map((s) => s.trim()).filter(Boolean))
-        }
+        setRiceTypes((d.riceTypes || []).map((s) => String(s).trim()).filter(Boolean))
       })
       .catch(() => {
         if (cancelled) return
@@ -642,7 +695,7 @@ export function Reservas() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [today, todayISO])
 
   // Month availability fetch (cached per month/year).
   const monthCacheRef = useRef<Map<string, Record<string, { freeBookingSeats: number }>>>(new Map())
@@ -654,10 +707,11 @@ export function Reservas() {
       return
     }
 
-    postForm<MonthAvailabilityResponse>('/api/fetch_month_availability.php', {
-      month: String(viewMonth0 + 1),
-      year: String(viewYear),
-    })
+    apiGetJson<MonthAvailabilityResponse>(
+      `/api/reservations/month-availability?month=${encodeURIComponent(String(viewMonth0 + 1))}&year=${encodeURIComponent(
+        String(viewYear)
+      )}`
+    )
       .then((d) => {
         const avail = d.availability || {}
         const compact: Record<string, { freeBookingSeats: number }> = {}
@@ -672,6 +726,13 @@ export function Reservas() {
         setMonthAvailability({})
       })
   }, [viewMonth0, viewYear])
+
+  useEffect(() => {
+    if (!selectedDate) return
+    const free = monthAvailability?.[selectedDate]?.freeBookingSeats
+    if (typeof free !== 'number') return
+    setFreeSeats(free)
+  }, [monthAvailability, selectedDate])
 
   const cells = useMemo(() => buildCalendarCells(viewYear, viewMonth0), [viewYear, viewMonth0])
 
@@ -706,18 +767,21 @@ export function Reservas() {
     setFreeSeats(null)
     setTwoTopAvailable(true)
     setHourData(null)
-    setSalonCondesa(false)
+    setDayContext(null)
+    setActiveFloors([])
+    setSelectedFloorNumber(null)
+    setSelectedShift(null)
     setStep('date')
 
     try {
-      const [dl, mesas, hours, salon] = await Promise.all([
-        postForm<DailyLimitResponse>('/api/fetch_daily_limit.php', { date: iso }),
+      const [mesas, hours, context] = await Promise.all([
         postForm<MesasDeDosResponse>('/api/fetch_mesas_de_dos.php', { date: iso }).catch(() => null),
         apiGetJson<HourDataResponse>(`/api/gethourdata.php?date=${encodeURIComponent(iso)}`),
-        apiGetJson<SalonCondesaResponse>(`/api/salon_condesa_api.php?date=${encodeURIComponent(iso)}`).catch(() => null),
+        apiGetJson<ReservationDayContextResponse>(`/api/get_reservation_day_context.php?date=${encodeURIComponent(iso)}`),
       ])
 
-      setFreeSeats(typeof dl.freeBookingSeats === 'number' ? dl.freeBookingSeats : 0)
+      const freeFromMonth = monthAvailability?.[iso]?.freeBookingSeats
+      setFreeSeats(typeof freeFromMonth === 'number' ? freeFromMonth : null)
 
       if (mesas && typeof mesas.disponibilidadDeDos === 'boolean') {
         setTwoTopAvailable(mesas.disponibilidadDeDos)
@@ -726,7 +790,20 @@ export function Reservas() {
       }
 
       setHourData(hours)
-      setSalonCondesa(!!(salon && salon.success && salon.state === 1))
+      setDayContext(context)
+      const nextActiveFloors = Array.isArray(context.activeFloors)
+        ? context.activeFloors
+        : (context.floors || []).filter((floor) => floor.active)
+      setActiveFloors(nextActiveFloors)
+
+      if (nextActiveFloors.length === 1) {
+        setSelectedFloorNumber(nextActiveFloors[0].floorNumber)
+      }
+      if (context.openingMode === 'morning') {
+        setSelectedShift('morning')
+      } else if (context.openingMode === 'night') {
+        setSelectedShift('night')
+      }
     } catch (e) {
       pushToast('error', 'Error', e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad.')
     }
@@ -768,6 +845,18 @@ export function Reservas() {
     }
     if (!partySize) {
       pushToast('warning', 'Personas requeridas', 'Por favor, selecciona el número de personas.')
+      return
+    }
+    if (activeFloors.length === 0) {
+      pushToast('warning', 'Salones cerrados', 'No hay salones activos para esta fecha. Contacta con el restaurante.')
+      return
+    }
+    if (activeFloors.length > 1 && selectedFloorNumber == null) {
+      pushToast('warning', 'Salón requerido', 'Selecciona un salón para continuar.')
+      return
+    }
+    if (dayContext?.openingMode === 'both' && !selectedShift) {
+      pushToast('warning', 'Turno requerido', 'Selecciona si tu reserva es para comida o cena.')
       return
     }
     if (!reservationTime) {
@@ -945,6 +1034,18 @@ export function Reservas() {
   const submitBooking = async () => {
     if (!selectedDate || !partySize || !reservationTime) return
     if (!validatePersonal()) return
+    if (activeFloors.length === 0) {
+      pushToast('warning', 'Salones cerrados', 'No hay salones activos para esta fecha. Contacta con el restaurante.')
+      return
+    }
+    if (activeFloors.length > 1 && selectedFloorNumber == null) {
+      pushToast('warning', 'Salón requerido', 'Selecciona un salón para completar la reserva.')
+      return
+    }
+    if (dayContext?.openingMode === 'both' && !selectedShift) {
+      pushToast('warning', 'Turno requerido', 'Selecciona si tu reserva es para comida o cena.')
+      return
+    }
     if (!termsAccepted || !privacyAccepted) {
       pushToast('warning', 'Términos', 'Debe aceptar los términos y la protección de datos.')
       return
@@ -961,6 +1062,9 @@ export function Reservas() {
     fd.set('reservation_date', selectedDate)
     fd.set('party_size', String(partySize))
     fd.set('reservation_time', reservationTime)
+    if (selectedFloorNumber != null) {
+      fd.set('preferred_floor_number', String(selectedFloorNumber))
+    }
     fd.set('customer_name', fullName.trim())
     fd.set('contact_email', email.trim())
     fd.set('country_code', '+' + onlyDigits(countryCode))
@@ -991,7 +1095,7 @@ export function Reservas() {
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/insert_booking_front.php', { method: 'POST', body: fd })
+      const res = await apiFetch('/api/insert_booking_front.php', { method: 'POST', body: fd })
       const text = await res.text()
       let data: InsertBookingResponse | null = null
       try {
@@ -1082,7 +1186,7 @@ export function Reservas() {
                     if (!c.inMonth) cls += ' other'
                     if (disabled) cls += ' disabled'
                     if (fullyBooked) cls += ' full'
-                    if (isSelected) cls += ' selected'
+                    if (isSelected && !disabled) cls += ' selected'
                     if (isToday) cls += ' today'
 
                     return (
@@ -1090,7 +1194,7 @@ export function Reservas() {
                         type="button"
                         class={cls}
                         key={c.iso}
-                        disabled={!c.inMonth}
+                        disabled={disabled}
                         onClick={() => onPickDate(c.iso, c.inMonth)}
                       >
                         {c.date.getDate()}
@@ -1128,8 +1232,8 @@ export function Reservas() {
                   <div class="resvCardSub">{selectedDate ? dateDisplay : 'Elige fecha, personas y hora.'}</div>
                 </div>
 
-                {salonCondesa ? (
-                  <div class="resvNotice warn">Su reserva se ubicará en la primera planta sin ascensor.</div>
+                {showUpperFloorWarning ? (
+                  <div class="resvNotice warn">La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.</div>
                 ) : null}
 
                 <div class="resvField resvField--inline">
@@ -1162,9 +1266,52 @@ export function Reservas() {
                 </div>
 
                 <div class="resvField">
+                  <div class="resvLabel">Salón</div>
+                  {activeFloors.length > 1 ? (
+                    <PopoverSelect
+                      ariaLabel="Salón"
+                      value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
+                      placeholder="Selecciona un salón"
+                      options={floorOptions}
+                      onChange={(v) => {
+                        const n = Number(v)
+                        setSelectedFloorNumber(Number.isFinite(n) ? n : null)
+                      }}
+                    />
+                  ) : activeFloors.length === 1 ? (
+                    <div class="resvHint">{activeFloors[0].name}</div>
+                  ) : (
+                    <div class="resvEmpty">No hay salones activos para esta fecha.</div>
+                  )}
+                </div>
+
+                <div class="resvField">
+                  <div class="resvLabel">Turno</div>
+                  {dayContext?.openingMode === 'both' ? (
+                    <PopoverSelect
+                      ariaLabel="Turno"
+                      value={selectedShift}
+                      placeholder="Selecciona comida o cena"
+                      options={shiftOptions}
+                      onChange={(v) => {
+                        if (v !== 'morning' && v !== 'night') return
+                        setSelectedShift(v)
+                        setReservationTime(null)
+                      }}
+                    />
+                  ) : shiftLabel ? (
+                    <div class="resvHint">Horario de {shiftLabel.toLowerCase()}</div>
+                  ) : (
+                    <div class="resvHint">Selecciona una fecha para ver turnos.</div>
+                  )}
+                </div>
+
+                <div class="resvField">
                   <div class="resvLabel">Horas disponibles</div>
                   {partySize ? (
-                    availableHours.length > 0 ? (
+                    dayContext?.openingMode === 'both' && !selectedShift ? (
+                      <div class="resvHint">Selecciona primero el turno para ver las horas disponibles.</div>
+                    ) : availableHours.length > 0 ? (
                       <>
                         <div class="resvHours">
                           {availableHours.map((h) => (
@@ -1637,8 +1784,16 @@ export function Reservas() {
               <span class="resvSummaryValue">{reservationTime || '-'}</span>
             </div>
             <div class="resvSummaryRow">
+              <span>Turno</span>
+              <span class="resvSummaryValue">{shiftLabel || '-'}</span>
+            </div>
+            <div class="resvSummaryRow">
               <span>Personas</span>
               <span class="resvSummaryValue">{ps || '-'}</span>
+            </div>
+            <div class="resvSummaryRow">
+              <span>Salón</span>
+              <span class="resvSummaryValue">{selectedFloor ? selectedFloor.name : '-'}</span>
             </div>
             <div class="resvSummaryRow">
               <span>Nombre</span>
@@ -1713,7 +1868,7 @@ export function Reservas() {
               </div>
             ) : null}
 
-            {salonCondesa ? (
+            {showUpperFloorWarning ? (
               <div class="resvNotice warn">Ubicación: primera planta sin ascensor.</div>
             ) : null}
           </div>
