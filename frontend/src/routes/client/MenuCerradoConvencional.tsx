@@ -40,12 +40,14 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             <MenuSection
               title={t('menus.preview.starters')}
               dishes={sectionData.starters}
+              annotations={sectionData.starterAnnotations}
               pickCategory="entrantes"
               showImage={props.menu.show_dish_images}
             />
             <MenuSection
               title={sectionData.mainsTitle || t('menus.preview.mains')}
               dishes={sectionData.mains}
+              annotations={sectionData.mainsAnnotations}
               pickCategory="principales"
               showImage={props.menu.show_dish_images}
             />
@@ -55,6 +57,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             <MenuSection
               title={t('menu.section.rice')}
               dishes={sectionData.rice}
+              annotations={sectionData.riceAnnotations}
               pickCategory="arroces"
               showImage={props.menu.show_dish_images}
               notes={[
@@ -70,6 +73,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                 key={`${section.id}-${section.title}`}
                 title={section.title}
                 dishes={section.dishes}
+                annotations={section.annotations}
                 showImage={props.menu.show_dish_images}
               />
             ))}

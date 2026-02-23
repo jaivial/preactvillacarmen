@@ -1,7 +1,7 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
-import { formatEuro } from './MenuShared'
+import { formatEuro, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 
 function beverageText(menu: PublicMenu, t: (key: string) => string): string[] {
@@ -29,6 +29,7 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
   const { t, lang } = useI18n()
   const sections = useMemo(() => getMenuViewSections(props.menu), [props.menu])
   const subtitles = useMemo(() => props.menu.menu_subtitle || [], [props.menu.menu_subtitle])
+  const pageSubtitle = useMemo(() => subtitles[0] || t('menus.card.groups.subtitle'), [subtitles, t])
   const beverageLines = useMemo(() => beverageText(props.menu, t), [props.menu, t])
   const comments = useMemo(() => props.menu.settings.comments || [], [props.menu.settings.comments])
   const priceValue = useMemo(() => Number(props.menu.price), [props.menu.price])
@@ -38,7 +39,13 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
       <section class="page-hero">
         <div class="container">
           <h1 class="page-title">{props.menu.menu_title}</h1>
-          <p class="page-subtitle">{t('menus.card.groups.subtitle')}</p>
+          <p class="page-subtitle">{pageSubtitle}</p>
+        </div>
+      </section>
+
+      <section class="menuHeroMedia">
+        <div class="container">
+          <MenuHeroSlider />
         </div>
       </section>
 
@@ -71,16 +78,12 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
 
             <div class="menuGrid menuGrid--single">
               {sections.map((section) => (
-                <section class="menuSubSection" key={`${section.id}-${section.title}`}>
-                  <h3 class="menuSubTitle">{section.title}</h3>
-                  <ul class="menuDishList">
-                    {section.dishes.map((dish, idx) => (
-                      <li class="menuDish" key={`${section.id}-${idx}-${dish.descripcion}`}>
-                        <div class="menuDishText">{dish.descripcion}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                <GroupStyleDishSection
+                  key={`${section.id}-${section.title}`}
+                  title={section.title}
+                  dishes={section.dishes}
+                  annotations={section.annotations}
+                />
               ))}
 
               <section class="menuSubSection">

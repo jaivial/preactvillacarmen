@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
+import { ImageOff } from 'lucide-react'
 import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
 import { useMenuVisibility } from '../../lib/menuVisibility'
-import { isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
+import { findFirstGroupMenu, findLegacyConventionalMenu, isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
 import { ScrollReveal } from '../../components/ScrollReveal'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
@@ -32,11 +33,21 @@ const IO_THRESHOLDS = Array.from({ length: 101 }, (_, i) => i / 100)
 type MenuCard = {
   key: string
   titleKey: string
-  subtitleKey: string
+  fallbackSubtitleKey: string
   href: string
   variant?: 'special'
   image16x9: string
   image9x16: string
+}
+
+function resolveMenuSubtitle(menu: { menu_subtitle: string[] } | null): string {
+  const first = menu?.menu_subtitle?.[0]
+  return String(first || '').trim()
+}
+
+function resolveMenuPreviewImage(menu: { show_menu_preview_image: boolean; menu_preview_image_url: string } | null): string {
+  if (!menu || menu.show_menu_preview_image !== true) return ''
+  return String(menu.menu_preview_image_url || '').trim()
 }
 
 function clamp01(value: number) {
@@ -60,6 +71,20 @@ function ResponsiveImage(props: {
   src9x16: string
   class?: string
 }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    setHasError(false)
+  }, [props.src16x9, props.src9x16])
+
+  if (hasError) {
+    return (
+      <div class="vc-menuCard-imgFallback" role="img" aria-label={props.alt}>
+        <ImageOff size={26} aria-hidden="true" />
+      </div>
+    )
+  }
+
   return (
     <picture>
       <source media="(max-aspect-ratio: 9/16)" srcSet={mediaSrc(props.src9x16)} />
@@ -69,6 +94,7 @@ function ResponsiveImage(props: {
         class={props.class}
         loading="eager"
         decoding="async"
+        onError={() => setHasError(true)}
       />
     </picture>
   )
@@ -761,7 +787,7 @@ export function Home() {
       {
         key: 'menufindesemana',
         titleKey: 'menus.card.weekend.title',
-        subtitleKey: 'menus.card.weekend.subtitle',
+        fallbackSubtitleKey: 'menus.card.weekend.subtitle',
         href: '/menufindesemana',
         image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-finde16-9_1.webp',
         image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-finde9-16_1.webp',
@@ -769,7 +795,7 @@ export function Home() {
       {
         key: 'menudeldia',
         titleKey: 'menus.card.daily.title',
-        subtitleKey: 'menus.card.daily.subtitle',
+        fallbackSubtitleKey: 'menus.card.daily.subtitle',
         href: '/menudeldia',
         image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-dia16-9_1.webp',
         image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-dia9-16_1.webp',
@@ -777,7 +803,7 @@ export function Home() {
       {
         key: 'menusdegrupos',
         titleKey: 'menus.card.groups.title',
-        subtitleKey: 'menus.card.groups.subtitle',
+        fallbackSubtitleKey: 'menus.card.groups.subtitle',
         href: '/menusdegrupos',
         image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-grupos16-9_1.webp',
         image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-grupos9-16_1.webp',
@@ -785,7 +811,7 @@ export function Home() {
       {
         key: 'menusanvalentin',
         titleKey: 'menus.card.valentine.title',
-        subtitleKey: 'menus.card.valentine.subtitle',
+        fallbackSubtitleKey: 'menus.card.valentine.subtitle',
         href: '/menusanvalentin',
         variant: 'special',
         image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-valentin16-9_1.webp',
@@ -803,60 +829,71 @@ export function Home() {
     return true
   })
 
-  // Lightbox state for menu images
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
-  const [lightboxStartX, setLightboxStartX] = useState(0)
-
-  const menuImages = filteredCards.map((card) => ({
-    '16x9': card.image16x9,
-    '9x16': card.image9x16,
-  }))
-
-  const handleLightboxPrev = () => {
-    setLightboxIndex((i) => (i > 0 ? i - 1 : menuImages.length - 1))
-  }
-
-  const handleLightboxNext = () => {
-    setLightboxIndex((i) => (i < menuImages.length - 1 ? i + 1 : 0))
-  }
-
-  const handleDragStart = (e: MouseEvent | TouchEvent) => {
-    if ('touches' in e) {
-      setLightboxStartX(e.touches[0].clientX)
-    } else {
-      setLightboxStartX(e.clientX)
-    }
-  }
-
-  const handleDragEnd = (e: MouseEvent | TouchEvent) => {
-    let endX: number
-    if ('changedTouches' in e) {
-      endX = e.changedTouches[0].clientX
-    } else {
-      endX = e.clientX
-    }
-    const diff = endX - lightboxStartX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        handleLightboxPrev()
-      } else {
-        handleLightboxNext()
+  const menuByCard = useMemo(() => {
+    if (!publicMenus || publicMenus.length === 0) {
+      return {
+        menudeldia: null,
+        menufindesemana: null,
+        menusdegrupos: null,
+        menusanvalentin: null,
       }
     }
-  }
 
-  // Keyboard navigation for lightbox
-  useEffect(() => {
-    if (!lightboxOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') handleLightboxPrev()
-      else if (e.key === 'ArrowRight') handleLightboxNext()
-      else if (e.key === 'Escape') setLightboxOpen(false)
+    const dayMenu = findLegacyConventionalMenu(publicMenus, 'DIA')
+    const weekendMenu = findLegacyConventionalMenu(publicMenus, 'FINDE')
+    const groupMenu = findFirstGroupMenu(publicMenus)
+    const specialMenu = publicMenus.find((menu) => menu.active && menu.menu_type === 'special') || null
+
+    return {
+      menudeldia: dayMenu,
+      menufindesemana: weekendMenu,
+      menusdegrupos: groupMenu,
+      menusanvalentin: specialMenu,
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [lightboxOpen])
+  }, [publicMenus])
+
+  const previewImageByCard = useMemo<Record<string, string>>(() => {
+    return {
+      menudeldia: resolveMenuPreviewImage(menuByCard.menudeldia),
+      menufindesemana: resolveMenuPreviewImage(menuByCard.menufindesemana),
+      menusdegrupos: resolveMenuPreviewImage(menuByCard.menusdegrupos),
+    }
+  }, [menuByCard])
+
+  const subtitleByCard = useMemo<Record<string, string>>(
+    () => ({
+      menudeldia: resolveMenuSubtitle(menuByCard.menudeldia),
+      menufindesemana: resolveMenuSubtitle(menuByCard.menufindesemana),
+      menusdegrupos: resolveMenuSubtitle(menuByCard.menusdegrupos),
+      menusanvalentin: resolveMenuSubtitle(menuByCard.menusanvalentin),
+    }),
+    [menuByCard],
+  )
+
+  const cardsWithResolvedImages = useMemo(
+    () =>
+      filteredCards.map((card) => {
+        const hasPreviewRule = card.key in previewImageByCard
+        const preview = previewImageByCard[card.key] || ''
+
+        if (hasPreviewRule) {
+          return {
+            ...card,
+            hasMedia: Boolean(preview),
+            media16x9: preview,
+            media9x16: preview,
+          }
+        }
+
+        return {
+          ...card,
+          hasMedia: true,
+          media16x9: card.image16x9,
+          media9x16: card.image9x16,
+        }
+      }),
+    [filteredCards, previewImageByCard],
+  )
 
   return (
     <div class="home">
@@ -913,37 +950,21 @@ export function Home() {
           </div>
 
           <div class="vc-menuCards">
-            {filteredCards.map((card, idx) => (
-              <div class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
-                <div
-                  class="vc-menuCard-media"
-                  onClick={() => {
-                    setLightboxIndex(idx)
-                    setLightboxOpen(true)
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      setLightboxIndex(idx)
-                      setLightboxOpen(true)
-                    }
-                  }}
-                  aria-label={`Ver imagen de ${t(card.titleKey)}`}
-                >
-                  <ResponsiveImage
-                    alt={t(card.titleKey)}
-                    src16x9={card.image16x9}
-                    src9x16={card.image9x16}
-                    class="vc-menuCard-img"
-                  />
-                  <div class="vc-menuCard-mediaOverlay">
-                    <span class="vc-menuCard-zoomIcon" aria-hidden="true">+</span>
+            {cardsWithResolvedImages.map((card) => (
+              <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
+                {card.hasMedia ? (
+                  <div class="vc-menuCard-media">
+                    <ResponsiveImage
+                      alt={t(card.titleKey)}
+                      src16x9={card.media16x9}
+                      src9x16={card.media9x16}
+                      class="vc-menuCard-img"
+                    />
                   </div>
-                </div>
+                ) : null}
                 <div class="vc-menuCard-top">
                   <h3 class="vc-menuCard-title">{t(card.titleKey)}</h3>
-                  <p class="vc-menuCard-sub">{t(card.subtitleKey)}</p>
+                  <p class="vc-menuCard-sub">{subtitleByCard[card.key] || t(card.fallbackSubtitleKey)}</p>
                 </div>
                 <Link
                   href={card.href}
@@ -956,77 +977,6 @@ export function Home() {
           </div>
         </div>
       </section>
-
-      {lightboxOpen && (
-        <div
-          class="vc-menuLightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Galería de menús"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setLightboxOpen(false)
-          }}
-        >
-          <button
-            type="button"
-            class="vc-menuLightboxClose"
-            aria-label="Cerrar"
-            onClick={() => setLightboxOpen(false)}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            class="vc-menuLightboxNav vc-menuLightboxPrev"
-            aria-label="Imagen anterior"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleLightboxPrev()
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-
-          <div
-            class="vc-menuLightboxContent"
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={handleDragStart}
-            onMouseUp={handleDragEnd}
-            onTouchStart={handleDragStart}
-            onTouchEnd={handleDragEnd}
-          >
-            <ResponsiveImage
-              alt={`Menú ${lightboxIndex + 1} de ${menuImages.length}`}
-              src16x9={menuImages[lightboxIndex]['16x9']}
-              src9x16={menuImages[lightboxIndex]['9x16']}
-              class="vc-menuLightboxImg"
-            />
-          </div>
-
-          <button
-            type="button"
-            class="vc-menuLightboxNav vc-menuLightboxNext"
-            aria-label="Siguiente imagen"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleLightboxNext()
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-
-          <div class="vc-menuLightboxCounter">
-            {lightboxIndex + 1} / {menuImages.length}
-          </div>
-        </div>
-      )}
 
       <section class="vc-cta">
         <div class="container vc-cta-inner">
