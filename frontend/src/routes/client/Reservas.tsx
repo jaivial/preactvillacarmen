@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
+import { Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { useI18n } from '../../lib/i18n'
 import type {
@@ -1501,7 +1502,7 @@ export function Reservas() {
                                 aria-label="Eliminar"
                                 onClick={() => setPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
                               >
-                                ✕
+                                <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
                               </button>
                             </div>
                           ))}
@@ -1662,6 +1663,9 @@ export function Reservas() {
                     placeholder="+34"
                     options={countryOptions}
                     searchable
+                    autoFocusSearch={false}
+                    autoScrollPageOnOpen
+                    viewportBottomPadding={10}
                     searchPlaceholder="Buscar país"
                     onChange={(v) => setCountryCode(v)}
                   />
