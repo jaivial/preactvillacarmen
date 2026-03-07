@@ -5,12 +5,14 @@ export function Counter(props: {
   onChange: (next: number) => void
   ariaLabel: string
   subtitle?: string
+  className?: string
 }) {
   const decDisabled = props.value <= props.min
   const incDisabled = props.value >= props.max
+  const rootClass = props.className ? `resvCounter ${props.className}` : 'resvCounter'
 
   return (
-    <div class="resvCounter">
+    <div class={rootClass}>
       <div class="resvCounter__head">
         <div class="resvCounter__title">{props.ariaLabel}</div>
         {props.subtitle ? <div class="resvCounter__sub">{props.subtitle}</div> : null}
@@ -42,4 +44,3 @@ export function Counter(props: {
     </div>
   )
 }
-

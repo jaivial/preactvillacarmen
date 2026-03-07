@@ -1,7 +1,10 @@
 import type { ApiError } from './types'
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://herorestaurant.com' : 'http://localhost:8080')
+  // Keep public API calls on the current origin by default so tenant-aware endpoints
+  // resolve the same restaurant the user is visiting. Local dev uses the Vite `/api`
+  // proxy unless an explicit VITE_API_BASE_URL override is provided.
+  import.meta.env.VITE_API_BASE_URL || ''
 ).replace(/\/+$/, '')
 
 function isAbsoluteUrl(path: string) {

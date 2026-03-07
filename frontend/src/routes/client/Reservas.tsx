@@ -115,6 +115,19 @@ function readStringArray(v: unknown): string[] {
     .filter(Boolean)
 }
 
+function normalizeDateOnly(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
+  const match = /^(\d{4}-\d{2}-\d{2})[T\s]/.exec(trimmed)
+  if (match) return match[1]
+  return trimmed
+}
+
+function normalizeDateSet(values: unknown): Set<string> {
+  return new Set(readStringArray(values).map(normalizeDateOnly).filter(Boolean))
+}
+
 function getPrincipalesItems(menu: GroupMenuDisplay | null): string[] {
   if (!menu || !menu.principales || typeof menu.principales !== 'object') return []
   const items = (menu.principales as any).items
@@ -668,14 +681,14 @@ export function Reservas() {
   // Initial fetch: closed/open days + arroz types.
   useEffect(() => {
     let cancelled = false
-    const closedToISO = isoFromLocalDate(addDaysLocal(today, 35))
+    const closedFromISO = isoFromLocalDate(addDaysLocal(today, 1))
     apiGetJson<ClosedDaysResponse>(
-      `/api/reservations/closed-days?from=${encodeURIComponent(todayISO)}&to=${encodeURIComponent(closedToISO)}`
+      `/api/reservations/closed-days?from=${encodeURIComponent(closedFromISO)}&to=${encodeURIComponent(maxISO)}`
     )
       .then((d) => {
         if (cancelled) return
-        setClosedDays(new Set(d.closed_days || []))
-        setOpenedDays(new Set(d.opened_days || []))
+        setClosedDays(normalizeDateSet(d.closed_days))
+        setOpenedDays(normalizeDateSet(d.opened_days))
       })
       .catch(() => {
         if (cancelled) return
@@ -696,7 +709,7 @@ export function Reservas() {
     return () => {
       cancelled = true
     }
-  }, [today, todayISO])
+  }, [maxISO, today])
 
   // Month availability fetch (cached per month/year).
   const monthCacheRef = useRef<Map<string, Record<string, { freeBookingSeats: number }>>>(new Map())
@@ -749,7 +762,7 @@ export function Reservas() {
 
   const isDisabledDate = (iso: string, inMonth: boolean) => {
     if (!inMonth) return true
-    if (iso < todayISO) return true
+    if (iso <= todayISO) return true
     if (iso > maxISO) return true
     if (isClosedByDefault(iso)) return true
     const free = monthAvailability?.[iso]?.freeBookingSeats
@@ -1096,7 +1109,7 @@ export function Reservas() {
 
     setSubmitting(true)
     try {
-      const res = await apiFetch('/api/insert_booking_front.php', { method: 'POST', body: fd })
+      const res = await apiFetch('/api/bookings/front', { method: 'POST', body: fd })
       const text = await res.text()
       let data: InsertBookingResponse | null = null
       try {
@@ -1188,7 +1201,7 @@ export function Reservas() {
                     if (disabled) cls += ' disabled'
                     if (fullyBooked) cls += ' full'
                     if (isSelected && !disabled) cls += ' selected'
-                    if (isToday) cls += ' today'
+                    if (isToday && !disabled) cls += ' today'
 
                     return (
                       <button
@@ -1709,7 +1722,7 @@ export function Reservas() {
             </div>
 
             <div class="resvAdultsPanel">
-              <Counter ariaLabel="Adultos" value={a} min={1} max={ps} onChange={(n) => setAdults(n)} />
+              <Counter ariaLabel="Adultos" value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
             </div>
 
             <div class="resvActions">
