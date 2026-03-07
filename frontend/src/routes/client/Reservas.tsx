@@ -18,6 +18,7 @@ import type {
 import { PopoverSelect, type PopoverSelectOption } from '../../components/reservas/PopoverSelect'
 import { Counter } from '../../components/reservas/Counter'
 import { Checkbox } from '../../components/reservas/Checkbox'
+import { InlineCounter } from '../../components/reservas/InlineCounter'
 
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
@@ -664,20 +665,6 @@ export function Reservas() {
     return availableHours.find((h) => h.hour === reservationTime) || null
   }, [availableHours, reservationTime])
 
-  const postForm = async <T,>(path: string, params: Record<string, string>) => {
-    const res = await apiFetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-      body: new URLSearchParams(params),
-    })
-    const data = (await res.json().catch(() => null)) as any
-    if (!res.ok) throw new Error((data && data.message) || `HTTP ${res.status}`)
-    if (data && typeof data === 'object' && 'success' in data && data.success === false) {
-      throw new Error(data.message || 'Error')
-    }
-    return data as T
-  }
-
   // Initial fetch: closed/open days + arroz types.
   useEffect(() => {
     let cancelled = false
@@ -787,12 +774,54 @@ export function Reservas() {
     setSelectedShift(null)
     setStep('date')
 
+    const loadTwoTopAvailability = async () => {
+      try {
+        return await apiGetJson<MesasDeDosResponse>(
+          `/api/reservations/two-top-availability?date=${encodeURIComponent(iso)}`
+        )
+      } catch {
+        try {
+          const body = new URLSearchParams({ date: iso })
+          const res = await apiFetch('/api/fetch_mesas_de_dos.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              Accept: 'application/json',
+            },
+            body: body.toString(),
+          })
+          const data = (await res.json().catch(() => null)) as MesasDeDosResponse | null
+          const apiError = data as { success?: boolean } | null
+          if (!res.ok || !data || apiError?.success === false) {
+            throw new Error('No se pudo cargar disponibilidad de mesas de 2')
+          }
+          return data
+        } catch {
+          return null
+        }
+      }
+    }
+
+    const loadHours = async () => {
+      try {
+        return await apiGetJson<HourDataResponse>(`/api/reservations/hour-data?date=${encodeURIComponent(iso)}`)
+      } catch {
+        return apiGetJson<HourDataResponse>(`/api/gethourdata.php?date=${encodeURIComponent(iso)}`)
+      }
+    }
+
+    const loadDayContext = async () => {
+      try {
+        return await apiGetJson<ReservationDayContextResponse>(`/api/reservations/day-context?date=${encodeURIComponent(iso)}`)
+      } catch {
+        return apiGetJson<ReservationDayContextResponse>(
+          `/api/get_reservation_day_context.php?date=${encodeURIComponent(iso)}`
+        )
+      }
+    }
+
     try {
-      const [mesas, hours, context] = await Promise.all([
-        postForm<MesasDeDosResponse>('/api/fetch_mesas_de_dos.php', { date: iso }).catch(() => null),
-        apiGetJson<HourDataResponse>(`/api/gethourdata.php?date=${encodeURIComponent(iso)}`),
-        apiGetJson<ReservationDayContextResponse>(`/api/get_reservation_day_context.php?date=${encodeURIComponent(iso)}`),
-      ])
+      const [mesas, hours, context] = await Promise.all([loadTwoTopAvailability(), loadHours(), loadDayContext()])
 
       const freeFromMonth = monthAvailability?.[iso]?.freeBookingSeats
       setFreeSeats(typeof freeFromMonth === 'number' ? freeFromMonth : null)
@@ -880,7 +909,7 @@ export function Reservas() {
 
     try {
       const data = await apiGetJson<ValidGroupMenusForPartySizeResponse>(
-        `/api/getValidMenusForPartySize.php?party_size=${encodeURIComponent(String(partySize))}`
+        `/api/reservations/group-menus?party_size=${encodeURIComponent(String(partySize))}`
       )
       if (data.hasValidMenus && Array.isArray(data.menus) && data.menus.length > 0) {
         setGroupMenus(data.menus)
@@ -1279,9 +1308,9 @@ export function Reservas() {
                   />
                 </div>
 
-                <div class="resvField">
-                  <div class="resvLabel">Salón</div>
-                  {activeFloors.length > 1 ? (
+                {activeFloors.length > 1 ? (
+                  <div class="resvField">
+                    <div class="resvLabel">Salón</div>
                     <PopoverSelect
                       ariaLabel="Salón"
                       value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
@@ -1292,16 +1321,12 @@ export function Reservas() {
                         setSelectedFloorNumber(Number.isFinite(n) ? n : null)
                       }}
                     />
-                  ) : activeFloors.length === 1 ? (
-                    <div class="resvHint">{activeFloors[0].name}</div>
-                  ) : (
-                    <div class="resvEmpty">No hay salones activos para esta fecha.</div>
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
-                <div class="resvField">
-                  <div class="resvLabel">Turno</div>
-                  {dayContext?.openingMode === 'both' ? (
+                {dayContext?.openingMode === 'both' ? (
+                  <div class="resvField">
+                    <div class="resvLabel">Turno</div>
                     <PopoverSelect
                       ariaLabel="Turno"
                       value={selectedShift}
@@ -1313,12 +1338,8 @@ export function Reservas() {
                         setReservationTime(null)
                       }}
                     />
-                  ) : shiftLabel ? (
-                    <div class="resvHint">Horario de {shiftLabel.toLowerCase()}</div>
-                  ) : (
-                    <div class="resvHint">Selecciona una fecha para ver turnos.</div>
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
                 <div class="resvField">
                   <div class="resvLabel">Horas disponibles</div>
@@ -1365,16 +1386,22 @@ export function Reservas() {
                   )}
                 </div>
 
-                <div class="resvActions">
-                  <button
-                    type="button"
-                    class="btn primary"
-                    onClick={() => void goNextFromDate()}
-                    disabled={!reservationTime}
+                {reservationTime ? (
+                  <motion.div
+                    class="resvActions"
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'ease-in-out' }}
                   >
-                    Siguiente
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      class="btn primary"
+                      onClick={() => void goNextFromDate()}
+                    >
+                      Siguiente
+                    </button>
+                  </motion.div>
+                ) : null}
               </motion.div>
             ) : null}
           </div>
@@ -1480,7 +1507,7 @@ export function Reservas() {
                       {principalesEnabled === true ? (
                         <div class="resvPrincipales">
                           {principalesRows.map((row, idx) => (
-                            <div class="resvPrincipalRow" key={idx}>
+                            <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
                               <PopoverSelect
                                 ariaLabel={`Principal ${idx + 1}`}
                                 value={row.name ? row.name : null}
@@ -1492,22 +1519,16 @@ export function Reservas() {
                                   setPrincipalesRows((prev) => prev.map((p, i) => (i === idx ? { ...p, name } : p)))
                                 }
                               />
-                              <input
-                                class="resvInput"
-                                type="number"
-                                min={1}
+                              <InlineCounter
+                                ariaLabel={`Raciones principal ${idx + 1}`}
+                                value={row.servings || 0}
+                                min={0}
                                 max={partySize || 99}
-                                value={row.servings ? String(row.servings) : ''}
-                                onInput={(e) => {
-                                  const v = Number((e.target as HTMLInputElement).value)
+                                onChange={(v) =>
                                   setPrincipalesRows((prev) =>
-                                    prev.map((p, i) =>
-                                      i === idx ? { ...p, servings: Number.isFinite(v) ? v : 0 } : p
-                                    )
+                                    prev.map((p, i) => (i === idx ? { ...p, servings: v } : p))
                                   )
-                                }}
-                                placeholder="Raciones"
-                                inputMode="numeric"
+                                }
                               />
                               <button
                                 type="button"
