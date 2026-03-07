@@ -3283,6 +3283,13 @@ svg {
     font-weight: 700;
 }
 
+.resvDay.disabled.today,
+.resvDay:disabled.today {
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.06);
+    font-weight: 400;
+}
+
 .resvDay.selected {
     background: #097969;
     color: var(--white);
@@ -3725,6 +3732,12 @@ svg {
     border-radius: 18px;
     padding: 14px;
     box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+}
+
+.resvCounter--plain {
+    border: none;
+    background: transparent;
+    box-shadow: none;
 }
 
 .resvCounter__title {
