@@ -51,7 +51,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
   useEffect(() => {
     let cancelled = false
 
-    apiGetJson<unknown>('/api/menus/public')
+    apiGetJson<unknown>('/api/menus/public?home_page=true')
       .then((data) => {
         if (cancelled) return
         setPublicMenus(normalizePublicMenusResponse(data))
