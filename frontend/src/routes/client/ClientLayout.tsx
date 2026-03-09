@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { apiGetJson } from '../../lib/api'
-import { normalizeMenuVisibilityResponse, normalizePublicMenusResponse } from '../../lib/backendAdapters'
-import { MenuVisibilityContext } from '../../lib/menuVisibility'
+import { normalizePublicMenusResponse } from '../../lib/backendAdapters'
 import { PublicMenusContext } from '../../lib/publicMenus'
-import type { MenuVisibility, PublicMenu } from '../../lib/types'
+import type { PublicMenu } from '../../lib/types'
 import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
-  const [menuVisibility, setMenuVisibility] = useState<MenuVisibility | null>(null)
   const [publicMenus, setPublicMenus] = useState<PublicMenu[] | null | undefined>(undefined)
   const [location] = useLocation()
 
@@ -32,24 +30,6 @@ export function ClientLayout(props: { children: ComponentChildren }) {
 
   useEffect(() => {
     let cancelled = false
-    apiGetJson<unknown>('/api/menu-visibility')
-      .then((data) => normalizeMenuVisibilityResponse(data))
-      .then((visibility) => {
-        if (cancelled) return
-        setMenuVisibility(visibility)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setMenuVisibility({})
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
 
     apiGetJson<unknown>('/api/menus/public?home_page=true')
       .then((data) => {
@@ -68,13 +48,11 @@ export function ClientLayout(props: { children: ComponentChildren }) {
 
   return (
     <PublicMenusContext.Provider value={publicMenus}>
-      <MenuVisibilityContext.Provider value={menuVisibility}>
-        <div class="client-shell">
-          <ClientHeader menuVisibility={menuVisibility} />
-          <main class={mainClass}>{props.children}</main>
-          {isEventosPage ? null : <ClientFooter />}
-        </div>
-      </MenuVisibilityContext.Provider>
+      <div class="client-shell">
+        <ClientHeader />
+        <main class={mainClass}>{props.children}</main>
+        {isEventosPage ? null : <ClientFooter />}
+      </div>
     </PublicMenusContext.Provider>
   )
 }
