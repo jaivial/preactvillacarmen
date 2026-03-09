@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'wouter-preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
-import type { MenuVisibility } from '../lib/types'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
 import { MenuPickWidget } from './MenuPickWidget'
@@ -11,10 +10,9 @@ type NavItem = {
   href: string
   labelKey?: string
   label?: string
-  visibilityKey?: string
 }
 
-export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
+export function ClientHeader() {
   const [location] = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [menusOpen, setMenusOpen] = useState(false)
@@ -158,18 +156,6 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
     if (mobileOpen) setMenusOpen(isMenuSectionActive)
   }, [isMenuSectionActive, mobileOpen])
 
-  const visibleItems = items.filter((item) => {
-    if (!item.visibilityKey) return true
-    if (!props.menuVisibility) return true
-    return props.menuVisibility[item.visibilityKey] !== false
-  })
-
-  const visibleMenuItems = effectiveMenuItems.filter((item) => {
-    if (!item.visibilityKey) return true
-    if (!props.menuVisibility) return true
-    return props.menuVisibility[item.visibilityKey] !== false
-  })
-
   const mobileNav = (
     <nav
       ref={navRef}
@@ -179,7 +165,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
       <div class="navMenuBurger__backdrop" onClick={() => setMobileOpen(false)} />
       <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
         <ul class="navMenuBurger__links" aria-label="Principal">
-          {visibleItems.map((item) => {
+          {items.map((item) => {
             if (item.href !== '/') return null
             const isActive = location === '/'
             return (
@@ -215,7 +201,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
               aria-label={t('nav.menusSection')}
             >
               <ul class="navBurgerSubLinks" aria-label={t('nav.menusSection')}>
-                {visibleMenuItems.map((item) => {
+                {effectiveMenuItems.map((item) => {
                   const isActive = location.startsWith(item.href)
                   const label = item.label || t(item.labelKey || '')
                   return (
@@ -234,7 +220,7 @@ export function ClientHeader(props: { menuVisibility: MenuVisibility | null }) {
             </div>
           </li>
 
-          {visibleItems.map((item) => {
+          {items.map((item) => {
             if (item.href === '/') return null
             const isActive = location.startsWith(item.href)
             return (

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { ImageOff } from 'lucide-react'
 import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
-import { useMenuVisibility } from '../../lib/menuVisibility'
-import { findFirstGroupMenu, findLegacyConventionalMenu, isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
+import { buildPublicMenuHref, isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
 import { ScrollReveal } from '../../components/ScrollReveal'
+import type { PublicMenu } from '../../lib/types'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
   '16:9': [
@@ -32,20 +31,35 @@ const IO_THRESHOLDS = Array.from({ length: 101 }, (_, i) => i / 100)
 
 type MenuCard = {
   key: string
-  titleKey: string
-  fallbackSubtitleKey: string
+  title: string
+  subtitle: string
   href: string
   variant?: 'special'
   image16x9: string
   image9x16: string
+  hasMedia: boolean
+  sortPriority: number
 }
 
-function resolveMenuSubtitle(menu: { menu_subtitle: string[] } | null): string {
-  const first = menu?.menu_subtitle?.[0]
+const MENU_TYPE_SORT_PRIORITY: Record<string, number> = {
+  closed_conventional: 1,
+  a_la_carte: 2,
+  closed_group: 3,
+  a_la_carte_group: 4,
+  special: 5,
+}
+
+function getMenuTypeSortPriority(menuType: string): number {
+  return MENU_TYPE_SORT_PRIORITY[menuType] ?? 99
+}
+
+function resolveMenuSubtitle(menu: PublicMenu | null): string {
+  if (!menu) return ''
+  const first = menu.menu_subtitle?.[0]
   return String(first || '').trim()
 }
 
-function resolveMenuPreviewImage(menu: { show_menu_preview_image: boolean; menu_preview_image_url: string } | null): string {
+function resolveMenuPreviewImage(menu: PublicMenu | null): string {
   if (!menu || menu.show_menu_preview_image !== true) return ''
   return String(menu.menu_preview_image_url || '').trim()
 }
@@ -70,6 +84,7 @@ function ResponsiveImage(props: {
   src16x9: string
   src9x16: string
   class?: string
+  onError?: () => void
 }) {
   const [hasError, setHasError] = useState(false)
 
@@ -77,12 +92,13 @@ function ResponsiveImage(props: {
     setHasError(false)
   }, [props.src16x9, props.src9x16])
 
+  const handleError = useCallback(() => {
+    setHasError(true)
+    props.onError?.()
+  }, [props])
+
   if (hasError) {
-    return (
-      <div class="vc-menuCard-imgFallback" role="img" aria-label={props.alt}>
-        <ImageOff size={26} aria-hidden="true" />
-      </div>
-    )
+    return null
   }
 
   return (
@@ -94,7 +110,7 @@ function ResponsiveImage(props: {
         class={props.class}
         loading="eager"
         decoding="async"
-        onError={() => setHasError(true)}
+        onError={handleError}
       />
     </picture>
   )
@@ -773,127 +789,60 @@ function EventsSection() {
 }
 
 export function Home() {
-  const menuVisibility = useMenuVisibility()
   const publicMenus = usePublicMenus()
   const { t } = useI18n()
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
-  const hasGroupMenus = useMemo(() => {
-    if (!publicMenus) return null
-    return publicMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
-  }, [publicMenus])
+  const handleImageError = useCallback((cardKey: string) => {
+    setFailedImages((prev) => new Set(prev).add(cardKey))
+  }, [])
 
-  const menuCards = useMemo<MenuCard[]>(
-    () => [
-      {
-        key: 'menufindesemana',
-        titleKey: 'menus.card.weekend.title',
-        fallbackSubtitleKey: 'menus.card.weekend.subtitle',
-        href: '/menufindesemana',
-        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-finde16-9_1.webp',
-        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-finde9-16_1.webp',
-      },
-      {
-        key: 'menudeldia',
-        titleKey: 'menus.card.daily.title',
-        fallbackSubtitleKey: 'menus.card.daily.subtitle',
-        href: '/menudeldia',
-        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-dia16-9_1.webp',
-        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-dia9-16_1.webp',
-      },
-      {
-        key: 'menusdegrupos',
-        titleKey: 'menus.card.groups.title',
-        fallbackSubtitleKey: 'menus.card.groups.subtitle',
-        href: '/menusdegrupos',
-        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-grupos16-9_1.webp',
-        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-grupos9-16_1.webp',
-      },
-      {
-        key: 'menusanvalentin',
-        titleKey: 'menus.card.valentine.title',
-        fallbackSubtitleKey: 'menus.card.valentine.subtitle',
-        href: '/menusanvalentin',
-        variant: 'special',
-        image16x9: 'https://villacarmenmedia.b-cdn.net/images/menus/16%3A9/menu-valentin16-9_1.webp',
-        image9x16: 'https://villacarmenmedia.b-cdn.net/images/menus/9%3A16/menu-valentin9-16_1.webp',
-      },
-    ],
-    []
-  )
+  const menuCards = useMemo<MenuCard[]>(() => {
+    if (!publicMenus || publicMenus.length === 0) return []
 
-  const filteredCards = menuCards.filter((card) => {
-    if (card.key === 'menusdegrupos' && hasGroupMenus === false) return false
-    if (!menuVisibility) return true
-    if (card.key === 'menudeldia' && menuVisibility.menudeldia === false) return false
-    if (card.key === 'menufindesemana' && menuVisibility.menufindesemana === false) return false
-    return true
-  })
+    return publicMenus
+      .filter((menu) => menu.active)
+      .map((menu) => {
+        const previewImage = resolveMenuPreviewImage(menu)
+        const subtitle = resolveMenuSubtitle(menu)
+        const isSpecial = menu.menu_type === 'special'
+        const isGroupMenu = isGroupMenuType(menu.menu_type)
+        const legacySource = String(menu.legacy_source_table || '').toUpperCase()
+        const isDayMenu = menu.menu_type === 'closed_conventional' && legacySource === 'DIA'
+        const isWeekendMenu = menu.menu_type === 'closed_conventional' && legacySource === 'FINDE'
 
-  const menuByCard = useMemo(() => {
-    if (!publicMenus || publicMenus.length === 0) {
-      return {
-        menudeldia: null,
-        menufindesemana: null,
-        menusdegrupos: null,
-        menusanvalentin: null,
-      }
-    }
-
-    const dayMenu = findLegacyConventionalMenu(publicMenus, 'DIA')
-    const weekendMenu = findLegacyConventionalMenu(publicMenus, 'FINDE')
-    const groupMenu = findFirstGroupMenu(publicMenus)
-    const specialMenu = publicMenus.find((menu) => menu.active && menu.menu_type === 'special') || null
-
-    return {
-      menudeldia: dayMenu,
-      menufindesemana: weekendMenu,
-      menusdegrupos: groupMenu,
-      menusanvalentin: specialMenu,
-    }
-  }, [publicMenus])
-
-  const previewImageByCard = useMemo<Record<string, string>>(() => {
-    return {
-      menudeldia: resolveMenuPreviewImage(menuByCard.menudeldia),
-      menufindesemana: resolveMenuPreviewImage(menuByCard.menufindesemana),
-      menusdegrupos: resolveMenuPreviewImage(menuByCard.menusdegrupos),
-    }
-  }, [menuByCard])
-
-  const subtitleByCard = useMemo<Record<string, string>>(
-    () => ({
-      menudeldia: resolveMenuSubtitle(menuByCard.menudeldia),
-      menufindesemana: resolveMenuSubtitle(menuByCard.menufindesemana),
-      menusdegrupos: resolveMenuSubtitle(menuByCard.menusdegrupos),
-      menusanvalentin: resolveMenuSubtitle(menuByCard.menusanvalentin),
-    }),
-    [menuByCard],
-  )
-
-  const cardsWithResolvedImages = useMemo(
-    () =>
-      filteredCards.map((card) => {
-        const hasPreviewRule = card.key in previewImageByCard
-        const preview = previewImageByCard[card.key] || ''
-
-        if (hasPreviewRule) {
-          return {
-            ...card,
-            hasMedia: Boolean(preview),
-            media16x9: preview,
-            media9x16: preview,
-          }
+        let title = menu.menu_title
+        if (!title) {
+          if (isDayMenu) title = t('menus.card.daily.title')
+          else if (isWeekendMenu) title = t('menus.card.weekend.title')
+          else if (isGroupMenu) title = t('menus.card.groups.title')
+          else if (isSpecial) title = t('menus.card.valentine.title')
+          else title = menu.menu_title || 'Menu'
         }
+
+        let fallbackSubtitle = ''
+        if (isDayMenu) fallbackSubtitle = t('menus.card.daily.subtitle')
+        else if (isWeekendMenu) fallbackSubtitle = t('menus.card.weekend.subtitle')
+        else if (isGroupMenu) fallbackSubtitle = t('menus.card.groups.subtitle')
+        else if (isSpecial) fallbackSubtitle = t('menus.card.valentine.subtitle')
+
+        const href = buildPublicMenuHref(menu)
+        const sortPriority = getMenuTypeSortPriority(menu.menu_type)
 
         return {
-          ...card,
-          hasMedia: true,
-          media16x9: card.image16x9,
-          media9x16: card.image9x16,
+          key: `menu-${menu.id}`,
+          title,
+          subtitle: subtitle || fallbackSubtitle,
+          href,
+          variant: isSpecial ? ('special' as const) : undefined,
+          image16x9: previewImage,
+          image9x16: previewImage,
+          hasMedia: Boolean(previewImage),
+          sortPriority,
         }
-      }),
-    [filteredCards, previewImageByCard],
-  )
+      })
+      .sort((a, b) => a.sortPriority - b.sortPriority)
+  }, [publicMenus, t])
 
   return (
     <div class="home">
@@ -950,30 +899,32 @@ export function Home() {
           </div>
 
           <div class="vc-menuCards">
-            {cardsWithResolvedImages.map((card) => (
-              <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
-                {card.hasMedia ? (
-                  <div class="vc-menuCard-media">
+            {menuCards.map((card) => {
+              const imageFailed = failedImages.has(card.key)
+              const showMedia = card.hasMedia && !imageFailed
+              return (
+                <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
+                  <div class="vc-menuCard-media" style={{ display: showMedia ? undefined : 'none' }}>
                     <ResponsiveImage
-                      alt={t(card.titleKey)}
-                      src16x9={card.media16x9}
-                      src9x16={card.media9x16}
+                      alt={card.title}
+                      src16x9={card.image16x9}
+                      src9x16={card.image9x16}
                       class="vc-menuCard-img"
+                      onError={() => handleImageError(card.key)}
                     />
                   </div>
-                ) : null}
-                <div class="vc-menuCard-top">
-                  <h3 class="vc-menuCard-title">{t(card.titleKey)}</h3>
-                  <p class="vc-menuCard-sub">{subtitleByCard[card.key] || t(card.fallbackSubtitleKey)}</p>
-                </div>
-                <Link
-                  href={card.href}
-                  className="vc-menuCard-cta btn"
-                >
+                  <div class="vc-menuCard-top">
+                    <h3 class="vc-menuCard-title">{card.title}</h3>
+                    <p class="vc-menuCard-sub">{card.subtitle}</p>
+                  </div>
+                  <Link
+                    href={card.href}
+                    className="vc-menuCard-cta btn"
+                  >
                   {t('menus.preview.view')}
                 </Link>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>
