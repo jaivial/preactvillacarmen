@@ -1562,6 +1562,21 @@ svg {
     color: var(--muted);
 }
 
+.specialMenuImageContainer {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+    max-width: 769px;
+    margin: 0 auto;
+}
+
+.specialMenuImage {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius, 8px);
+    object-fit: contain;
+}
+
 .menuUnavailableCard {
     max-width: 680px;
     margin: 36px auto 0;
