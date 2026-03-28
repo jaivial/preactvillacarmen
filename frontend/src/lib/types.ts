@@ -245,3 +245,45 @@ export type InsertBookingResponse = {
   booking_id?: number
   error_code?: string
 }
+
+// Lightweight menu data for the sidebar burger nav.
+export type SidebarMenu = {
+  id: number
+  slug: string
+  menu_title: string
+  menu_type: PublicMenuType
+  active: boolean
+  legacy_source_table?: string
+}
+
+// Lightweight menu data for the homepage cards section.
+export type HomeMenu = {
+  id: number
+  slug: string
+  menu_title: string
+  menu_type: PublicMenuType
+  active: boolean
+  menu_subtitle: string[]
+  show_menu_preview_image: boolean
+  menu_preview_image_url: string
+}
+
+// Response shape for GET /api/menus/{id}
+export type MenuByIDResponse = {
+  success: true
+  menu: PublicMenu
+}
+
+// Response shape for GET /api/menus/sidebar
+export type MenuSidebarResponse = {
+  success: true
+  count: number
+  menus: SidebarMenu[]
+}
+
+// Response shape for GET /api/menus/home
+export type MenuHomeResponse = {
+  success: true
+  count: number
+  menus: HomeMenu[]
+}

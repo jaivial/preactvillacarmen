@@ -3,9 +3,10 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n } from '../../lib/i18n'
-import { buildPublicMenuHref, isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
+import { buildPublicMenuHref, isGroupMenuType } from '../../lib/publicMenus'
+import { fetchMenuHome } from '../../lib/menuApi'
 import { ScrollReveal } from '../../components/ScrollReveal'
-import type { PublicMenu } from '../../lib/types'
+import type { HomeMenu } from '../../lib/types'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
   '16:9': [
@@ -53,13 +54,13 @@ function getMenuTypeSortPriority(menuType: string): number {
   return MENU_TYPE_SORT_PRIORITY[menuType] ?? 99
 }
 
-function resolveMenuSubtitle(menu: PublicMenu | null): string {
+function resolveMenuSubtitle(menu: HomeMenu | null): string {
   if (!menu) return ''
   const first = menu.menu_subtitle?.[0]
   return String(first || '').trim()
 }
 
-function resolveMenuPreviewImage(menu: PublicMenu | null): string {
+function resolveMenuPreviewImage(menu: HomeMenu | null): string {
   if (!menu || menu.show_menu_preview_image !== true) return ''
   return String(menu.menu_preview_image_url || '').trim()
 }
@@ -789,41 +790,48 @@ function EventsSection() {
 }
 
 export function Home() {
-  const publicMenus = usePublicMenus()
+  const [homeMenus, setHomeMenus] = useState<HomeMenu[] | null>(null)
   const { t } = useI18n()
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    let cancelled = false
+    fetchMenuHome()
+      .then((menus) => {
+        if (!cancelled) setHomeMenus(menus)
+      })
+      .catch(() => {
+        if (!cancelled) setHomeMenus(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleImageError = useCallback((cardKey: string) => {
     setFailedImages((prev) => new Set(prev).add(cardKey))
   }, [])
 
   const menuCards = useMemo<MenuCard[]>(() => {
-    if (!publicMenus || publicMenus.length === 0) return []
+    if (!homeMenus || homeMenus.length === 0) return []
 
-    return publicMenus
+    return homeMenus
       .filter((menu) => menu.active)
       .map((menu) => {
         const previewImage = resolveMenuPreviewImage(menu)
         const subtitle = resolveMenuSubtitle(menu)
         const isSpecial = menu.menu_type === 'special'
         const isGroupMenu = isGroupMenuType(menu.menu_type)
-        const legacySource = String(menu.legacy_source_table || '').toUpperCase()
-        const isDayMenu = menu.menu_type === 'closed_conventional' && legacySource === 'DIA'
-        const isWeekendMenu = menu.menu_type === 'closed_conventional' && legacySource === 'FINDE'
 
         let title = menu.menu_title
         if (!title) {
-          if (isDayMenu) title = t('menus.card.daily.title')
-          else if (isWeekendMenu) title = t('menus.card.weekend.title')
-          else if (isGroupMenu) title = t('menus.card.groups.title')
+          if (isGroupMenu) title = t('menus.card.groups.title')
           else if (isSpecial) title = t('menus.card.valentine.title')
-          else title = menu.menu_title || 'Menu'
+          else title = 'Menu'
         }
 
         let fallbackSubtitle = ''
-        if (isDayMenu) fallbackSubtitle = t('menus.card.daily.subtitle')
-        else if (isWeekendMenu) fallbackSubtitle = t('menus.card.weekend.subtitle')
-        else if (isGroupMenu) fallbackSubtitle = t('menus.card.groups.subtitle')
+        if (isGroupMenu) fallbackSubtitle = t('menus.card.groups.subtitle')
         else if (isSpecial) fallbackSubtitle = t('menus.card.valentine.subtitle')
 
         const href = buildPublicMenuHref(menu)
@@ -842,7 +850,7 @@ export function Home() {
         }
       })
       .sort((a, b) => a.sortPriority - b.sortPriority)
-  }, [publicMenus, t])
+  }, [homeMenus, t])
 
   return (
     <div class="home">

@@ -4,7 +4,9 @@ import { createPortal } from 'preact/compat'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
 import { MenuPickWidget } from './MenuPickWidget'
-import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType, usePublicMenus } from '../lib/publicMenus'
+import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
+import { fetchMenuSidebar } from '../lib/menuApi'
+import type { SidebarMenu } from '../lib/types'
 
 type NavItem = {
   href: string
@@ -20,7 +22,8 @@ export function ClientHeader() {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const { lang, setLang, t } = useI18n()
-  const publicMenus = usePublicMenus()
+  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
+  const [sidebarFetched, setSidebarFetched] = useState(false)
 
   const isHome = location === '/'
   const isEventosPage = location.startsWith('/eventos')
@@ -48,6 +51,23 @@ export function ClientHeader() {
   useEffect(() => {
     setMobileOpen(false)
   }, [location])
+
+  // Fetch sidebar menus on mount (lightweight payload).
+  useEffect(() => {
+    if (sidebarFetched) return
+    let cancelled = false
+    setSidebarFetched(true)
+    fetchMenuSidebar()
+      .then((menus) => {
+        if (!cancelled) setSidebarMenus(menus)
+      })
+      .catch(() => {
+        if (!cancelled) setSidebarMenus(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [sidebarFetched])
 
   useEffect(() => {
     const cls = 'vc-overflow-hidden'
@@ -104,7 +124,7 @@ export function ClientHeader() {
   )
 
   const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
-    if (publicMenus == null) return null
+    if (sidebarMenus == null) return null
 
     const typeOrder: Record<string, number> = {
       closed_conventional: 1,
@@ -112,7 +132,7 @@ export function ClientHeader() {
       special: 3,
     }
 
-    const nonGroupMenus = publicMenus
+    const nonGroupMenus = sidebarMenus
       .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type))
       .sort((left, right) => {
         const leftOrder = typeOrder[left.menu_type] || 99
@@ -128,7 +148,7 @@ export function ClientHeader() {
       label: menu.menu_title,
     }))
 
-    const hasGroupMenus = publicMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
+    const hasGroupMenus = sidebarMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
 
     const groupLink = hasGroupMenus ? [{ href: '/menusdegrupos', labelKey: 'nav.groupMenus' }] : []
 
@@ -137,7 +157,7 @@ export function ClientHeader() {
       ...groupLink,
       { href: '/postres', labelKey: 'nav.desserts' },
     ]
-  }, [publicMenus])
+  }, [sidebarMenus])
 
   const menuItems = useMemo<NavItem[]>(
     () => [
