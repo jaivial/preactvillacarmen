@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
-import { isGroupMenuType, usePublicMenus } from '../../lib/publicMenus'
+import { isGroupMenuType } from '../../lib/publicMenus'
+import { apiGetJson } from '../../lib/api'
+import { normalizePublicMenusResponse } from '../../lib/backendAdapters'
 import type { PublicMenu, PublicMenuSection } from '../../lib/types'
 import { formatEuro } from './MenuShared'
 
@@ -166,8 +168,22 @@ function renderBeverageText(beverage: NormalizedBeverage, t: (key: string) => st
 
 export function MenusDeGrupos() {
   const { t, lang } = useI18n()
-  const publicMenus = usePublicMenus()
+  const [publicMenus, setPublicMenus] = useState<PublicMenu[] | null>(null)
   const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    apiGetJson<unknown>('/api/menus/public')
+      .then((data) => {
+        if (!cancelled) setPublicMenus(normalizePublicMenusResponse(data))
+      })
+      .catch(() => {
+        if (!cancelled) setPublicMenus(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const menus = useMemo(() => {
     if (!publicMenus) return null
