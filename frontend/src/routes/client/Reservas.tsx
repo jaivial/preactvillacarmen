@@ -1150,6 +1150,9 @@ export function Reservas() {
       if (!data || data.success !== true || typeof data.booking_id !== 'number') {
         throw new Error((data && data.message) || 'Error al realizar la reserva.')
       }
+      if (data.whatsapp_warning) {
+        pushToast('warning', 'Reserva realizada', data.whatsapp_warning)
+      }
       setConfirmationOpen(true)
     } catch (e) {
       pushToast('error', 'Error', e instanceof Error ? e.message : 'Error al realizar la reserva.')
@@ -1698,8 +1701,6 @@ export function Reservas() {
                     options={countryOptions}
                     searchable
                     autoFocusSearch={false}
-                    autoScrollPageOnOpen
-                    viewportBottomPadding={10}
                     searchPlaceholder="Buscar país"
                     onChange={(v) => setCountryCode(v)}
                   />
@@ -1942,9 +1943,11 @@ export function Reservas() {
             <button type="button" class="btn" onClick={goPrev} disabled={submitting}>
               Anterior
             </button>
-            <button type="button" class="btn primary" onClick={() => void submitBooking()} disabled={submitting}>
-              {submitting ? 'Enviando...' : 'Completar reserva'}
-            </button>
+            {termsAccepted && privacyAccepted && (
+              <button type="button" class="btn primary" onClick={() => void submitBooking()} disabled={submitting}>
+                {submitting ? 'Enviando...' : 'Completar reserva'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -2028,6 +2031,13 @@ export function Reservas() {
           <div class="resvConfirm__elegant">{t('reservations.confirm.elegant')}</div>
         </div>
       </Modal>
+
+      {submitting && (
+        <div class="resvOverlay" role="alert" aria-label="Enviando reserva">
+          <div class="resvOverlay__spinner" />
+          <div class="resvOverlay__text">Enviando reserva…</div>
+        </div>
+      )}
 
       <div class="resvToastStack" aria-live="polite" aria-relevant="additions removals">
         {toasts.map((t) => (

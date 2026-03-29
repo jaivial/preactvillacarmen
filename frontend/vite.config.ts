@@ -5,7 +5,7 @@ import { request as httpsRequest } from 'node:https'
 import preact from '@preact/preset-vite'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 
-const DEV_API_PROXY_TIMEOUT_MS = 1500
+const DEV_API_PROXY_TIMEOUT_MS = 10_000
 
 function normalizeProxyTarget(target: string) {
   return target.replace(/\/+$/, '')
