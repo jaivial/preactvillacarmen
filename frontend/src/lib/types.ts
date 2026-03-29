@@ -244,6 +244,8 @@ export type InsertBookingResponse = {
   message?: string
   booking_id?: number
   error_code?: string
+  whatsapp_warning?: string
+  whatsapp_sent?: boolean
 }
 
 // Lightweight menu data for the sidebar burger nav.

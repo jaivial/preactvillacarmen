@@ -1726,6 +1726,8 @@ svg {
 }
 
 .menuHeroSlider {
+    max-width: 960px;
+    margin: 0 auto;
     border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.12);
@@ -4186,6 +4188,41 @@ svg {
     color: rgba(20, 37, 32, 0.92);
 }
 
+/* Full-viewport loading overlay */
+.resvOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(15, 16, 21, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.resvOverlay__spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    border-top-color: var(--accent, #b9a8ff);
+    border-radius: 50%;
+    animation: resvSpin 0.8s linear infinite;
+}
+.resvOverlay__text {
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.02em;
+}
+@keyframes resvSpin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .resvOverlay__spinner { animation: none; }
+}
+
 /* Toasts */
 .resvToastStack {
     position: fixed;
@@ -4410,6 +4447,236 @@ svg {
     color: rgba(0, 0, 0, 0.62);
     font-size: 13px;
 }
+
+/* Booking action pages (confirm, cancel, update-rice) — white/light WCAG AA */
+.bookingActionPage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: #f5f5f4;
+}
+.bookingActionCard {
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border: 1px solid #d6d3d1;
+    border-radius: 16px;
+    padding: 32px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+    text-align: center;
+    color: #1c1917;
+}
+.bookingActionTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1c1917;
+}
+.bookingActionSubtext {
+    font-size: 13px;
+    color: #57534e;
+    margin-bottom: 20px;
+}
+.bookingActionAlert {
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+}
+.bookingActionAlert.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.bookingActionAlert.danger  { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+.bookingActionAlert.warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+.bookingActionDetails {
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: left;
+}
+.bookingActionName { font-weight: 600; font-size: 16px; color: #1c1917; }
+.bookingActionSub { font-size: 12px; color: #78716c; margin-bottom: 12px; }
+.bookingActionGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bookingActionGrid > div { display: flex; flex-direction: column; gap: 2px; }
+.bookingActionLabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #78716c; }
+.bookingActionValue { font-size: 14px; font-weight: 500; color: #292524; }
+.bookingActionBtn {
+    display: block;
+    width: 100%;
+    padding: 13px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    border: 2px solid transparent;
+    background: transparent;
+    color: inherit;
+    margin-top: 10px;
+    font-family: inherit;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.bookingActionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bookingActionBtn.accent { border-color: #78716c; color: #44403c; }
+.bookingActionBtn.accent:hover { background: #44403c; color: #ffffff; }
+.bookingActionBtn.success { border-color: #16a34a; color: #166534; }
+.bookingActionBtn.success:hover { background: #16a34a; color: #ffffff; }
+.bookingActionBtn.danger { border-color: #dc2626; color: #991b1b; }
+.bookingActionBtn.danger:hover { background: #dc2626; color: #ffffff; }
+.bookingActionBtn.primary { background: #1c1917; color: #ffffff; border-color: #1c1917; }
+.bookingActionBtn.primary:hover { background: #292524; }
+.bookingActionNote {
+    font-size: 12px;
+    color: #78716c;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e7e5e4;
+    line-height: 1.5;
+}
+.bookingActionForm { margin-bottom: 10px; text-align: left; }
+.bookingActionFormGroup { margin-bottom: 14px; }
+.bookingActionFormLabel { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #44403c; }
+.bookingActionFormControl {
+    width: 100%; height: 40px; padding: 0 12px;
+    font-size: 14px; font-family: inherit;
+    background: #ffffff; color: #1c1917;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+}
+.bookingActionFormControl:focus { outline: 2px solid #1c1917; outline-offset: -1px; border-color: #1c1917; }
+.bookingActionSpinner {
+    width: 40px; height: 40px; margin: 0 auto 16px;
+    border: 3px solid #e7e5e4;
+    border-top-color: #1c1917;
+    border-radius: 50%;
+    animation: bookingActionSpin 0.8s linear infinite;
+}
+@keyframes bookingActionSpin { to { transform: rotate(360deg); } }
+@media (max-width: 400px) {
+    .bookingActionCard { padding: 20px 16px; }
+    .bookingActionGrid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .bookingActionSpinner { animation: none; }
+}
+
+/* Booking action — Counter component */
+.baCounter {
+    margin-bottom: 14px;
+}
+.baCounterLabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #44403c;
+}
+.baCounterControls {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+    height: 40px;
+}
+.baCounterBtn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    width: 44px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #44403c;
+    transition: background 120ms ease;
+}
+.baCounterBtn:hover:not(:disabled) { background: #f5f5f4; }
+.baCounterBtn:active:not(:disabled) { background: #e7e5e4; }
+.baCounterBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.baCounterBtn:focus-visible { outline: 2px solid #1c1917; outline-offset: -2px; }
+.baCounterValue {
+    flex: 1;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1c1917;
+    min-width: 32px;
+    user-select: none;
+}
+
+/* Booking action — Selector component */
+.baSelector {
+    position: relative;
+    margin-bottom: 14px;
+}
+.baSelectorLabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #44403c;
+}
+.baSelectorTrigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #1c1917;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 120ms ease;
+}
+.baSelectorTrigger.is-open { border-color: #1c1917; outline: 2px solid #1c1917; outline-offset: -1px; }
+.baSelectorTrigger.is-placeholder { color: #a8a29e; }
+.baSelectorTrigger:focus-visible { border-color: #1c1917; outline: 2px solid #1c1917; outline-offset: -1px; }
+.baSelectorChevron {
+    flex-shrink: 0;
+    transition: transform 160ms ease;
+}
+.baSelectorTrigger.is-open .baSelectorChevron { transform: rotate(180deg); }
+.baSelectorList {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 50;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    max-height: 220px;
+    overflow-y: auto;
+}
+.baSelectorOption {
+    padding: 9px 12px;
+    font-size: 14px;
+    color: #1c1917;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 100ms ease;
+}
+.baSelectorOption:hover { background: #f5f5f4; }
+.baSelectorOption.is-selected { background: #1c1917; color: #ffffff; }
+.baSelectorOption:focus-visible { outline: 2px solid #1c1917; outline-offset: -2px; }
 
 /* Legal pages */
 .legalPage {

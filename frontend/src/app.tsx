@@ -13,6 +13,9 @@ import { Placeholder } from './routes/client/Placeholder.tsx'
 import { Reservas } from './routes/client/Reservas.tsx'
 import { AvisoLegal } from './routes/client/AvisoLegal.tsx'
 import { BookingPolicies } from './routes/client/BookingPolicies.tsx'
+import { ConfirmBooking } from './routes/client/ConfirmBooking.tsx'
+import { CancelBooking } from './routes/client/CancelBooking.tsx'
+import { UpdateRice } from './routes/client/UpdateRice.tsx'
 import { ProteccionDatos } from './routes/client/ProteccionDatos.tsx'
 import { Vinos } from './routes/client/Vinos.tsx'
 
@@ -35,6 +38,10 @@ function ClientApp() {
         <Route path="/reservas.php" component={Reservas} />
         <Route path="/avisolegal.html" component={AvisoLegal} />
         <Route path="/booking_policies.php" component={BookingPolicies} />
+        <Route path="/booking-policies" component={BookingPolicies} />
+        <Route path="/confirm" component={ConfirmBooking} />
+        <Route path="/cancel" component={CancelBooking} />
+        <Route path="/update-rice" component={UpdateRice} />
         <Route path="/protecciondatos.html" component={ProteccionDatos} />
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
