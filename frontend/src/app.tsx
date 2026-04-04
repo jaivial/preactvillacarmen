@@ -2,6 +2,8 @@ import { Route, Switch } from 'wouter-preact'
 import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
 import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
+import { Bebidas } from './routes/client/Bebidas.tsx'
+import { Cafes } from './routes/client/Cafes.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
 import { Home } from './routes/client/Home.tsx'
@@ -34,6 +36,8 @@ function ClientApp() {
         <Route path="/menusdegrupos" component={MenusDeGrupos} />
         <Route path="/postres" component={Postres} />
         <Route path="/vinos" component={Vinos} />
+        <Route path="/cafes" component={Cafes} />
+        <Route path="/bebidas" component={Bebidas} />
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
         <Route path="/avisolegal.html" component={AvisoLegal} />
