@@ -26,8 +26,8 @@ export function LegacyMenuRedirect(props: { target: LegacyRedirectTarget }) {
   useEffect(() => {
     let cancelled = false
     fetchMenuSidebar()
-      .then((menus) => {
-        if (!cancelled) setSidebarMenus(menus)
+      .then((data) => {
+        if (!cancelled) setSidebarMenus(data.menus)
       })
       .catch(() => {
         if (!cancelled) setSidebarMenus(null)

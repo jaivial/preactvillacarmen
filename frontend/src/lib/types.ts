@@ -281,6 +281,32 @@ export type MenuSidebarResponse = {
   success: true
   count: number
   menus: SidebarMenu[]
+  cafe_page_active: boolean
+  bebidas_page_active: boolean
+}
+
+export type ComidaItem = {
+  num: number
+  source_type: string
+  tipo?: string
+  nombre: string
+  precio: number
+  descripcion: string
+  titulo?: string
+  suplemento?: number
+  alergenos?: string[]
+  active: boolean
+  has_foto: boolean
+  foto_url?: string
+  categoria?: string
+  category_id?: number
+  category_slug?: string
+}
+
+export type ComidaItemsResponse = {
+  success: true
+  items: ComidaItem[]
+  total: number
 }
 
 // Response shape for GET /api/menus/home

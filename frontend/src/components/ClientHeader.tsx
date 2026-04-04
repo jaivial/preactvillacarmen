@@ -7,6 +7,7 @@ import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import { fetchMenuSidebar } from '../lib/menuApi'
 import type { SidebarMenu } from '../lib/types'
+import type { MenuSidebarData } from '../lib/menuApi'
 
 type NavItem = {
   href: string
@@ -23,7 +24,8 @@ export function ClientHeader() {
   const navRef = useRef<HTMLElement>(null)
   const { lang, setLang, t } = useI18n()
   const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
-  const [sidebarFetched, setSidebarFetched] = useState(false)
+  const [cafePageActive, setCafePageActive] = useState(true)
+  const [bebidasPageActive, setBebidasPageActive] = useState(true)
 
   const isHome = location === '/'
   const isEventosPage = location.startsWith('/eventos')
@@ -54,20 +56,22 @@ export function ClientHeader() {
 
   // Fetch sidebar menus on mount (lightweight payload).
   useEffect(() => {
-    if (sidebarFetched) return
     let cancelled = false
-    setSidebarFetched(true)
     fetchMenuSidebar()
-      .then((menus) => {
-        if (!cancelled) setSidebarMenus(menus)
+      .then((data: MenuSidebarData) => {
+        if (cancelled) return
+        setSidebarMenus(data.menus)
+        setCafePageActive(data.cafe_page_active)
+        setBebidasPageActive(data.bebidas_page_active)
       })
       .catch(() => {
-        if (!cancelled) setSidebarMenus(null)
+        if (cancelled) return
+        setSidebarMenus(null)
       })
     return () => {
       cancelled = true
     }
-  }, [sidebarFetched])
+  }, [])
 
   useEffect(() => {
     const cls = 'vc-overflow-hidden'
@@ -112,16 +116,18 @@ export function ClientHeader() {
 
   const eventosHeaderUnlocked = !isEventosPage || scrolled
 
-  const items = useMemo<NavItem[]>(
-    () => [
+  const items = useMemo<NavItem[]>(() => {
+    const base = [
       { href: '/', labelKey: 'nav.home' },
       { href: '/vinos', labelKey: 'nav.wines' },
       { href: '/reservas', labelKey: 'nav.reservations' },
       { href: '/regala', labelKey: 'nav.gift' },
       { href: '/contacto', labelKey: 'nav.contact' },
-    ],
-    []
-  )
+    ]
+    if (cafePageActive) base.push({ href: '/cafes', labelKey: 'nav.coffees' })
+    if (bebidasPageActive) base.push({ href: '/bebidas', labelKey: 'nav.beverages' })
+    return base
+  }, [cafePageActive, bebidasPageActive])
 
   const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
     if (sidebarMenus == null) return null
