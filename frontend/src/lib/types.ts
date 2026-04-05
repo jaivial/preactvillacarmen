@@ -315,3 +315,26 @@ export type MenuHomeResponse = {
   count: number
   menus: HomeMenu[]
 }
+
+// Mandatory Menu Types
+
+export type MandatoryMenuDisplay = {
+  menuId: number
+  menuTitle: string
+  menuSubtitle: string
+  menuType: string
+  entrantes: string[]
+  principales: { items: string[]; titulo_principales?: string }
+  minPartySize: number
+  mainDishesLimit: boolean
+  mainDishesLimitNumber: number
+  price: number
+  menuChooseMain: boolean
+}
+
+export type MandatoryMenuResponse = {
+  date: string
+  status: boolean
+  mandatory?: boolean
+  menus?: MandatoryMenuDisplay[]
+}
