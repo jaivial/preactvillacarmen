@@ -8,6 +8,7 @@ import type {
   HourDataResponse,
   InsertBookingResponse,
   MesasDeDosResponse,
+  MandatoryMenuResponse,
   MonthAvailabilityResponse,
   ReservationDayContextFloor,
   ReservationDayContextResponse,
@@ -23,7 +24,7 @@ import { InlineCounter } from '../../components/reservas/InlineCounter'
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
 
-type StepId = 'date' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'accessories' | 'summary'
+type StepId = 'date' | 'mandatoryMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'accessories' | 'summary'
 
 type PrincipalesRow = { name: string; servings: number }
 
@@ -345,6 +346,12 @@ export function Reservas() {
   const [principalesEnabled, setPrincipalesEnabled] = useState<boolean | null>(null)
   const [principalesRows, setPrincipalesRows] = useState<PrincipalesRow[]>([])
 
+  // Mandatory menus.
+  const [mandatoryMenuData, setMandatoryMenuData] = useState<MandatoryMenuResponse | null>(null)
+  const [mandatoryMenuId, setMandatoryMenuId] = useState<number | null>(null)
+  const [mandatoryPrincipalesEnabled, setMandatoryPrincipalesEnabled] = useState<boolean | null>(null)
+  const [mandatoryPrincipalesRows, setMandatoryPrincipalesRows] = useState<PrincipalesRow[]>([])
+
   // Rice.
   const [riceTypes, setRiceTypes] = useState<string[]>([])
   const [wantsRice, setWantsRice] = useState<boolean | null>(null)
@@ -381,11 +388,21 @@ export function Reservas() {
   const steps = useMemo(() => {
     const out: { id: StepId; label: string }[] = [{ id: 'date', label: 'Fecha y personas' }]
 
+    // Check if mandatory menu is active for this date
+    const hasMandatoryMenu = mandatoryMenuData?.status === true && !!mandatoryMenuData?.menus && mandatoryMenuData.menus.length > 0
+
+    if (hasMandatoryMenu) {
+      out.push({ id: 'mandatoryMenu', label: 'Menú' })
+    }
+
     const hasMenu = !!groupMenus && groupMenus.length > 0
-    if (hasMenu) out.push({ id: 'groupMenu', label: 'Menú' })
+    // Only show groupMenu step if mandatory menu is not forcing menu selection
+    if (hasMenu && !hasMandatoryMenu) out.push({ id: 'groupMenu', label: 'Menú' })
 
     // Legacy-like: before the user chooses (null), keep Arroz visible.
-    const includeRice = !hasMenu || wantsGroupMenu !== true
+    // If mandatory menu is selected, skip rice and group menu steps
+    const mandatoryMenuSelected = hasMandatoryMenu && mandatoryMenuId !== null
+    const includeRice = !hasMandatoryMenu || !mandatoryMenuSelected
     if (includeRice) out.push({ id: 'rice', label: 'Arroz' })
 
     out.push({ id: 'personal', label: 'Datos' })
@@ -396,7 +413,7 @@ export function Reservas() {
 
     out.push({ id: 'summary', label: 'Resumen' })
     return out
-  }, [groupMenus, wantsGroupMenu, childrenCount])
+  }, [groupMenus, wantsGroupMenu, childrenCount, mandatoryMenuData, mandatoryMenuId])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -908,6 +925,29 @@ export function Reservas() {
     }
 
     try {
+      // First, check for mandatory menus
+      const mandatoryRes = await apiGetJson<MandatoryMenuResponse>(
+        `/api/reservations/mandatory-menus?date=${encodeURIComponent(selectedDate)}`
+      )
+      if (mandatoryRes.status === true && mandatoryRes.menus && mandatoryRes.menus.length > 0) {
+        setMandatoryMenuData(mandatoryRes)
+        setMandatoryMenuId(null)
+        setMandatoryPrincipalesEnabled(null)
+        setMandatoryPrincipalesRows([])
+        setStep('mandatoryMenu')
+        return
+      }
+      // No mandatory menus, proceed with normal flow
+      setMandatoryMenuData(null)
+      setMandatoryMenuId(null)
+      setMandatoryPrincipalesEnabled(null)
+      setMandatoryPrincipalesRows([])
+    } catch {
+      // No mandatory menus config
+      setMandatoryMenuData(null)
+    }
+
+    try {
       const data = await apiGetJson<ValidGroupMenusForPartySizeResponse>(
         `/api/reservations/group-menus?party_size=${encodeURIComponent(String(partySize))}`
       )
@@ -1394,7 +1434,7 @@ export function Reservas() {
                     class="resvActions"
                     initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'ease-in-out' }}
+                    transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
                   >
                     <button
                       type="button"
@@ -1407,6 +1447,220 @@ export function Reservas() {
                 ) : null}
               </motion.div>
             ) : null}
+          </div>
+        </div>
+      )
+    }
+
+    if (step === 'mandatoryMenu') {
+      const mandatoryMenus = mandatoryMenuData?.menus || []
+      const isMandatory = mandatoryMenuData?.mandatory === true
+      const selectedMandatoryMenu = mandatoryMenus.find(m => m.menuId === mandatoryMenuId)
+
+      const mandatoryMenuOptions = useMemo<PopoverSelectOption[]>(() => {
+        return mandatoryMenus.map((m) => ({
+          value: String(m.menuId),
+          label: m.menuTitle,
+          right: `${m.price}€/persona`,
+          keywords: `${m.menuTitle} ${m.price}`.toLowerCase(),
+        }))
+      }, [mandatoryMenus])
+
+      const mandatoryPrincipalesOptions = useMemo<PopoverSelectOption[]>(() => {
+        if (!selectedMandatoryMenu) return []
+        const items = readStringArray(selectedMandatoryMenu.principales?.items || [])
+        return items.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() }))
+      }, [selectedMandatoryMenu])
+
+      return (
+        <div class="resvStep">
+          <div class="resvCard">
+            <div class="resvCardHead">
+              <div class="resvCardTitle">Menú recomendado del día</div>
+              <div class="resvCardSub">
+                {isMandatory
+                  ? 'Seleccione un menu recomendado del dia para su reserva. Para la fecha seleccionada solo se admitiran reservas con uno de los menus disponibles.'
+                  : '¿Desea reservar un menu recomendado del dia?'}
+              </div>
+            </div>
+
+            <div class="resvField">
+              <div class="resvLabel">Seleccione un menú</div>
+              <PopoverSelect
+                ariaLabel="Seleccione un menú"
+                value={mandatoryMenuId ? String(mandatoryMenuId) : null}
+                placeholder="Selecciona un menú"
+                options={mandatoryMenuOptions}
+                searchable={mandatoryMenuOptions.length > 6}
+                searchPlaceholder="Buscar menú"
+                onChange={(v) => {
+                  const id = Number(v)
+                  setMandatoryMenuId(Number.isFinite(id) && id > 0 ? id : null)
+                  setMandatoryPrincipalesEnabled(null)
+                  setMandatoryPrincipalesRows([])
+                }}
+              />
+            </div>
+
+            {selectedMandatoryMenu ? (
+              <div class="resvMenuDetails">
+                {selectedMandatoryMenu.menuType !== 'special' && (
+                  <>
+                    <div class="resvMenuBlock">
+                      <div class="resvMenuTitle">Entrantes incluidos</div>
+                      <ul class="resvMenuList">
+                        {readStringArray(selectedMandatoryMenu.entrantes).map((t) => (
+                          <li key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {selectedMandatoryMenu.menuChooseMain ? (
+                      <div class="resvMenuBlock">
+                        <div class="resvMenuTitle">Principales</div>
+                        <div class="resvHint">¿Queréis elegir ahora los principales?</div>
+                        <div class="resvYesNo">
+                          <button
+                            type="button"
+                            class={mandatoryPrincipalesEnabled === true ? 'resvChoice selected' : 'resvChoice'}
+                            onClick={() => {
+                              setMandatoryPrincipalesEnabled(true)
+                              if (mandatoryPrincipalesRows.length === 0) {
+                                setMandatoryPrincipalesRows([{ name: '', servings: 0 }])
+                              }
+                            }}
+                          >
+                            Sí
+                          </button>
+                          <button
+                            type="button"
+                            class={mandatoryPrincipalesEnabled === false ? 'resvChoice selected' : 'resvChoice'}
+                            onClick={() => {
+                              setMandatoryPrincipalesEnabled(false)
+                              setMandatoryPrincipalesRows([])
+                            }}
+                          >
+                            No
+                          </button>
+                        </div>
+
+                        {mandatoryPrincipalesEnabled === true ? (
+                          <div class="resvPrincipales">
+                            {mandatoryPrincipalesRows.map((row, idx) => (
+                              <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
+                                <PopoverSelect
+                                  ariaLabel={`Principal ${idx + 1}`}
+                                  value={row.name ? row.name : null}
+                                  placeholder="Selecciona un principal"
+                                  options={mandatoryPrincipalesOptions}
+                                  searchable={mandatoryPrincipalesOptions.length > 10}
+                                  searchPlaceholder="Buscar principal"
+                                  onChange={(name) =>
+                                    setMandatoryPrincipalesRows((prev) => prev.map((p, i) => (i === idx ? { ...p, name } : p)))
+                                  }
+                                />
+                                <InlineCounter
+                                  ariaLabel={`Raciones principal ${idx + 1}`}
+                                  value={row.servings || 0}
+                                  min={0}
+                                  max={partySize || 99}
+                                  onChange={(v) =>
+                                    setMandatoryPrincipalesRows((prev) =>
+                                      prev.map((p, i) => (i === idx ? { ...p, servings: v } : p))
+                                    )
+                                  }
+                                />
+                                <button
+                                  type="button"
+                                  class="resvIconBtn"
+                                  aria-label="Eliminar"
+                                  onClick={() => setMandatoryPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
+                                >
+                                  <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
+                                </button>
+                              </div>
+                            ))}
+
+                            <div class="resvPrincipalesActions">
+                              <button
+                                type="button"
+                                class="btn"
+                                onClick={() => {
+                                  const max = selectedMandatoryMenu.mainDishesLimit
+                                    ? Math.max(1, selectedMandatoryMenu.mainDishesLimitNumber || 1)
+                                    : Math.max(1, Math.min(10, partySize || 10))
+                                  if (mandatoryPrincipalesRows.length >= max) return
+                                  setMandatoryPrincipalesRows((prev) => [...prev, { name: '', servings: 0 }])
+                                }}
+                              >
+                                Añadir principal
+                              </button>
+                              <div class="resvHint">
+                                Máximo:{' '}
+                                {selectedMandatoryMenu.mainDishesLimit
+                                  ? selectedMandatoryMenu.mainDishesLimitNumber
+                                  : Math.min(10, partySize || 10)}{' '}
+                                tipos
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div class="resvMenuBlock">
+                        <div class="resvMenuTitle">Principales</div>
+                        <ul class="resvMenuList">
+                          {readStringArray(selectedMandatoryMenu.principales?.items || []).map((t) => (
+                            <li key={t}>{t}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            {!isMandatory && mandatoryMenuId && (
+              <button
+                type="button"
+                class="btn"
+                onClick={() => {
+                  setMandatoryMenuId(null)
+                  setMandatoryPrincipalesEnabled(null)
+                  setMandatoryPrincipalesRows([])
+                }}
+              >
+                Continuar sin reservar menu recomendado
+              </button>
+            )}
+
+            <div class="resvActions">
+              <button type="button" class="btn" onClick={goPrev}>
+                Anterior
+              </button>
+              <button
+                type="button"
+                class="btn primary"
+                onClick={() => {
+                  if (isMandatory && mandatoryMenuId === null) {
+                    pushToast('warning', 'Menú requerido', 'Seleccione un menú para continuar.')
+                    return
+                  }
+                  // If mandatory menu selected, skip rice and group menu steps
+                  if (mandatoryMenuId !== null) {
+                    setWantsRice(false)
+                    setRiceType('')
+                    setRiceServings(null)
+                    setWantsGroupMenu(false)
+                    setGroupMenuId(null)
+                  }
+                  setStep('personal')
+                }}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </div>
       )
