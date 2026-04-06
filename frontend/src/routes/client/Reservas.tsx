@@ -1624,7 +1624,8 @@ export function Reservas() {
             {!isMandatory && mandatoryMenuId && (
               <button
                 type="button"
-                class="btn"
+                class="btn !mt-4"
+                style={{ marginTop: "20px", marginLeft: "auto", marginRight: "auto", display: "flex" }}
                 onClick={() => {
                   setMandatoryMenuId(null)
                   setMandatoryPrincipalesEnabled(null)
