@@ -145,18 +145,23 @@ export default defineConfig(({ mode }) => {
     env.VITE_API_PROXY_TARGET,
     env.BACKEND_ORIGIN,
     existsSync('/.dockerenv') ? 'http://backend:8080' : undefined,
-    'http://127.0.0.1:8080',
-    'http://localhost:8080',
+    'http://127.0.0.1:8081',
+    'http://localhost:8081',
   ])
 
   return {
     plugins: [preact(), devApiProxyPlugin(apiProxyTargets)],
     server: {
       host: '0.0.0.0',
-      port: 5173,
+      port: 5174,
+      allowedHosts: [
+        '0.0.0.0',
+        'localhost',
+        '.trycloudflare.com',
+      ],
       hmr: {
-        clientPort: 5173,
-        port: 5173,
+        clientPort: 5174,
+        port: 5174,
       },
     },
   }
