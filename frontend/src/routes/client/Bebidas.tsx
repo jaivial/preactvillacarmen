@@ -4,6 +4,7 @@ import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
+import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 
 type DynamicBebidasState = {
   loadedTypes: Set<string>
@@ -149,11 +150,11 @@ export function Bebidas() {
           )}
 
           {state.error ? (
-            <div class="menuState">{t('bebidas.error')}</div>
+            <EmptyState title={t('bebidas.error')} />
           ) : items === undefined ? (
             <div class="menuState">{t('menus.preview.loading')}</div>
           ) : !hasContent ? (
-            <div class="menuState">{t('bebidas.empty')}</div>
+            <EmptyState title={t('bebidas.empty')} />
           ) : (
             <div class="wineList">
               {items.map((item, idx) => {
