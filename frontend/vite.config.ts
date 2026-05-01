@@ -146,6 +146,8 @@ export default defineConfig(({ mode }) => {
     env.VITE_API_PROXY_TARGET,
     env.BACKEND_ORIGIN,
     existsSync('/.dockerenv') ? 'http://backend:8080' : undefined,
+    'http://127.0.0.1:8080',
+    'http://localhost:8080',
     'http://127.0.0.1:8081',
     'http://localhost:8081',
   ])
