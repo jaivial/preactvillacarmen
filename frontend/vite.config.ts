@@ -3,7 +3,8 @@ import { request as httpRequest, type IncomingHttpHeaders, type IncomingMessage,
 import { request as httpsRequest } from 'node:https'
 
 import preact from '@preact/preset-vite'
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin, type Alias } from 'vite'
+import { resolve } from 'node:path'
 
 const DEV_API_PROXY_TIMEOUT_MS = 10_000
 
@@ -151,6 +152,17 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [preact(), devApiProxyPlugin(apiProxyTargets)],
+    resolve: {
+      alias: [
+        { find: 'react', replacement: 'preact/compat' },
+        { find: 'react-dom', replacement: 'preact/compat' },
+        { find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' },
+        { find: 'react/jsx-dev-runtime', replacement: 'preact/jsx-runtime' },
+      ] as Alias[],
+    },
+    define: {
+      __DEV__: 'process.env.NODE_ENV !== "production"',
+    },
     server: {
       host: '0.0.0.0',
       port: 5174,
