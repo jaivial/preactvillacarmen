@@ -13,8 +13,6 @@ export function EmptyState({
   icon,
   className,
 }: EmptyStateProps) {
-  const { t } = useI18n()
-
   return (
     <div
       class={`cafeEmpty${className ? ` ${className}` : ''}`}
