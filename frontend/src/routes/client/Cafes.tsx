@@ -4,6 +4,7 @@ import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
+import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 
 type CafesState = {
   loaded: boolean
@@ -149,7 +150,7 @@ export function Cafes() {
               )}
 
               {!hasContent ? (
-                <div class="menuState">{t('cafes.empty')}</div>
+                <EmptyState title={t('cafes.empty')} />
               ) : (
                 <div class="cafeList">
                   {items.map((item, idx) => {

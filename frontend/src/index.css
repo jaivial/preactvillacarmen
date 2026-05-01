@@ -5172,3 +5172,60 @@ svg {
     padding: 14px 16px 14px 10px;
   }
 }
+
+/* =============================================
+   EMPTY STATE — Shared reusable component
+   Clean, minimal, warm tones
+   ============================================= */
+
+.cafeEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+}
+
+.cafeEmptyInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 360px;
+  text-align: center;
+}
+
+.cafeEmptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: rgba(196, 132, 58, 0.1);
+  border: 1px solid rgba(196, 132, 58, 0.2);
+  color: rgba(139, 69, 19, 0.5);
+  margin-bottom: 4px;
+  transition: transform 200ms ease, background 200ms ease;
+}
+
+.cafeEmpty:hover .cafeEmptyIcon {
+  transform: scale(1.06);
+  background: rgba(196, 132, 58, 0.14);
+}
+
+.cafeEmptyTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(20px, 2.4vw, 26px);
+  color: #3d1f0a;
+  line-height: 1.2;
+}
+
+.cafeEmptyMessage {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(107, 58, 31, 0.56);
+  line-height: 1.6;
+}
