@@ -161,7 +161,7 @@ export default defineConfig(({ mode }) => {
       ] as Alias[],
     },
     define: {
-      __DEV__: 'process.env.NODE_ENV !== "production"',
+      __DEV__: JSON.stringify(mode !== 'production'),
     },
     server: {
       host: '0.0.0.0',
