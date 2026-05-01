@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'wouter-preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
+import { useSetAtom } from 'jotai'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
+import { bebidasPageActiveAtom, cafePageActiveAtom } from '../lib/config'
 import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import { fetchMenuSidebar } from '../lib/menuApi'
@@ -26,6 +28,8 @@ export function ClientHeader() {
   const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
   const [cafePageActive, setCafePageActive] = useState(true)
   const [bebidasPageActive, setBebidasPageActive] = useState(true)
+  const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
+  const setCafeActive = useSetAtom(cafePageActiveAtom)
 
   const isHome = location === '/'
   const isEventosPage = location.startsWith('/eventos')
@@ -63,6 +67,8 @@ export function ClientHeader() {
         setSidebarMenus(data.menus)
         setCafePageActive(data.cafe_page_active)
         setBebidasPageActive(data.bebidas_page_active)
+        setCafeActive(data.cafe_page_active)
+        setBebidasActive(data.bebidas_page_active)
       })
       .catch(() => {
         if (cancelled) return

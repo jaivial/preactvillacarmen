@@ -2,6 +2,7 @@ import { render } from 'preact'
 import './index.css'
 import { App } from './app.tsx'
 import { I18nProvider } from './lib/i18n.tsx'
+import { Provider as JotaiProvider } from 'jotai'
 import { startBootLoader } from './lib/bootLoader.ts'
 import { startSmoothAnchorScroll } from './lib/anchorScroll.ts'
 import '@fontsource/inter/400.css'
@@ -12,9 +13,11 @@ import '@fontsource/cormorant-garamond/400.css'
 import '@fontsource/cormorant-garamond/500.css'
 
 render(
-  <I18nProvider>
-    <App />
-  </I18nProvider>,
+  <JotaiProvider>
+    <I18nProvider>
+      <App />
+    </I18nProvider>
+  </JotaiProvider>,
   document.getElementById('app')!
 )
 

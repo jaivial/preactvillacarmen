@@ -3,6 +3,7 @@ import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
 import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Bebidas } from './routes/client/Bebidas.tsx'
+import { BebidasPageGuard } from './routes/client/BebidasPageGuard.tsx'
 import { Cafes } from './routes/client/Cafes.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
@@ -37,7 +38,11 @@ function ClientApp() {
         <Route path="/postres" component={Postres} />
         <Route path="/vinos" component={Vinos} />
         <Route path="/cafes" component={Cafes} />
-        <Route path="/bebidas" component={Bebidas} />
+        <Route path="/bebidas">
+          <BebidasPageGuard>
+            <Bebidas />
+          </BebidasPageGuard>
+        </Route>
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
         <Route path="/avisolegal.html" component={AvisoLegal} />
