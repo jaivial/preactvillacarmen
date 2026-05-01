@@ -5,6 +5,7 @@ import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Bebidas } from './routes/client/Bebidas.tsx'
 import { BebidasPageGuard } from './routes/client/BebidasPageGuard.tsx'
 import { Cafes } from './routes/client/Cafes.tsx'
+import { CafesPageGuard } from './routes/client/CafesPageGuard.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
 import { Home } from './routes/client/Home.tsx'
@@ -37,7 +38,11 @@ function ClientApp() {
         <Route path="/menusdegrupos" component={MenusDeGrupos} />
         <Route path="/postres" component={Postres} />
         <Route path="/vinos" component={Vinos} />
-        <Route path="/cafes" component={Cafes} />
+        <Route path="/cafes">
+          <CafesPageGuard>
+            <Cafes />
+          </CafesPageGuard>
+        </Route>
         <Route path="/bebidas">
           <BebidasPageGuard>
             <Bebidas />

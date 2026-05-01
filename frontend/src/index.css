@@ -4852,3 +4852,323 @@ svg {
     border-color: rgb(147 239 231);
     color: rgb(114 190 184 / 95%);
 }
+
+/* =============================================
+   CAFES PAGE — Warm Coffee-Shop Aesthetic
+   Flexbox-based, warm amber palette
+   ============================================= */
+
+/* Page wrapper */
+.cafePage {
+  padding-bottom: 72px;
+}
+
+/* Hero */
+.cafePage .page-hero {
+  background: linear-gradient(
+    160deg,
+    #faf7f2 0%,
+    #f5ede0 60%,
+    #f0e4d0 100%
+  );
+  border-bottom: 1px solid rgba(160, 100, 40, 0.14);
+}
+
+.cafePage .page-title {
+  color: #6b3a1f;
+}
+
+.cafePage .page-subtitle {
+  color: rgba(107, 58, 31, 0.68);
+}
+
+/* Body */
+.cafeBody {
+  padding: 14px 0 74px;
+}
+
+/* --- Category Tabs --- */
+.cafeTabsSticky {
+  position: sticky;
+  top: calc(var(--header-h) + 10px);
+  z-index: 70;
+  padding: 6px 0 14px;
+}
+
+.cafeTabs {
+  margin: 0 auto;
+  width: min(520px, 100%);
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  position: relative;
+  background: rgba(255, 252, 248, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(180, 130, 80, 0.2);
+  box-shadow: 0 8px 28px rgba(107, 58, 31, 0.08);
+}
+
+.cafeTab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 12px 14px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  color: rgba(107, 58, 31, 0.75);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.cafeTabLabel {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.cafeTabBubble {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c4843a 0%, #8b4513 100%);
+  box-shadow: 0 10px 24px rgba(139, 69, 19, 0.22);
+}
+
+.cafeTab.is-active {
+  color: rgba(255, 252, 248, 0.98);
+}
+
+@media (hover: hover) {
+  .cafeTab:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.cafeTab:focus-visible {
+  outline: 2px solid rgba(139, 69, 19, 0.35);
+  outline-offset: 3px;
+}
+
+/* --- Card List (flex column) --- */
+.cafeList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
+}
+
+.cafeCardWrap {
+  margin: 0;
+  padding: 0 0.5rem;
+}
+
+/* --- Card (horizontal flex layout) --- */
+.cafeCard {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: linear-gradient(
+    170deg,
+    rgba(255, 252, 248, 0.94),
+    rgba(245, 237, 224, 0.82)
+  );
+  border: 1px solid rgba(180, 130, 80, 0.22);
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: 0 4px 20px rgba(107, 58, 31, 0.07);
+  overflow: hidden;
+  gap: 0;
+}
+
+@media (hover: hover) {
+  .cafeCard {
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .cafeCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(107, 58, 31, 0.13);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cafeTab,
+  .cafeCard {
+    transition: none !important;
+  }
+}
+
+/* --- Photo (left column, fixed width) --- */
+.cafePhoto {
+  flex: 0 0 clamp(120px, 22vw, 180px);
+  min-height: clamp(120px, 22vw, 180px);
+  border-right: 1px solid rgba(180, 130, 80, 0.14);
+  background:
+    radial-gradient(
+      400px 300px at 50% 30%,
+      rgba(196, 132, 58, 0.12),
+      transparent 60%
+    ),
+    rgba(245, 237, 224, 0.5);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cafePhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  filter: drop-shadow(0 8px 12px rgba(107, 58, 31, 0.18));
+}
+
+.cafePhotoPlaceholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      500px 340px at 40% 30%,
+      rgba(196, 132, 58, 0.1),
+      transparent 60%
+    ),
+    rgba(245, 237, 224, 0.3);
+}
+
+.cafePhotoPlaceholder.is-loading {
+  opacity: 0.7;
+}
+
+/* --- Content (center flex-grow) --- */
+.cafeContent {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 16px 18px 20px;
+  gap: 4px;
+}
+
+.cafeMeta {
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(139, 69, 19, 0.72);
+  font-weight: 600;
+}
+
+.cafeName {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(18px, 2.4vw, 26px);
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+  color: #3d1f0a;
+}
+
+.cafeDesc {
+  margin: 6px 0 0;
+  color: rgba(107, 58, 31, 0.62);
+  line-height: 1.68;
+  font-size: 14px;
+}
+
+/* --- Price Tag (right column) --- */
+.cafePriceTag {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 20px 18px 12px;
+  align-self: stretch;
+  border-left: 1px solid rgba(180, 130, 80, 0.14);
+  background: rgba(245, 237, 224, 0.4);
+}
+
+.cafePriceAmount {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(20px, 2.4vw, 26px);
+  color: #6b3a1f;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* --- Responsive: Mobile --- */
+@media (max-width: 600px) {
+  .cafeTabs {
+    padding: 7px;
+    gap: 6px;
+  }
+
+  .cafeTab {
+    padding: 10px 10px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+
+  .cafeCard {
+    flex-direction: column;
+  }
+
+  .cafePhoto {
+    flex: 0 0 auto;
+    width: 100%;
+    height: clamp(160px, 40vw, 220px);
+    border-right: none;
+    border-bottom: 1px solid rgba(180, 130, 80, 0.14);
+  }
+
+  .cafePhoto img {
+    object-fit: cover;
+    padding: 8px;
+  }
+
+  .cafeContent {
+    padding: 14px 16px 10px;
+  }
+
+  .cafePriceTag {
+    border-left: none;
+    border-top: 1px solid rgba(180, 130, 80, 0.14);
+    background: rgba(245, 237, 224, 0.6);
+    padding: 10px 16px;
+    justify-content: flex-end;
+    align-self: auto;
+  }
+}
+
+/* --- Responsive: Tablet --- */
+@media (min-width: 601px) and (max-width: 860px) {
+  .cafeCard {
+    min-height: clamp(140px, 20vw, 180px);
+  }
+
+  .cafePhoto {
+    flex: 0 0 clamp(110px, 18vw, 150px);
+  }
+
+  .cafeContent {
+    padding: 14px 14px 14px 16px;
+  }
+
+  .cafePriceTag {
+    padding: 14px 16px 14px 10px;
+  }
+}
