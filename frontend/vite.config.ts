@@ -172,6 +172,7 @@ export default defineConfig(({ mode }) => {
         '0.0.0.0',
         'localhost',
         '.trycloudflare.com',
+        '.menustudioai.com',
       ],
       hmr: {
         clientPort: 5174,
