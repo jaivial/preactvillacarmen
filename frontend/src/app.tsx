@@ -50,12 +50,14 @@ function ClientApp() {
         </Route>
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
+        <Route path="/avisolegal" component={AvisoLegal} />
         <Route path="/avisolegal.html" component={AvisoLegal} />
-        <Route path="/booking_policies.php" component={BookingPolicies} />
         <Route path="/booking-policies" component={BookingPolicies} />
+        <Route path="/booking_policies.php" component={BookingPolicies} />
         <Route path="/confirm" component={ConfirmBooking} />
         <Route path="/cancel" component={CancelBooking} />
         <Route path="/update-rice" component={UpdateRice} />
+        <Route path="/protecciondatos" component={ProteccionDatos} />
         <Route path="/protecciondatos.html" component={ProteccionDatos} />
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
