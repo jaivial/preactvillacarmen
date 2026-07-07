@@ -338,3 +338,22 @@ export type MandatoryMenuResponse = {
   mandatory?: boolean
   menus?: MandatoryMenuDisplay[]
 }
+
+export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos'
+
+export type LegalPage = {
+  slug: LegalPageSlug
+  title: string
+  contentJson: string
+  contentHtml: string
+  updatedAt: string
+}
+
+export type LegalPageResponse = {
+  success: true
+  slug: LegalPageSlug
+  title: string
+  contentHtml: string
+  contentJson: string
+  updatedAt: string
+}

@@ -2172,11 +2172,11 @@ export function Reservas() {
               <Checkbox checked={termsAccepted} onCheckedChange={setTermsAccepted} variant="accent" size="sm" />
               <span>
                 He leído y acepto las{' '}
-                <a href="avisolegal.html" target="_blank" rel="noreferrer">
+                <a href="/avisolegal" target="_blank" rel="noreferrer">
                   condiciones de uso y aviso legal
                 </a>{' '}
                 y las{' '}
-                <a href="booking_policies.php" target="_blank" rel="noreferrer">
+                <a href="/booking-policies" target="_blank" rel="noreferrer">
                   políticas de reserva del restaurante
                 </a>
                 .
@@ -2186,7 +2186,7 @@ export function Reservas() {
               <Checkbox checked={privacyAccepted} onCheckedChange={setPrivacyAccepted} variant="accent" size="sm" />
               <span>
                 He leído, acepto y consiento el{' '}
-                <a href="protecciondatos.html" target="_blank" rel="noreferrer">
+                <a href="/protecciondatos" target="_blank" rel="noreferrer">
                   tratamiento de datos personales
                 </a>
                 .
