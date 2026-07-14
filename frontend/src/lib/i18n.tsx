@@ -225,6 +225,7 @@ const DICT: Dictionary = {
   },
   'menu.price.dessertOrCoffee': { es: 'Postre o café a elegir', en: 'Dessert or coffee (choose one)' },
   'menu.price.drinkNotIncluded': { es: 'Bebida no incluida', en: 'Drinks not included' },
+  'menu.dish.supplement': { es: 'Suplemento', en: 'Supplement' },
   'menu.important.title': { es: 'Información importante', en: 'Important information' },
   'menu.important.minConsumption': {
     es: 'Consumo mínimo: 1 menú por plaza reservada en la mesa, independientemente de la edad de los comensales.',
@@ -371,4 +372,25 @@ export function useI18n() {
   const ctx = useContext(I18nContext)
   if (!ctx) throw new Error('useI18n must be used within I18nProvider')
   return ctx
+}
+
+// localized picks the English value when the active language is English and a
+// non-empty translation is available; otherwise it falls back to Spanish.
+export function localized(spanish: string, english: string | null | undefined, lang: Lang): string {
+  if (lang === 'en') {
+    const en = String(english || '').trim()
+    if (en) return en
+  }
+  return spanish
+}
+
+// localizedArray returns the English array when the active language is English
+// and it has content; otherwise the Spanish array. Missing English entries fall
+// back element-wise to the Spanish value.
+export function localizedArray(spanish: string[], english: string[] | null | undefined, lang: Lang): string[] {
+  if (lang !== 'en' || !Array.isArray(english) || english.length === 0) return spanish
+  return spanish.map((es, idx) => {
+    const en = String(english[idx] || '').trim()
+    return en || es
+  })
 }

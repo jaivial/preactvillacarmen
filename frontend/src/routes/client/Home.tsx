@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from 'wouter-preact'
 import { cdnUrl } from '../../lib/cdn'
-import { useI18n } from '../../lib/i18n'
+import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import type { Lang } from '../../lib/i18n'
 import { buildPublicMenuHref, isGroupMenuType } from '../../lib/publicMenus'
 import { fetchMenuHome } from '../../lib/menuApi'
 import { ScrollReveal } from '../../components/ScrollReveal'
@@ -54,10 +55,9 @@ function getMenuTypeSortPriority(menuType: string): number {
   return MENU_TYPE_SORT_PRIORITY[menuType] ?? 99
 }
 
-function resolveMenuSubtitle(menu: HomeMenu | null): string {
+function resolveMenuSubtitle(menu: HomeMenu | null, lang: Lang): string {
   if (!menu) return ''
-  const first = menu.menu_subtitle?.[0]
-  return String(first || '').trim()
+  return String(localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, lang)[0] || '').trim()
 }
 
 function resolveMenuPreviewImage(menu: HomeMenu | null): string {
@@ -791,7 +791,7 @@ function EventsSection() {
 
 export function Home() {
   const [homeMenus, setHomeMenus] = useState<HomeMenu[] | null>(null)
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -819,11 +819,11 @@ export function Home() {
       .filter((menu) => menu.active)
       .map((menu) => {
         const previewImage = resolveMenuPreviewImage(menu)
-        const subtitle = resolveMenuSubtitle(menu)
+        const subtitle = resolveMenuSubtitle(menu, lang)
         const isSpecial = menu.menu_type === 'special'
         const isGroupMenu = isGroupMenuType(menu.menu_type)
 
-        let title = menu.menu_title
+        let title = localized(menu.menu_title, menu.menu_title_english, lang)
         if (!title) {
           if (isGroupMenu) title = t('menus.card.groups.title')
           else if (isSpecial) title = t('menus.card.valentine.title')
@@ -850,7 +850,7 @@ export function Home() {
         }
       })
       .sort((a, b) => a.sortPriority - b.sortPriority)
-  }, [homeMenus, t])
+  }, [homeMenus, lang, t])
 
   return (
     <div class="home">

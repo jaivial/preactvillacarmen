@@ -6,9 +6,44 @@ interface BookingData {
   reservationDate: string
   reservationTime: string
   partySize: number
+  adults: number
+  children: number
   customerName: string
+  arrozDisplay?: string
+  menuDisplay?: string
+  principales?: Array<{ name: string; servings: number }>
+  commentary?: string
+  babyStrollers: number
+  highChairs: number
+  floorDisplay?: string
+  tableNumber?: string
   isSameDay: boolean
   isConfirmed: boolean
+}
+
+function BookingDetails({ booking }: { booking: BookingData }) {
+  return (
+    <div class="bookingActionDetails" data-slot="details">
+      <div class="bookingActionName" data-slot="customer-name">{booking.customerName}</div>
+      <div class="bookingActionGrid" data-slot="info-grid">
+        <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
+        <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
+        <div data-slot="field-party"><span class="bookingActionLabel">Comensales</span><span class="bookingActionValue">{booking.partySize}</span></div>
+        <div data-slot="field-adults"><span class="bookingActionLabel">Adultos</span><span class="bookingActionValue">{booking.adults}</span></div>
+        <div data-slot="field-children"><span class="bookingActionLabel">Niños</span><span class="bookingActionValue">{booking.children}</span></div>
+        {booking.floorDisplay ? <div data-slot="field-floor"><span class="bookingActionLabel">Salón</span><span class="bookingActionValue">{booking.floorDisplay}</span></div> : null}
+        {booking.tableNumber ? <div data-slot="field-table"><span class="bookingActionLabel">Mesa</span><span class="bookingActionValue">{booking.tableNumber}</span></div> : null}
+        {booking.menuDisplay ? <div data-slot="field-menu"><span class="bookingActionLabel">Menú</span><span class="bookingActionValue">{booking.menuDisplay}</span></div> : null}
+        {booking.arrozDisplay ? <div data-slot="field-rice"><span class="bookingActionLabel">Arroz</span><span class="bookingActionValue">{booking.arrozDisplay}</span></div> : null}
+        <div data-slot="field-high-chairs"><span class="bookingActionLabel">Tronas</span><span class="bookingActionValue">{booking.highChairs}</span></div>
+        <div data-slot="field-strollers"><span class="bookingActionLabel">Carritos</span><span class="bookingActionValue">{booking.babyStrollers}</span></div>
+      </div>
+      {booking.principales?.length ? (
+        <div class="bookingActionNote" data-slot="principales">Principales: {booking.principales.map((row) => `${row.name} · ${row.servings} raciones`).join(', ')}</div>
+      ) : null}
+      {booking.commentary ? <div class="bookingActionNote" data-slot="commentary">Observaciones: {booking.commentary}</div> : null}
+    </div>
+  )
 }
 
 export function CancelBooking() {
@@ -96,16 +131,7 @@ export function CancelBooking() {
           <h1 class="bookingActionTitle" data-slot="title">Cancelación No Disponible</h1>
           <p class="bookingActionSubtext" data-slot="subtitle">Reserva para hoy</p>
           <div class="bookingActionAlert warning" data-slot="alert" data-role="warning-message">Las reservas para el mismo día no se pueden cancelar online. Por favor, llame al restaurante.</div>
-          {booking && (
-            <div class="bookingActionDetails" data-slot="details">
-              <div class="bookingActionName" data-slot="customer-name">{booking.customerName}</div>
-              <div class="bookingActionGrid" data-slot="info-grid">
-                <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
-                <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
-                <div data-slot="field-party"><span class="bookingActionLabel">Personas</span><span class="bookingActionValue">{booking.partySize}</span></div>
-              </div>
-            </div>
-          )}
+          {booking ? <BookingDetails booking={booking} /> : null}
           <a href="tel:+34638857294" class="bookingActionBtn success" data-slot="call-btn" data-role="phone-action">Llamar ahora</a>
           <a href="/" class="bookingActionBtn accent" data-slot="home-link" data-role="navigation">Volver al inicio</a>
         </div>
@@ -120,16 +146,7 @@ export function CancelBooking() {
           <h1 class="bookingActionTitle" data-slot="title">Reserva Cancelada</h1>
           <p class="bookingActionSubtext" data-slot="subtitle">Su reserva ha sido cancelada correctamente</p>
           <div class="bookingActionAlert success" data-slot="alert" data-role="success-message">{success}</div>
-          {booking && (
-            <div class="bookingActionDetails" data-slot="details">
-              <div class="bookingActionName" data-slot="customer-name">{booking.customerName}</div>
-              <div class="bookingActionGrid" data-slot="info-grid">
-                <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
-                <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
-                <div data-slot="field-party"><span class="bookingActionLabel">Personas</span><span class="bookingActionValue">{booking.partySize}</span></div>
-              </div>
-            </div>
-          )}
+          {booking ? <BookingDetails booking={booking} /> : null}
           <a href="/" class="bookingActionBtn accent" data-slot="home-link" data-role="navigation">Volver al inicio</a>
         </div>
       </div>
@@ -144,16 +161,7 @@ export function CancelBooking() {
 
         {error && <div class="bookingActionAlert danger" data-slot="alert" data-role="error-message">{error}</div>}
 
-        {booking && (
-          <div class="bookingActionDetails" data-slot="details">
-            <div class="bookingActionName" data-slot="customer-name">{booking.customerName}</div>
-            <div class="bookingActionGrid" data-slot="info-grid">
-              <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
-              <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
-              <div data-slot="field-party"><span class="bookingActionLabel">Personas</span><span class="bookingActionValue">{booking.partySize}</span></div>
-            </div>
-          </div>
-        )}
+        {booking ? <BookingDetails booking={booking} /> : null}
 
         <button class="bookingActionBtn danger" data-slot="cancel-btn" data-role="primary-action" onClick={() => void handleCancel()} disabled={cancelling}>
           {cancelling ? 'Cancelando…' : 'Cancelar Reserva'}

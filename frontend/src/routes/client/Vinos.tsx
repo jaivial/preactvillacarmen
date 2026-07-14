@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { useI18n } from '../../lib/i18n'
+import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Vino, VinosResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
@@ -14,7 +14,7 @@ const WINE_TYPES: { tipo: WineType; labelKey: string }[] = [
 ]
 
 export function Vinos() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
   const [tipo, setTipo] = useState<WineType>('TINTO')
   const [vinosByTipo, setVinosByTipo] = useState<Record<WineType, Vino[] | null | undefined>>(() => ({
@@ -228,12 +228,12 @@ export function Vinos() {
                       </div>
 
                       <div class="wineInfo">
-                        <div class="wineMeta">{v.bodega}</div>
-                        <h2 class="wineName">{v.nombre}</h2>
+                        <div class="wineMeta">{localized(v.bodega, v.bodega_english, lang)}</div>
+                        <h2 class="wineName">{localized(v.nombre, v.nombre_english, lang)}</h2>
 
-                        {v.denominacion_origen ? <div class="wineOrigin">{`D.O. ${v.denominacion_origen}`}</div> : null}
+                        {v.denominacion_origen ? <div class="wineOrigin">{`D.O. ${localized(v.denominacion_origen, v.denominacion_origen_english, lang)}`}</div> : null}
 
-                        {v.descripcion ? <p class="wineDesc">{v.descripcion}</p> : null}
+                        {v.descripcion ? <p class="wineDesc">{localized(v.descripcion, v.descripcion_english, lang)}</p> : null}
 
                         <div class="wineFacts">
                           {v.anyo ? <span>{v.anyo}</span> : null}

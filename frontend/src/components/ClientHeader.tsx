@@ -55,6 +55,15 @@ export function ClientHeader() {
   }, [mobileOpen])
 
   useEffect(() => {
+    if (!mobileOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [mobileOpen])
+
+  useEffect(() => {
     setMobileOpen(false)
   }, [location])
 

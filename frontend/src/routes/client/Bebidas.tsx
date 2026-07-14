@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { useI18n } from '../../lib/i18n'
+import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
@@ -14,7 +14,7 @@ type DynamicBebidasState = {
 }
 
 export function Bebidas() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
   const [state, setState] = useState<DynamicBebidasState>(() => ({
     loadedTypes: new Set(),
@@ -60,6 +60,15 @@ export function Bebidas() {
     () => Object.keys(state.itemsByTipo).sort((a, b) => a.localeCompare(b)),
     [state.itemsByTipo]
   )
+
+  const tipoLabels = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const [tipo, list] of Object.entries(state.itemsByTipo)) {
+      const withEn = (list || []).find((it) => String(it.tipo_english || '').trim())
+      if (withEn?.tipo_english) map[tipo] = withEn.tipo_english
+    }
+    return map
+  }, [state.itemsByTipo])
 
   const items = selectedTipo ? state.itemsByTipo[selectedTipo] : undefined
 
@@ -141,7 +150,7 @@ export function Bebidas() {
                           transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }}
                         />
                       ) : null}
-                      <span class="wineTabLabel">{tipo}</span>
+                      <span class="wineTabLabel">{localized(tipo, tipoLabels[tipo], lang)}</span>
                     </button>
                   )
                 })}
@@ -178,9 +187,9 @@ export function Bebidas() {
                         </div>
                       ) : null}
                       <div class="wineInfo">
-                        {item.tipo && <div class="wineMeta">{item.tipo}</div>}
-                        <h2 class="wineName">{item.nombre}</h2>
-                        {item.descripcion && item.nombre !== item.descripcion ? <p class="wineDesc">{item.descripcion}</p> : null}
+                        {item.tipo && <div class="wineMeta">{localized(item.tipo, item.tipo_english, lang)}</div>}
+                        <h2 class="wineName">{localized(item.nombre, item.nombre_english, lang)}</h2>
+                        {item.descripcion && item.nombre !== item.descripcion ? <p class="wineDesc">{localized(item.descripcion, item.descripcion_english, lang)}</p> : null}
                       </div>
                       <div class="winePriceTag">{formatEuro(item.precio)}</div>
                     </motion.div>

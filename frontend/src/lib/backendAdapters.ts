@@ -97,6 +97,8 @@ function normalizePublicMenuDish(value: unknown): PublicMenuDish | null {
     price: toNumberOrNull(record.price),
     active: toBool(record.active) !== false,
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
+    title_english: toText(record.title_english) || undefined,
+    description_english: toText(record.description_english) || undefined,
   }
 }
 
@@ -120,6 +122,8 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
     annotations: toStringArray(record.annotations),
     dishes,
+    title_english: toText(record.title_english) || undefined,
+    annotations_english: toStringArray(record.annotations_english),
   }
 }
 
@@ -132,6 +136,7 @@ function normalizePublicMenuSettings(value: unknown): PublicMenuSettings {
     min_party_size: Math.max(1, Math.trunc(toNumber(record.min_party_size, 1))),
     main_dishes_limit: toBool(record.main_dishes_limit) === true,
     main_dishes_limit_number: Math.max(1, Math.trunc(toNumber(record.main_dishes_limit_number, 1))),
+    comments_english: toStringArray(record.comments_english),
   }
 }
 
@@ -179,6 +184,8 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     legacy_source_table: legacySource || undefined,
     created_at: toText(record.created_at),
     modified_at: toText(record.modified_at),
+    menu_title_english: toText(record.menu_title_english) || undefined,
+    menu_subtitle_english: toStringArray(record.menu_subtitle_english),
   }
 }
 
@@ -198,6 +205,8 @@ function normalizeDish(value: unknown): Dish | null {
     active: toBool(record.active) !== false,
     foto_url: toText(record.foto_url) || null,
     image_url: toText(record.image_url) || null,
+    descripcion_english: toText(record.descripcion_english) || null,
+    description_english: toText(record.description_english) || null,
   }
 }
 

@@ -1,5 +1,6 @@
 import { useMemo } from 'preact/hooks'
 import { ImageOff } from 'lucide-react'
+import { useI18n } from '../../lib/i18n'
 
 import './MenuDishPreviewCard.css'
 
@@ -64,6 +65,7 @@ export function MenuDishPreviewCard({
   price,
   className,
 }: MenuDishPreviewCardProps) {
+  const { t } = useI18n()
   const allergenKeys = useMemo(
     () =>
       Array.from(new Set((allergens || []).map((item) => String(item || '').trim()).filter((key) => key && Boolean(ALLERGEN_ICONS[key])))),
@@ -71,10 +73,10 @@ export function MenuDishPreviewCard({
   )
 
   const supplementLabel = useMemo(() => {
-    if (!supplementEnabled) return ''
-    if (Number.isFinite(supplementPrice)) return `Suplemento +${formatEuro(Number(supplementPrice))}`
-    return 'Suplemento'
-  }, [supplementEnabled, supplementPrice])
+    if (!supplementEnabled || !Number.isFinite(supplementPrice) || Number(supplementPrice) <= 0) return ''
+    const label = t('menu.dish.supplement')
+    return `${label} +${formatEuro(Number(supplementPrice))}`
+  }, [supplementEnabled, supplementPrice, t])
 
   const priceLabel = useMemo(() => {
     if (!Number.isFinite(price)) return ''
@@ -117,7 +119,7 @@ export function MenuDishPreviewCard({
 
         {supplementLabel || priceLabel ? (
           <div class="vcDishPreviewMeta">
-            {supplementLabel ? <span class="vcDishPreviewTag">{supplementLabel}</span> : null}
+            {supplementLabel ? <span class="vcDishPreviewTag" data-testid="dish-supplement">{supplementLabel}</span> : null}
             {priceLabel ? <span class="vcDishPreviewTag">{priceLabel}</span> : null}
           </div>
         ) : null}
