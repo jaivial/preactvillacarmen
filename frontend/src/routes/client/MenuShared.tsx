@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
 import type { Dish } from '../../lib/types'
 import { cdnUrl } from '../../lib/cdn'
-import { useI18n } from '../../lib/i18n'
+import { useI18n, localized } from '../../lib/i18n'
 import { addMenuPickItem, type MenuPickCategory } from '../../lib/menuPick'
 import { ChefHat, Plus } from 'lucide-react'
 
@@ -130,12 +130,10 @@ function dishDescriptionText(dish: Dish): string {
   return String(dish.description || '').trim()
 }
 
-function dishSupplementText(dish: Dish): string {
-  if (dish.supplement_enabled !== true) return ''
-  if (typeof dish.supplement_price === 'number' && Number.isFinite(dish.supplement_price)) {
-    return `Suplemento +${formatEuro(dish.supplement_price)}`
-  }
-  return 'Suplemento'
+function dishSupplementText(dish: Dish, label: string): string {
+  if (dish.supplement_enabled !== true || typeof dish.supplement_price !== 'number') return ''
+  if (!Number.isFinite(dish.supplement_price) || dish.supplement_price <= 0) return ''
+  return `${label} +${formatEuro(dish.supplement_price)}`
 }
 
 export function AllergenIcons(props: { alergenos: string[] }) {
@@ -168,7 +166,7 @@ export function AllergenIcons(props: { alergenos: string[] }) {
 }
 
 function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImage?: boolean }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const ref = useRef<HTMLLIElement>(null)
   const [revealed, setRevealed] = useState(() => prefersReducedMotion())
   const [imageErrored, setImageErrored] = useState(false)
@@ -177,8 +175,15 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
   const rawImage = String(props.dish.image_url || props.dish.foto_url || '').trim()
   const hasImage = Boolean(rawImage)
   const imageSource = useMemo(() => (hasImage ? mediaSrc(rawImage) : ''), [rawImage, hasImage])
-  const descriptionText = useMemo(() => dishDescriptionText(props.dish), [props.dish])
-  const supplementText = useMemo(() => dishSupplementText(props.dish), [props.dish])
+  const displayDescripcion = useMemo(
+    () => localized(props.dish.descripcion, props.dish.descripcion_english, lang),
+    [props.dish.descripcion, props.dish.descripcion_english, lang],
+  )
+  const descriptionText = useMemo(
+    () => localized(dishDescriptionText(props.dish), props.dish.description_english, lang),
+    [props.dish, lang],
+  )
+  const supplementText = useMemo(() => dishSupplementText(props.dish, t('menu.dish.supplement')), [props.dish, t])
 
   useEffect(() => {
     setImageErrored(false)
@@ -224,13 +229,13 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
               <button
                 type="button"
                 class="dishCardMediaBtn"
-                aria-label={`Ver imagen de ${props.dish.descripcion}`}
+                aria-label={`Ver imagen de ${displayDescripcion}`}
                 onClick={() => setLightboxOpen(true)}
               >
                 <img
                   class="dishCardMediaImage"
                   src={imageSource}
-                  alt={props.dish.descripcion}
+                  alt={displayDescripcion}
                   onError={() => setImageErrored(true)}
                   loading="lazy"
                   decoding="async"
@@ -244,32 +249,34 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
           </div>
           <div class="dishCardInfo">
             <div class="dishCardBody">
-              <div class="dishDescription">{props.dish.descripcion}</div>
+              <div class="dishDescription">{displayDescripcion}</div>
               {descriptionText ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
-              {supplementText ? <div class="dishSupplementInfo">{supplementText}</div> : null}
+              {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
             </div>
             <AllergenIcons alergenos={props.dish.alergenos} />
           </div>
         </div>
       ) : (
         <div class="dishCardBody">
-          <div class="dishDescription">{props.dish.descripcion}</div>
+          <div class="dishDescription">{displayDescripcion}</div>
           {descriptionText ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
-          {supplementText ? <div class="dishSupplementInfo">{supplementText}</div> : null}
+          {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
           <AllergenIcons alergenos={props.dish.alergenos} />
         </div>
       )}
 
       {props.pickCategory ? (
-        <button
-          type="button"
-          class="dishAddBtn"
-          aria-label={t('menu.pick.add')}
-          title={t('menu.pick.add')}
-          onClick={() => addMenuPickItem(props.pickCategory!, props.dish.descripcion)}
-        >
-          <Plus className="dishAddIcon" aria-hidden="true" />
-        </button>
+        <div class="dishCardAction">
+          <button
+            type="button"
+            class="dishAddBtn"
+            aria-label={t('menu.pick.add')}
+            title={t('menu.pick.add')}
+            onClick={() => addMenuPickItem(props.pickCategory!, props.dish.descripcion)}
+          >
+            <Plus className="dishAddIcon" aria-hidden="true" />
+          </button>
+        </div>
       ) : null}
 
       {lightboxOpen
@@ -279,7 +286,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
                   class="vc-menuLightbox"
                   role="dialog"
                   aria-modal="true"
-                  aria-label={`Imagen de ${props.dish.descripcion}`}
+                  aria-label={`Imagen de ${displayDescripcion}`}
                   onClick={(e) => {
                     if (e.target === e.currentTarget) setLightboxOpen(false)
                   }}
@@ -297,7 +304,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
                   <div class="vc-menuLightboxContent" onClick={(e) => e.stopPropagation()}>
                     <img
                       src={imageSource}
-                      alt={props.dish.descripcion}
+                      alt={displayDescripcion}
                       class="vc-menuLightboxImg"
                       loading="eager"
                       decoding="async"
@@ -310,7 +317,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
                   class="vc-menuLightbox"
                   role="dialog"
                   aria-modal="true"
-                  aria-label={`Imagen de ${props.dish.descripcion}`}
+                  aria-label={`Imagen de ${displayDescripcion}`}
                   onClick={(e) => {
                     if (e.target === e.currentTarget) setLightboxOpen(false)
                   }}
@@ -328,7 +335,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
                   <div class="vc-menuLightboxContent" onClick={(e) => e.stopPropagation()}>
                     <img
                       src={imageSource}
-                      alt={props.dish.descripcion}
+                      alt={displayDescripcion}
                       class="vc-menuLightboxImg"
                       loading="eager"
                       decoding="async"
@@ -585,6 +592,7 @@ export function MenuHeroSlider() {
 }
 
 export function DishList(props: { dishes: Dish[] }) {
+  const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
 
@@ -592,7 +600,7 @@ export function DishList(props: { dishes: Dish[] }) {
     <ul class="menuDishList">
       {items.map((dish, idx) => (
         <li class="menuDish" key={`${dish.descripcion}-${idx}`}>
-          <div class="menuDishText">{dish.descripcion}</div>
+          <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
           <AllergenIcons alergenos={dish.alergenos} />
         </li>
       ))}
@@ -612,6 +620,7 @@ export function GroupStyleDishSection(props: {
   showAllergens?: boolean
   annotations?: string[]
 }) {
+  const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
 
@@ -621,7 +630,7 @@ export function GroupStyleDishSection(props: {
       <ul class="menuDishList">
         {items.map((dish, idx) => (
           <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`}>
-            <div class="menuDishText">{dish.descripcion}</div>
+            <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
             {props.showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
             {props.showDishPrice ? (
               <div class="menuDishText menuMuted">{dishPriceLabel(dish.price)}</div>

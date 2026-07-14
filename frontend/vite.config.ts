@@ -4,7 +4,6 @@ import { request as httpsRequest } from 'node:https'
 
 import preact from '@preact/preset-vite'
 import { defineConfig, loadEnv, type Plugin, type Alias } from 'vite'
-import { resolve } from 'node:path'
 
 const DEV_API_PROXY_TIMEOUT_MS = 10_000
 
@@ -142,6 +141,8 @@ function devApiProxyPlugin(targets: string[]): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const port = Number(env.VITE_PORT) || 5174
+  const hmrPort = Number(env.VITE_HMR_PORT) || port
   const apiProxyTargets = uniqueProxyTargets([
     env.VITE_API_PROXY_TARGET,
     env.BACKEND_ORIGIN,
@@ -167,7 +168,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 5174,
+      port,
       allowedHosts: [
         '0.0.0.0',
         'localhost',
@@ -175,8 +176,8 @@ export default defineConfig(({ mode }) => {
         '.menustudioai.com',
       ],
       hmr: {
-        clientPort: 5174,
-        port: 5174,
+        clientPort: hmrPort,
+        port: hmrPort,
       },
     },
   }

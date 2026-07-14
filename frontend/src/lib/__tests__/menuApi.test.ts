@@ -90,7 +90,7 @@ describe('fetchMenuSidebar', () => {
 
     expect(mockGetJson).toHaveBeenCalledTimes(1)
     expect(mockGetJson).toHaveBeenCalledWith('/api/menus/sidebar')
-    expect(result).toHaveLength(2)
+    expect(result.menus).toHaveLength(2)
   })
 })
 
@@ -108,9 +108,11 @@ describe('fetchMenuHome', () => {
           id: 1,
           slug: 'menu-1',
           menu_title: 'Menu 1',
+          menu_title_english: 'Menu 1 EN',
           menu_type: 'closed_conventional',
           active: true,
           menu_subtitle: ['Subtitle'],
+          menu_subtitle_english: ['Subtitle EN'],
           show_menu_preview_image: true,
           menu_preview_image_url: 'https://example.com/img.jpg',
         },
@@ -124,5 +126,7 @@ describe('fetchMenuHome', () => {
     expect(mockGetJson).toHaveBeenCalledTimes(1)
     expect(mockGetJson).toHaveBeenCalledWith('/api/menus/home')
     expect(result).toHaveLength(1)
+    expect(result[0].menu_title_english).toBe('Menu 1 EN')
+    expect(result[0].menu_subtitle_english).toEqual(['Subtitle EN'])
   })
 })

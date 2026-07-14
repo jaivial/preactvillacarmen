@@ -1,13 +1,16 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
-import { useI18n } from '../../lib/i18n'
+import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
 import { formatMenuPrice, splitClosedConventionalSections } from './menuPublicHelpers'
 
 export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const sectionData = useMemo(() => splitClosedConventionalSections(props.menu), [props.menu])
-  const subtitle = useMemo(() => props.menu.menu_subtitle[0] || t('menus.card.daily.subtitle'), [props.menu.menu_subtitle, t])
+  const subtitle = useMemo(
+    () => localizedArray(props.menu.menu_subtitle, props.menu.menu_subtitle_english, lang)[0] || t('menus.card.daily.subtitle'),
+    [lang, props.menu.menu_subtitle, props.menu.menu_subtitle_english, t],
+  )
   const price = useMemo(() => formatMenuPrice(props.menu.price), [props.menu.price])
 
   const hasContent = useMemo(
@@ -23,7 +26,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
     <div class="page menuPage menuPage--closedConventional">
       <section class="page-hero">
         <div class="container">
-          <h1 class="page-title">{props.menu.menu_title}</h1>
+          <h1 class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h1>
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>
@@ -40,14 +43,14 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             <MenuSection
               title={t('menus.preview.starters')}
               dishes={sectionData.starters}
-              annotations={sectionData.starterAnnotations}
+              annotations={localizedArray(sectionData.starterAnnotations, sectionData.starterAnnotationsEnglish, lang)}
               pickCategory="entrantes"
               showImage={props.menu.show_dish_images}
             />
             <MenuSection
-              title={sectionData.mainsTitle || t('menus.preview.mains')}
+              title={localized(sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTitleEnglish, lang)}
               dishes={sectionData.mains}
-              annotations={sectionData.mainsAnnotations}
+              annotations={localizedArray(sectionData.mainsAnnotations, sectionData.mainsAnnotationsEnglish, lang)}
               pickCategory="principales"
               showImage={props.menu.show_dish_images}
             />
@@ -55,9 +58,9 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             {sectionData.rice.length > 0 ? <p class="menuSectionLead">{t('menu.rice.lead')}</p> : null}
 
             <MenuSection
-              title={t('menu.section.rice')}
+              title={localized(sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTitleEnglish, lang)}
               dishes={sectionData.rice}
-              annotations={sectionData.riceAnnotations}
+              annotations={localizedArray(sectionData.riceAnnotations, sectionData.riceAnnotationsEnglish, lang)}
               pickCategory="arroces"
               showImage={props.menu.show_dish_images}
               notes={[
@@ -71,9 +74,9 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
             {sectionData.others.map((section) => (
               <MenuSection
                 key={`${section.id}-${section.title}`}
-                title={section.title}
+                title={localized(section.title, section.title_english, lang)}
                 dishes={section.dishes}
-                annotations={section.annotations}
+                annotations={localizedArray(section.annotations, section.annotations_english, lang)}
                 showImage={props.menu.show_dish_images}
               />
             ))}

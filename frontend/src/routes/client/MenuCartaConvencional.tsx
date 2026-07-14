@@ -1,6 +1,6 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
-import { useI18n } from '../../lib/i18n'
+import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 
@@ -12,17 +12,23 @@ function beverageNote(menu: PublicMenu): string {
 }
 
 export function MenuCartaConvencional(props: { menu: PublicMenu }) {
-  const { t } = useI18n()
-  const subtitle = useMemo(() => props.menu.menu_subtitle[0] || 'Carta convencional', [props.menu.menu_subtitle])
+  const { t, lang } = useI18n()
+  const subtitle = useMemo(
+    () => localizedArray(props.menu.menu_subtitle, props.menu.menu_subtitle_english, lang)[0] || 'Carta convencional',
+    [lang, props.menu.menu_subtitle, props.menu.menu_subtitle_english],
+  )
   const sections = useMemo(() => getMenuViewSections(props.menu), [props.menu])
-  const comments = useMemo(() => props.menu.settings.comments || [], [props.menu.settings.comments])
+  const comments = useMemo(
+    () => localizedArray(props.menu.settings.comments, props.menu.settings.comments_english, lang),
+    [lang, props.menu.settings.comments, props.menu.settings.comments_english],
+  )
   const infoLines = useMemo(() => [beverageNote(props.menu), ...comments].filter(Boolean), [comments, props.menu])
 
   return (
     <div class="page menuPage">
       <section class="page-hero">
         <div class="container">
-          <h1 class="page-title">{props.menu.menu_title}</h1>
+          <h1 class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h1>
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>
@@ -43,9 +49,9 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
                 {sections.map((section) => (
                   <GroupStyleDishSection
                     key={`${section.id}-${section.title}`}
-                    title={section.title}
+                    title={localized(section.title, section.title_english, lang)}
                     dishes={section.dishes}
-                    annotations={section.annotations}
+                    annotations={localizedArray(section.annotations, section.annotations_english, lang)}
                     showDishPrice={true}
                     showAllergens={true}
                   />

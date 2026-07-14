@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
-import { useI18n } from '../../lib/i18n'
+import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import type { Lang } from '../../lib/i18n'
 import type {
   ClosedDaysResponse,
   HourDataResponse,
@@ -59,46 +60,19 @@ function addDaysLocal(d: Date, days: number) {
   return out
 }
 
-function monthNameEs(monthIndex0: number) {
-  const names = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ]
-  return names[monthIndex0] || ''
+function textFor(lang: Lang, es: string, en: string) {
+  return lang === 'en' ? en : es
 }
 
-function weekdayAndMonthDisplayEs(iso: string) {
+function monthName(monthIndex0: number, lang: Lang) {
+  return new Intl.DateTimeFormat(lang, { month: 'long' }).format(new Date(2024, monthIndex0, 1))
+}
+
+function reservationDateDisplay(iso: string, lang: Lang) {
   const d = parseISODateLocal(iso)
   if (!d) return ''
-  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-  const monthNames = [
-    'enero',
-    'febrero',
-    'marzo',
-    'abril',
-    'mayo',
-    'junio',
-    'julio',
-    'agosto',
-    'septiembre',
-    'octubre',
-    'noviembre',
-    'diciembre',
-  ]
-  const dayOfWeek = dayNames[d.getDay()]
-  const dayOfMonth = d.getDate()
-  const month = monthNames[d.getMonth()]
-  return `Reserva para ${dayOfWeek} ${dayOfMonth} ${month}`
+  const date = new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(d)
+  return `${textFor(lang, 'Reserva para', 'Reservation for')} ${date}`
 }
 
 function onlyDigits(s: string) {
@@ -136,11 +110,11 @@ function getPrincipalesItems(menu: GroupMenuDisplay | null): string[] {
   return readStringArray(items)
 }
 
-function getPrincipalesTitle(menu: GroupMenuDisplay | null): string {
-  if (!menu || !menu.principales || typeof menu.principales !== 'object') return 'Principales'
-  const t = (menu.principales as any).titulo_principales
-  if (typeof t === 'string' && t.trim()) return t.trim()
-  return 'Principales'
+function getPrincipalesTitle(menu: GroupMenuDisplay | null, lang: Lang): string {
+  if (!menu || !menu.principales || typeof menu.principales !== 'object') return textFor(lang, 'Principales', 'Main courses')
+  const es = (menu.principales as any).titulo_principales
+  const en = menu.principales_english?.titulo_principales
+  return localized(typeof es === 'string' && es.trim() ? es.trim() : 'Principales', en, lang)
 }
 
 function buildCalendarCells(year: number, month0: number) {
@@ -261,6 +235,7 @@ function Modal(props: {
   primaryLabel?: string
   secondaryLabel?: string
 }) {
+  const { lang } = useI18n()
   useEffect(() => {
     if (!props.open) return
     const onKey = (e: KeyboardEvent) => {
@@ -279,11 +254,11 @@ function Modal(props: {
         <div class="resvModal__body">{props.children}</div>
         <div class="resvModal__actions">
           <button type="button" class="btn" onClick={props.onClose}>
-            {props.secondaryLabel || 'Cerrar'}
+            {props.secondaryLabel || textFor(lang, 'Cerrar', 'Close')}
           </button>
           {props.primaryHref ? (
             <a class="btn primary" href={props.primaryHref}>
-              {props.primaryLabel || 'Continuar'}
+              {props.primaryLabel || textFor(lang, 'Continuar', 'Continue')}
             </a>
           ) : null}
         </div>
@@ -294,7 +269,8 @@ function Modal(props: {
 
 export function Reservas() {
   const reduceMotion = useReducedMotion()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
+  const text = (es: string, en: string) => textFor(lang, es, en)
   const formLoadTimeRef = useRef(Math.floor(Date.now() / 1000))
   const [toasts, setToasts] = useState<Toast[]>([])
   const toastIdRef = useRef(0)
@@ -354,6 +330,7 @@ export function Reservas() {
 
   // Rice.
   const [riceTypes, setRiceTypes] = useState<string[]>([])
+  const [riceTypesEnglish, setRiceTypesEnglish] = useState<string[]>([])
   const [wantsRice, setWantsRice] = useState<boolean | null>(null)
   const [riceType, setRiceType] = useState<string>('')
   const [riceServings, setRiceServings] = useState<number | null>(null)
@@ -385,35 +362,55 @@ export function Reservas() {
     return clamp(partySize - adults, 0, partySize)
   }, [partySize, adults])
 
+  const dateStepReady = Boolean(
+    selectedDate &&
+    partySize &&
+    reservationTime &&
+    activeFloors.length > 0 &&
+    (activeFloors.length === 1 || selectedFloorNumber != null) &&
+    (dayContext?.openingMode !== 'both' || selectedShift)
+  )
+  const riceStepReady = wantsRice === false || Boolean(wantsRice && riceType && riceServings && riceServings >= 2 && (!partySize || riceServings <= partySize))
+  const personalStepReady = Boolean(
+    fullName.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
+    onlyDigits(countryCode).length >= 1 &&
+    onlyDigits(countryCode).length <= 4 &&
+    onlyDigits(phoneNational).length >= 6 &&
+    onlyDigits(phoneNational).length <= 15 &&
+    (onlyDigits(countryCode) + onlyDigits(phoneNational)).length <= 15
+  )
+  const groupMenuStepReady = wantsGroupMenu === false || Boolean(wantsGroupMenu && groupMenuId)
+
   const steps = useMemo(() => {
-    const out: { id: StepId; label: string }[] = [{ id: 'date', label: 'Fecha y personas' }]
+    const out: { id: StepId; label: string }[] = [{ id: 'date', label: text('Fecha y personas', 'Date and guests') }]
 
     // Check if mandatory menu is active for this date
     const hasMandatoryMenu = mandatoryMenuData?.status === true && !!mandatoryMenuData?.menus && mandatoryMenuData.menus.length > 0
 
     if (hasMandatoryMenu) {
-      out.push({ id: 'mandatoryMenu', label: 'Menú' })
+      out.push({ id: 'mandatoryMenu', label: text('Menú', 'Menu') })
     }
 
     const hasMenu = !!groupMenus && groupMenus.length > 0
     // Only show groupMenu step if mandatory menu is not forcing menu selection
-    if (hasMenu && !hasMandatoryMenu) out.push({ id: 'groupMenu', label: 'Menú' })
+    if (hasMenu && !hasMandatoryMenu) out.push({ id: 'groupMenu', label: text('Menú', 'Menu') })
 
     // Legacy-like: before the user chooses (null), keep Arroz visible.
     // If mandatory menu is selected, skip rice and group menu steps
     const mandatoryMenuSelected = hasMandatoryMenu && mandatoryMenuId !== null
     const includeRice = !hasMandatoryMenu || !mandatoryMenuSelected
-    if (includeRice) out.push({ id: 'rice', label: 'Arroz' })
+    if (includeRice) out.push({ id: 'rice', label: text('Arroz', 'Rice') })
 
-    out.push({ id: 'personal', label: 'Datos' })
-    out.push({ id: 'adults', label: 'Adultos' })
+    out.push({ id: 'personal', label: text('Datos', 'Details') })
+    out.push({ id: 'adults', label: text('Adultos', 'Adults') })
 
     const includeAccessories = childrenCount === null ? true : childrenCount > 0
-    if (includeAccessories) out.push({ id: 'accessories', label: 'Accesorios' })
+    if (includeAccessories) out.push({ id: 'accessories', label: text('Accesorios', 'Accessories') })
 
-    out.push({ id: 'summary', label: 'Resumen' })
+    out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, childrenCount, mandatoryMenuData, mandatoryMenuId])
+  }, [groupMenus, wantsGroupMenu, childrenCount, mandatoryMenuData, mandatoryMenuId, lang])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -538,25 +535,25 @@ export function Reservas() {
 
   const countries = useMemo<Country[]>(
     () => [
-      { name: 'España', code: 'ES', flag: '🇪🇸', dial: '34', keywords: 'spain espana esp' },
-      { name: 'Francia', code: 'FR', flag: '🇫🇷', dial: '33', keywords: 'france' },
+      { name: text('España', 'Spain'), code: 'ES', flag: '🇪🇸', dial: '34', keywords: 'spain espana esp' },
+      { name: text('Francia', 'France'), code: 'FR', flag: '🇫🇷', dial: '33', keywords: 'france' },
       { name: 'Portugal', code: 'PT', flag: '🇵🇹', dial: '351', keywords: 'portugal' },
-      { name: 'Reino Unido', code: 'GB', flag: '🇬🇧', dial: '44', keywords: 'uk united kingdom britain' },
-      { name: 'Alemania', code: 'DE', flag: '🇩🇪', dial: '49', keywords: 'germany deutschland' },
-      { name: 'Italia', code: 'IT', flag: '🇮🇹', dial: '39', keywords: 'italy italia' },
-      { name: 'Estados Unidos', code: 'US', flag: '🇺🇸', dial: '1', keywords: 'usa united states' },
-      { name: 'México', code: 'MX', flag: '🇲🇽', dial: '52', keywords: 'mexico' },
+      { name: text('Reino Unido', 'United Kingdom'), code: 'GB', flag: '🇬🇧', dial: '44', keywords: 'uk united kingdom britain' },
+      { name: text('Alemania', 'Germany'), code: 'DE', flag: '🇩🇪', dial: '49', keywords: 'germany deutschland' },
+      { name: text('Italia', 'Italy'), code: 'IT', flag: '🇮🇹', dial: '39', keywords: 'italy italia' },
+      { name: text('Estados Unidos', 'United States'), code: 'US', flag: '🇺🇸', dial: '1', keywords: 'usa united states' },
+      { name: text('México', 'Mexico'), code: 'MX', flag: '🇲🇽', dial: '52', keywords: 'mexico' },
       { name: 'Argentina', code: 'AR', flag: '🇦🇷', dial: '54', keywords: 'argentina' },
       { name: 'Colombia', code: 'CO', flag: '🇨🇴', dial: '57', keywords: 'colombia' },
-      { name: 'Países Bajos', code: 'NL', flag: '🇳🇱', dial: '31', keywords: 'netherlands holland' },
-      { name: 'Bélgica', code: 'BE', flag: '🇧🇪', dial: '32', keywords: 'belgium' },
-      { name: 'Suiza', code: 'CH', flag: '🇨🇭', dial: '41', keywords: 'switzerland suisse' },
-      { name: 'Irlanda', code: 'IE', flag: '🇮🇪', dial: '353', keywords: 'ireland' },
-      { name: 'Suecia', code: 'SE', flag: '🇸🇪', dial: '46', keywords: 'sweden' },
-      { name: 'Noruega', code: 'NO', flag: '🇳🇴', dial: '47', keywords: 'norway' },
-      { name: 'Dinamarca', code: 'DK', flag: '🇩🇰', dial: '45', keywords: 'denmark' },
+      { name: text('Países Bajos', 'Netherlands'), code: 'NL', flag: '🇳🇱', dial: '31', keywords: 'netherlands holland' },
+      { name: text('Bélgica', 'Belgium'), code: 'BE', flag: '🇧🇪', dial: '32', keywords: 'belgium' },
+      { name: text('Suiza', 'Switzerland'), code: 'CH', flag: '🇨🇭', dial: '41', keywords: 'switzerland suisse' },
+      { name: text('Irlanda', 'Ireland'), code: 'IE', flag: '🇮🇪', dial: '353', keywords: 'ireland' },
+      { name: text('Suecia', 'Sweden'), code: 'SE', flag: '🇸🇪', dial: '46', keywords: 'sweden' },
+      { name: text('Noruega', 'Norway'), code: 'NO', flag: '🇳🇴', dial: '47', keywords: 'norway' },
+      { name: text('Dinamarca', 'Denmark'), code: 'DK', flag: '🇩🇰', dial: '45', keywords: 'denmark' },
     ],
-    []
+    [lang]
   )
 
   const countryOptions = useMemo<PopoverSelectOption[]>(
@@ -587,41 +584,50 @@ export function Reservas() {
 
   const groupMenuOptions = useMemo<PopoverSelectOption[]>(() => {
     if (!groupMenus || groupMenus.length === 0) return []
-    return groupMenus.map((m) => ({
-      value: String(m.id),
-      label: m.menu_title,
-      right: `${m.price}€/persona`,
-      keywords: `${m.menu_title} ${m.price}`.toLowerCase(),
-    }))
-  }, [groupMenus])
+    return groupMenus.map((m) => {
+      const title = localized(m.menu_title, m.menu_title_english, lang)
+      return {
+        value: String(m.id),
+        label: title,
+        right: `${m.price}€/${text('persona', 'person')}`,
+        keywords: `${m.menu_title} ${m.menu_title_english || ''} ${m.price}`.toLowerCase(),
+      }
+    })
+  }, [groupMenus, lang])
 
-  const principalesOptions = useMemo<PopoverSelectOption[]>(
-    () => principalesItems.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() })),
-    [principalesItems]
-  )
+  const principalesOptions = useMemo<PopoverSelectOption[]>(() => {
+    const english = selectedMenu?.principales_english?.items
+    return principalesItems.map((it, index) => {
+      const label = localized(it, english?.[index], lang)
+      return { value: it, label, keywords: `${it} ${english?.[index] || ''}`.toLowerCase() }
+    })
+  }, [principalesItems, selectedMenu, lang])
 
   const riceTypeOptions = useMemo<PopoverSelectOption[]>(
-    () => riceTypes.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() })),
-    [riceTypes]
+    () => riceTypes.map((it, index) => {
+      const label = localized(it, riceTypesEnglish[index], lang)
+      return { value: it, label, keywords: `${it} ${riceTypesEnglish[index] || ''}`.toLowerCase() }
+    }),
+    [riceTypes, riceTypesEnglish, lang]
   )
 
   const riceServingsOptions = useMemo<PopoverSelectOption[]>(() => {
     const ps = Math.max(2, partySize || 2)
     const out: PopoverSelectOption[] = []
     for (let n = 2; n <= ps; n++) {
-      out.push({ value: String(n), label: 'raciones', left: String(n) })
+      out.push({ value: String(n), label: text('raciones', 'servings'), left: String(n) })
     }
     return out
-  }, [partySize])
+  }, [partySize, lang])
 
   const floorOptions = useMemo<PopoverSelectOption[]>(
     () =>
       activeFloors.map((floor) => ({
         value: String(floor.floorNumber),
-        label: floor.name,
+        label: lang === 'en' ? (floor.isGround ? 'Ground floor' : `Floor ${floor.floorNumber}`) : floor.name,
         keywords: `${floor.name} ${floor.floorNumber}`.toLowerCase(),
       })),
-    [activeFloors]
+    [activeFloors, lang]
   )
 
   const selectedFloor = useMemo(() => {
@@ -638,19 +644,19 @@ export function Reservas() {
 
   const shiftOptions = useMemo<PopoverSelectOption[]>(
     () => [
-      { value: 'morning', label: 'Comida', keywords: 'comida mañana mediodia' },
-      { value: 'night', label: 'Cena', keywords: 'cena noche' },
+      { value: 'morning', label: text('Comida', 'Lunch'), keywords: 'comida lunch mañana mediodia' },
+      { value: 'night', label: text('Cena', 'Dinner'), keywords: 'cena dinner noche' },
     ],
-    []
+    [lang]
   )
 
   const shiftLabel = useMemo(() => {
-    if (dayContext?.openingMode === 'morning') return 'Comida'
-    if (dayContext?.openingMode === 'night') return 'Cena'
-    if (selectedShift === 'morning') return 'Comida'
-    if (selectedShift === 'night') return 'Cena'
+    if (dayContext?.openingMode === 'morning') return text('Comida', 'Lunch')
+    if (dayContext?.openingMode === 'night') return text('Cena', 'Dinner')
+    if (selectedShift === 'morning') return text('Comida', 'Lunch')
+    if (selectedShift === 'night') return text('Cena', 'Dinner')
     return null
-  }, [dayContext?.openingMode, selectedShift])
+  }, [dayContext?.openingMode, selectedShift, lang])
 
   const activeShiftHours = useMemo(() => {
     if (!dayContext) return []
@@ -704,10 +710,12 @@ export function Reservas() {
       .then((d) => {
         if (cancelled) return
         setRiceTypes((d.riceTypes || []).map((s) => String(s).trim()).filter(Boolean))
+        setRiceTypesEnglish(Array.isArray(d.riceTypesEnglish) ? d.riceTypesEnglish : [])
       })
       .catch(() => {
         if (cancelled) return
         setRiceTypes([])
+        setRiceTypesEnglish([])
       })
 
     return () => {
@@ -752,6 +760,10 @@ export function Reservas() {
     setFreeSeats(free)
   }, [monthAvailability, selectedDate])
 
+  useEffect(() => {
+    if (selectedDate) setDateDisplay(reservationDateDisplay(selectedDate, lang))
+  }, [lang, selectedDate])
+
   const cells = useMemo(() => buildCalendarCells(viewYear, viewMonth0), [viewYear, viewMonth0])
 
   const isClosedByDefault = (iso: string) => {
@@ -776,7 +788,7 @@ export function Reservas() {
 
   const loadDateContext = async (iso: string) => {
     setSelectedDate(iso)
-    setDateDisplay(weekdayAndMonthDisplayEs(iso))
+    setDateDisplay(reservationDateDisplay(iso, lang))
     setPartySize(null)
     setAdults(null)
     setHighChairs(0)
@@ -865,7 +877,7 @@ export function Reservas() {
         setSelectedShift('night')
       }
     } catch (e) {
-      pushToast('error', 'Error', e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad.')
+      pushToast('error', text('Error', 'Error'), lang === 'en' ? 'Availability could not be loaded.' : e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad.')
     }
   }
 
@@ -878,20 +890,20 @@ export function Reservas() {
 
     const free = monthAvailability?.[iso]?.freeBookingSeats
     if (typeof free === 'number' && free <= 0) {
-      pushToast('error', 'Fecha completa', 'Lo sentimos, no hay disponibilidad para esta fecha.')
+      pushToast('error', text('Fecha completa', 'Date fully booked'), text('Lo sentimos, no hay disponibilidad para esta fecha.', 'Sorry, there is no availability for this date.'))
       return
     }
 
     if (iso < todayISO) {
-      pushToast('warning', 'Fecha no válida', 'No se pueden seleccionar fechas pasadas.')
+      pushToast('warning', text('Fecha no válida', 'Invalid date'), text('No se pueden seleccionar fechas pasadas.', 'Past dates cannot be selected.'))
       return
     }
     if (iso > maxISO) {
-      pushToast('warning', 'Demasiada antelación', 'Solo se pueden realizar reservas con hasta 40 días de antelación.')
+      pushToast('warning', text('Demasiada antelación', 'Date too far ahead'), text('Solo se pueden realizar reservas con hasta 40 días de antelación.', 'Reservations can only be made up to 40 days in advance.'))
       return
     }
     if (isClosedByDefault(iso)) {
-      pushToast('warning', 'Restaurante cerrado', 'El restaurante se encuentra cerrado en la fecha seleccionada.')
+      pushToast('warning', text('Restaurante cerrado', 'Restaurant closed'), text('El restaurante se encuentra cerrado en la fecha seleccionada.', 'The restaurant is closed on the selected date.'))
       return
     }
 
@@ -900,27 +912,27 @@ export function Reservas() {
 
   const goNextFromDate = async () => {
     if (!selectedDate) {
-      pushToast('warning', 'Fecha requerida', 'Por favor, selecciona una fecha.')
+      pushToast('warning', text('Fecha requerida', 'Date required'), text('Por favor, selecciona una fecha.', 'Please select a date.'))
       return
     }
     if (!partySize) {
-      pushToast('warning', 'Personas requeridas', 'Por favor, selecciona el número de personas.')
+      pushToast('warning', text('Personas requeridas', 'Guests required'), text('Por favor, selecciona el número de personas.', 'Please select the number of guests.'))
       return
     }
     if (activeFloors.length === 0) {
-      pushToast('warning', 'Salones cerrados', 'No hay salones activos para esta fecha. Contacta con el restaurante.')
+      pushToast('warning', text('Salones cerrados', 'Dining rooms closed'), text('No hay salones activos para esta fecha. Contacta con el restaurante.', 'No dining rooms are open on this date. Contact the restaurant.'))
       return
     }
     if (activeFloors.length > 1 && selectedFloorNumber == null) {
-      pushToast('warning', 'Salón requerido', 'Selecciona un salón para continuar.')
+      pushToast('warning', text('Salón requerido', 'Dining room required'), text('Selecciona un salón para continuar.', 'Select a dining room to continue.'))
       return
     }
     if (dayContext?.openingMode === 'both' && !selectedShift) {
-      pushToast('warning', 'Turno requerido', 'Selecciona si tu reserva es para comida o cena.')
+      pushToast('warning', text('Turno requerido', 'Service required'), text('Selecciona si tu reserva es para comida o cena.', 'Select lunch or dinner.'))
       return
     }
     if (!reservationTime) {
-      pushToast('warning', 'Hora requerida', 'Por favor, selecciona una hora.')
+      pushToast('warning', text('Hora requerida', 'Time required'), text('Por favor, selecciona una hora.', 'Please select a time.'))
       return
     }
 
@@ -975,12 +987,12 @@ export function Reservas() {
   const validateGroupMenuStep = () => {
     if (!groupMenus || groupMenus.length === 0) return true
     if (wantsGroupMenu == null) {
-      pushToast('warning', 'Selección requerida', 'Por favor, indique si desea un menú de grupos o no.')
+      pushToast('warning', text('Selección requerida', 'Selection required'), text('Por favor, indique si desea un menú de grupos o no.', 'Please choose whether you want a group menu.'))
       return false
     }
     if (wantsGroupMenu === false) return true
     if (!groupMenuId) {
-      pushToast('warning', 'Menú requerido', 'Seleccione un menú de grupo.')
+      pushToast('warning', text('Menú requerido', 'Menu required'), text('Seleccione un menú de grupo.', 'Select a group menu.'))
       return false
     }
     if (principalesEnabled === true) {
@@ -990,22 +1002,22 @@ export function Reservas() {
       const unique = new Set<string>()
       for (const r of cleaned) {
         if (unique.has(r.name)) {
-          pushToast('warning', 'Principales', 'No repitas el mismo principal.')
+          pushToast('warning', text('Principales', 'Main courses'), text('No repitas el mismo principal.', 'Do not select the same main course twice.'))
           return false
         }
         unique.add(r.name)
         if (!principalesItems.includes(r.name)) {
-          pushToast('warning', 'Principales', 'Selecciona solo principales del menú.')
+          pushToast('warning', text('Principales', 'Main courses'), text('Selecciona solo principales del menú.', 'Select only main courses from the menu.'))
           return false
         }
       }
       const sum = cleaned.reduce((acc, r) => acc + r.servings, 0)
       if (cleaned.length === 0 || sum <= 0) {
-        pushToast('warning', 'Principales', 'Añade al menos un principal.')
+        pushToast('warning', text('Principales', 'Main courses'), text('Añade al menos un principal.', 'Add at least one main course.'))
         return false
       }
       if (partySize && sum > partySize) {
-        pushToast('warning', 'Principales', 'Las raciones superan el número de comensales.')
+        pushToast('warning', text('Principales', 'Main courses'), text('Las raciones superan el número de comensales.', 'Servings exceed the number of guests.'))
         return false
       }
     }
@@ -1027,20 +1039,20 @@ export function Reservas() {
 
   const validateRiceStep = () => {
     if (wantsRice == null) {
-      pushToast('warning', 'Arroz', 'Por favor, selecciona si deseas arroz o no.')
+      pushToast('warning', text('Arroz', 'Rice'), text('Por favor, selecciona si deseas arroz o no.', 'Please choose whether you want rice.'))
       return false
     }
     if (wantsRice === false) return true
     if (!riceType) {
-      pushToast('warning', 'Arroz', 'Por favor, selecciona el tipo de arroz.')
+      pushToast('warning', text('Arroz', 'Rice'), text('Por favor, selecciona el tipo de arroz.', 'Please select a rice dish.'))
       return false
     }
     if (!riceServings || riceServings < 2) {
-      pushToast('warning', 'Arroz', 'Por favor, selecciona el número de raciones.')
+      pushToast('warning', text('Arroz', 'Rice'), text('Por favor, selecciona el número de raciones.', 'Please select the number of servings.'))
       return false
     }
     if (partySize && riceServings > partySize) {
-      pushToast('warning', 'Arroz', 'Las raciones de arroz no pueden superar el número de comensales.')
+      pushToast('warning', text('Arroz', 'Rice'), text('Las raciones de arroz no pueden superar el número de comensales.', 'Rice servings cannot exceed the number of guests.'))
       return false
     }
     return true
@@ -1053,30 +1065,30 @@ export function Reservas() {
 
   const validatePersonal = () => {
     if (!fullName.trim()) {
-      pushToast('warning', 'Nombre requerido', 'Por favor, introduce tu nombre y apellidos.')
+      pushToast('warning', text('Nombre requerido', 'Name required'), text('Por favor, introduce tu nombre y apellidos.', 'Please enter your full name.'))
       return false
     }
     const em = email.trim()
     if (!em) {
-      pushToast('warning', 'Email requerido', 'Por favor, introduce tu email.')
+      pushToast('warning', text('Email requerido', 'Email required'), text('Por favor, introduce tu email.', 'Please enter your email address.'))
       return false
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
-      pushToast('warning', 'Email no válido', 'Revisa el formato del email.')
+      pushToast('warning', text('Email no válido', 'Invalid email'), text('Revisa el formato del email.', 'Check the email format.'))
       return false
     }
     const cc = onlyDigits(countryCode)
     const phone = onlyDigits(phoneNational)
     if (!cc || cc.length < 1 || cc.length > 4) {
-      pushToast('warning', 'Teléfono', 'Selecciona un prefijo válido.')
+      pushToast('warning', text('Teléfono', 'Phone'), text('Selecciona un prefijo válido.', 'Select a valid country code.'))
       return false
     }
     if (!phone || phone.length < 6 || phone.length > 15) {
-      pushToast('warning', 'Teléfono', 'Introduce un teléfono válido.')
+      pushToast('warning', text('Teléfono', 'Phone'), text('Introduce un teléfono válido.', 'Enter a valid phone number.'))
       return false
     }
     if ((cc + phone).length > 15) {
-      pushToast('warning', 'Teléfono', 'El teléfono es demasiado largo.')
+      pushToast('warning', text('Teléfono', 'Phone'), text('El teléfono es demasiado largo.', 'The phone number is too long.'))
       return false
     }
     return true
@@ -1118,19 +1130,19 @@ export function Reservas() {
     if (!selectedDate || !partySize || !reservationTime) return
     if (!validatePersonal()) return
     if (activeFloors.length === 0) {
-      pushToast('warning', 'Salones cerrados', 'No hay salones activos para esta fecha. Contacta con el restaurante.')
+      pushToast('warning', text('Salones cerrados', 'Dining rooms closed'), text('No hay salones activos para esta fecha. Contacta con el restaurante.', 'No dining rooms are open on this date. Contact the restaurant.'))
       return
     }
     if (activeFloors.length > 1 && selectedFloorNumber == null) {
-      pushToast('warning', 'Salón requerido', 'Selecciona un salón para completar la reserva.')
+      pushToast('warning', text('Salón requerido', 'Dining room required'), text('Selecciona un salón para completar la reserva.', 'Select a dining room to complete the reservation.'))
       return
     }
     if (dayContext?.openingMode === 'both' && !selectedShift) {
-      pushToast('warning', 'Turno requerido', 'Selecciona si tu reserva es para comida o cena.')
+      pushToast('warning', text('Turno requerido', 'Service required'), text('Selecciona si tu reserva es para comida o cena.', 'Select lunch or dinner.'))
       return
     }
     if (!termsAccepted || !privacyAccepted) {
-      pushToast('warning', 'Términos', 'Debe aceptar los términos y la protección de datos.')
+      pushToast('warning', text('Términos', 'Terms'), text('Debe aceptar los términos y la protección de datos.', 'You must accept the terms and data protection policy.'))
       return
     }
 
@@ -1157,11 +1169,14 @@ export function Reservas() {
     fd.set('adults', String(a))
     fd.set('children', String(kids))
 
-    const wantsMenu = wantsGroupMenu === true && groupMenuId
+    const selectedMenuId = mandatoryMenuId ?? (wantsGroupMenu === true ? groupMenuId : null)
+    const wantsMenu = selectedMenuId != null
+    const selectedPrincipalesEnabled = mandatoryMenuId != null ? mandatoryPrincipalesEnabled : principalesEnabled
+    const selectedPrincipalesRows = mandatoryMenuId != null ? mandatoryPrincipalesRows : principalesRows
     fd.set('menu_de_grupo_selected', wantsMenu ? '1' : '0')
-    fd.set('menu_de_grupo_id', wantsMenu ? String(groupMenuId) : '')
-    fd.set('principales_enabled', wantsMenu && principalesEnabled === true ? '1' : '0')
-    fd.set('principales_json', wantsMenu ? JSON.stringify(principalesRows || []) : '[]')
+    fd.set('menu_de_grupo_id', wantsMenu ? String(selectedMenuId) : '')
+    fd.set('principales_enabled', wantsMenu && selectedPrincipalesEnabled === true ? '1' : '0')
+    fd.set('principales_json', wantsMenu ? JSON.stringify(selectedPrincipalesRows || []) : '[]')
 
     if (wantsMenu) {
       fd.set('toggleArroz', 'false')
@@ -1179,10 +1194,10 @@ export function Reservas() {
     setSubmitting(true)
     try {
       const res = await apiFetch('/api/bookings/front', { method: 'POST', body: fd })
-      const text = await res.text()
+      const responseText = await res.text()
       let data: InsertBookingResponse | null = null
       try {
-        data = JSON.parse(text) as InsertBookingResponse
+        data = JSON.parse(responseText) as InsertBookingResponse
       } catch {
         data = null
       }
@@ -1191,11 +1206,11 @@ export function Reservas() {
         throw new Error((data && data.message) || 'Error al realizar la reserva.')
       }
       if (data.whatsapp_warning) {
-        pushToast('warning', 'Reserva realizada', data.whatsapp_warning)
+        pushToast('warning', text('Reserva realizada', 'Reservation completed'), lang === 'en' ? 'Reservation completed, but the WhatsApp notification could not be sent.' : data.whatsapp_warning)
       }
       setConfirmationOpen(true)
     } catch (e) {
-      pushToast('error', 'Error', e instanceof Error ? e.message : 'Error al realizar la reserva.')
+      pushToast('error', text('Error', 'Error'), lang === 'en' ? 'The reservation could not be completed.' : e instanceof Error ? e.message : 'Error al realizar la reserva.')
     } finally {
       setSubmitting(false)
     }
@@ -1208,7 +1223,7 @@ export function Reservas() {
           <div class="resvGrid2">
             <div class="resvCard">
               <div class="resvCardHead">
-                <div class="resvCardTitle">Selecciona una fecha</div>
+                <div class="resvCardTitle">{text('Selecciona una fecha', 'Select a date')}</div>
               </div>
 
               <div class="resvCalendar">
@@ -1216,7 +1231,7 @@ export function Reservas() {
                   <button
                     type="button"
                     class="resvCalNav"
-                    aria-label="Mes anterior"
+                    aria-label={text('Mes anterior', 'Previous month')}
                     onClick={() => {
                       const m = viewMonth0 - 1
                       if (m < 0) {
@@ -1230,12 +1245,12 @@ export function Reservas() {
                     ‹
                   </button>
                   <div class="resvCalTitle">
-                    {monthNameEs(viewMonth0)} {viewYear}
+                    {monthName(viewMonth0, lang)} {viewYear}
                   </div>
                   <button
                     type="button"
                     class="resvCalNav"
-                    aria-label="Mes siguiente"
+                    aria-label={text('Mes siguiente', 'Next month')}
                     onClick={() => {
                       const m = viewMonth0 + 1
                       if (m > 11) {
@@ -1251,13 +1266,7 @@ export function Reservas() {
                 </div>
 
                 <div class="resvCalWeekdays" aria-hidden="true">
-                  <div>L</div>
-                  <div>M</div>
-                  <div>X</div>
-                  <div>J</div>
-                  <div>V</div>
-                  <div>S</div>
-                  <div>D</div>
+                  {(lang === 'en' ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['L', 'M', 'X', 'J', 'V', 'S', 'D']).map((day, index) => <div key={index}>{day}</div>)}
                 </div>
 
                 <div class="resvCalDays">
@@ -1291,16 +1300,16 @@ export function Reservas() {
 
                 <div class="resvLegend" aria-hidden="true">
                   <div class="resvLegendItem">
-                    <i class="swatch available" /> Disponible
+                    <i class="swatch available" /> {text('Disponible', 'Available')}
                   </div>
                   <div class="resvLegendItem">
-                    <i class="swatch selected" /> Seleccionado
+                    <i class="swatch selected" /> {text('Seleccionado', 'Selected')}
                   </div>
                   <div class="resvLegendItem">
-                    <i class="swatch disabled" /> No disponible
+                    <i class="swatch disabled" /> {text('No disponible', 'Unavailable')}
                   </div>
                   <div class="resvLegendItem">
-                    <i class="swatch full" /> Completo
+                    <i class="swatch full" /> {text('Completo', 'Full')}
                   </div>
                 </div>
               </div>
@@ -1314,20 +1323,20 @@ export function Reservas() {
                 transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
               >
                 <div class="resvCardHead">
-                  <div class="resvCardTitle">Tu reserva</div>
-                  <div class="resvCardSub">{selectedDate ? dateDisplay : 'Elige fecha, personas y hora.'}</div>
+                  <div class="resvCardTitle">{text('Tu reserva', 'Your reservation')}</div>
+                  <div class="resvCardSub">{selectedDate ? dateDisplay : text('Elige fecha, personas y hora.', 'Choose date, guests and time.')}</div>
                 </div>
 
                 {showUpperFloorWarning ? (
-                  <div class="resvNotice warn">La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.</div>
+                  <div class="resvNotice warn">{text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
                 ) : null}
 
                 <div class="resvField resvField--inline">
                   <div class="resvLabel">{t('reservations.people.label')}</div>
                   <PopoverSelect
-                    ariaLabel="Número de personas"
+                    ariaLabel={text('Número de personas', 'Number of guests')}
                     value={partySize ? String(partySize) : null}
-                    placeholder={freeSeats == null ? 'Selecciona una fecha' : 'Selecciona'}
+                    placeholder={freeSeats == null ? text('Selecciona una fecha', 'Select a date') : text('Selecciona', 'Select')}
                     options={peopleOptions}
                     disabled={!selectedDate || freeSeats == null || freeSeats <= 0}
                     onChange={(v) => {
@@ -1353,11 +1362,11 @@ export function Reservas() {
 
                 {activeFloors.length > 1 ? (
                   <div class="resvField">
-                    <div class="resvLabel">Salón</div>
+                    <div class="resvLabel">{text('Salón', 'Dining room')}</div>
                     <PopoverSelect
-                      ariaLabel="Salón"
+                      ariaLabel={text('Salón', 'Dining room')}
                       value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
-                      placeholder="Selecciona un salón"
+                      placeholder={text('Selecciona un salón', 'Select a dining room')}
                       options={floorOptions}
                       onChange={(v) => {
                         const n = Number(v)
@@ -1369,11 +1378,11 @@ export function Reservas() {
 
                 {dayContext?.openingMode === 'both' ? (
                   <div class="resvField">
-                    <div class="resvLabel">Turno</div>
+                    <div class="resvLabel">{text('Turno', 'Service')}</div>
                     <PopoverSelect
-                      ariaLabel="Turno"
+                      ariaLabel={text('Turno', 'Service')}
                       value={selectedShift}
-                      placeholder="Selecciona comida o cena"
+                      placeholder={text('Selecciona comida o cena', 'Select lunch or dinner')}
                       options={shiftOptions}
                       onChange={(v) => {
                         if (v !== 'morning' && v !== 'night') return
@@ -1385,10 +1394,10 @@ export function Reservas() {
                 ) : null}
 
                 <div class="resvField">
-                  <div class="resvLabel">Horas disponibles</div>
+                  <div class="resvLabel">{text('Horas disponibles', 'Available times')}</div>
                   {partySize ? (
                     dayContext?.openingMode === 'both' && !selectedShift ? (
-                      <div class="resvHint">Selecciona primero el turno para ver las horas disponibles.</div>
+                      <div class="resvHint">{text('Selecciona primero el turno para ver las horas disponibles.', 'Select lunch or dinner first to see available times.')}</div>
                     ) : availableHours.length > 0 ? (
                       <>
                         <div class="resvHours">
@@ -1415,21 +1424,21 @@ export function Reservas() {
                           <div
                             class={selectedHour.status === 'limited' ? 'resvSelectedTime limited' : 'resvSelectedTime'}
                           >
-                            Hora seleccionada: {selectedHour.hour}
+                            {text('Hora seleccionada:', 'Selected time:')} {selectedHour.hour}
                           </div>
                         ) : null}
                       </>
                     ) : (
                       <div class="resvEmpty">
-                        No hay horas disponibles para {partySize} {t('reservations.people.suffix')} en esta fecha.
+                        {text('No hay horas disponibles para', 'No times available for')} {partySize} {t('reservations.people.suffix')} {text('en esta fecha.', 'on this date.')}
                       </div>
                     )
                   ) : (
-                    <div class="resvHint">Selecciona primero el número de personas.</div>
+                    <div class="resvHint">{text('Selecciona primero el número de personas.', 'Select the number of guests first.')}</div>
                   )}
                 </div>
 
-                {reservationTime ? (
+                {dateStepReady ? (
                   <motion.div
                     class="resvActions"
                     initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
@@ -1441,7 +1450,7 @@ export function Reservas() {
                       class="btn primary"
                       onClick={() => void goNextFromDate()}
                     >
-                      Siguiente
+                      {text('Siguiente', 'Next')}
                     </button>
                   </motion.div>
                 ) : null}
@@ -1456,43 +1465,52 @@ export function Reservas() {
       const mandatoryMenus = mandatoryMenuData?.menus || []
       const isMandatory = mandatoryMenuData?.mandatory === true
       const selectedMandatoryMenu = mandatoryMenus.find(m => m.menuId === mandatoryMenuId)
+      const mandatoryMenuStepReady = !isMandatory || mandatoryMenuId !== null
+      const mandatoryEntrantes = selectedMandatoryMenu
+        ? localizedArray(selectedMandatoryMenu.entrantes, selectedMandatoryMenu.entrantesEnglish, lang)
+        : []
 
       const mandatoryMenuOptions = useMemo<PopoverSelectOption[]>(() => {
         return mandatoryMenus.map((m) => ({
           value: String(m.menuId),
-          label: m.menuTitle,
-          right: `${m.price}€/persona`,
-          keywords: `${m.menuTitle} ${m.price}`.toLowerCase(),
+          label: localized(m.menuTitle, m.menuTitleEnglish, lang),
+          right: `${m.price}€/${text('persona', 'person')}`,
+          keywords: `${m.menuTitle} ${m.menuTitleEnglish || ''} ${m.price}`.toLowerCase(),
         }))
-      }, [mandatoryMenus])
+      }, [mandatoryMenus, lang])
 
       const mandatoryPrincipalesOptions = useMemo<PopoverSelectOption[]>(() => {
         if (!selectedMandatoryMenu) return []
         const items = readStringArray(selectedMandatoryMenu.principales?.items || [])
-        return items.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() }))
-      }, [selectedMandatoryMenu])
+        const english = selectedMandatoryMenu.principalesEnglish?.items
+        return items.map((it, index) => ({
+          value: it,
+          label: localized(it, english?.[index], lang),
+          keywords: `${it} ${english?.[index] || ''}`.toLowerCase(),
+        }))
+      }, [selectedMandatoryMenu, lang])
 
       return (
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">Menú recomendado del día</div>
+              <div class="resvCardTitle">{text('Menú recomendado del día', 'Recommended menu of the day')}</div>
               <div class="resvCardSub">
                 {isMandatory
-                  ? 'Seleccione un menu recomendado del dia para su reserva. Para la fecha seleccionada solo se admitiran reservas con uno de los menus disponibles.'
-                  : '¿Desea reservar un menu recomendado del dia?'}
+                  ? text('Seleccione un menú recomendado del día para su reserva. Para la fecha seleccionada solo se admitirán reservas con uno de los menús disponibles.', 'Select a recommended menu for your reservation. On this date, reservations are only accepted with one of the available menus.')
+                  : text('¿Desea reservar un menú recomendado del día?', 'Would you like to book a recommended menu?')}
               </div>
             </div>
 
             <div class="resvField">
-              <div class="resvLabel">Seleccione un menú</div>
+              <div class="resvLabel">{text('Seleccione un menú', 'Select a menu')}</div>
               <PopoverSelect
-                ariaLabel="Seleccione un menú"
+                ariaLabel={text('Seleccione un menú', 'Select a menu')}
                 value={mandatoryMenuId ? String(mandatoryMenuId) : null}
-                placeholder="Selecciona un menú"
+                placeholder={text('Selecciona un menú', 'Select a menu')}
                 options={mandatoryMenuOptions}
                 searchable={mandatoryMenuOptions.length > 6}
-                searchPlaceholder="Buscar menú"
+                searchPlaceholder={text('Buscar menú', 'Search menus')}
                 onChange={(v) => {
                   const id = Number(v)
                   setMandatoryMenuId(Number.isFinite(id) && id > 0 ? id : null)
@@ -1507,9 +1525,9 @@ export function Reservas() {
                 {selectedMandatoryMenu.menuType !== 'special' && (
                   <>
                     <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">Entrantes incluidos</div>
+                      <div class="resvMenuTitle">{text('Entrantes incluidos', 'Starters included')}</div>
                       <ul class="resvMenuList">
-                        {readStringArray(selectedMandatoryMenu.entrantes).map((t) => (
+                        {mandatoryEntrantes.map((t) => (
                           <li key={t}>{t}</li>
                         ))}
                       </ul>
@@ -1517,8 +1535,8 @@ export function Reservas() {
 
                     {selectedMandatoryMenu.menuChooseMain ? (
                       <div class="resvMenuBlock">
-                        <div class="resvMenuTitle">Principales</div>
-                        <div class="resvHint">¿Queréis elegir ahora los principales?</div>
+                        <div class="resvMenuTitle">{text('Principales', 'Main courses')}</div>
+                        <div class="resvHint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
                         <div class="resvYesNo">
                           <button
                             type="button"
@@ -1530,7 +1548,7 @@ export function Reservas() {
                               }
                             }}
                           >
-                            Sí
+                            {text('Sí', 'Yes')}
                           </button>
                           <button
                             type="button"
@@ -1540,7 +1558,7 @@ export function Reservas() {
                               setMandatoryPrincipalesRows([])
                             }}
                           >
-                            No
+                            {text('No', 'No')}
                           </button>
                         </div>
 
@@ -1549,18 +1567,18 @@ export function Reservas() {
                             {mandatoryPrincipalesRows.map((row, idx) => (
                               <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
                                 <PopoverSelect
-                                  ariaLabel={`Principal ${idx + 1}`}
+                                  ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
                                   value={row.name ? row.name : null}
-                                  placeholder="Selecciona un principal"
+                                  placeholder={text('Selecciona un principal', 'Select a main course')}
                                   options={mandatoryPrincipalesOptions}
                                   searchable={mandatoryPrincipalesOptions.length > 10}
-                                  searchPlaceholder="Buscar principal"
+                                  searchPlaceholder={text('Buscar principal', 'Search main courses')}
                                   onChange={(name) =>
                                     setMandatoryPrincipalesRows((prev) => prev.map((p, i) => (i === idx ? { ...p, name } : p)))
                                   }
                                 />
                                 <InlineCounter
-                                  ariaLabel={`Raciones principal ${idx + 1}`}
+                                  ariaLabel={`${text('Raciones principal', 'Main course servings')} ${idx + 1}`}
                                   value={row.servings || 0}
                                   min={0}
                                   max={partySize || 99}
@@ -1573,7 +1591,7 @@ export function Reservas() {
                                 <button
                                   type="button"
                                   class="resvIconBtn"
-                                  aria-label="Eliminar"
+                                  aria-label={text('Eliminar', 'Remove')}
                                   onClick={() => setMandatoryPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
                                 >
                                   <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
@@ -1593,14 +1611,14 @@ export function Reservas() {
                                   setMandatoryPrincipalesRows((prev) => [...prev, { name: '', servings: 0 }])
                                 }}
                               >
-                                Añadir principal
+                                {text('Añadir principal', 'Add main course')}
                               </button>
                               <div class="resvHint">
-                                Máximo:{' '}
+                                {text('Máximo:', 'Maximum:')}{' '}
                                 {selectedMandatoryMenu.mainDishesLimit
                                   ? selectedMandatoryMenu.mainDishesLimitNumber
                                   : Math.min(10, partySize || 10)}{' '}
-                                tipos
+                                {text('tipos', 'types')}
                               </div>
                             </div>
                           </div>
@@ -1608,9 +1626,9 @@ export function Reservas() {
                       </div>
                     ) : (
                       <div class="resvMenuBlock">
-                        <div class="resvMenuTitle">Principales</div>
+                        <div class="resvMenuTitle">{text('Principales', 'Main courses')}</div>
                         <ul class="resvMenuList">
-                          {readStringArray(selectedMandatoryMenu.principales?.items || []).map((t) => (
+                          {localizedArray(readStringArray(selectedMandatoryMenu.principales?.items || []), selectedMandatoryMenu.principalesEnglish?.items, lang).map((t) => (
                             <li key={t}>{t}</li>
                           ))}
                         </ul>
@@ -1632,35 +1650,33 @@ export function Reservas() {
                   setMandatoryPrincipalesRows([])
                 }}
               >
-                Continuar sin reservar menu recomendado
+                {text('Continuar sin reservar menú recomendado', 'Continue without a recommended menu')}
               </button>
             )}
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
-              <button
-                type="button"
-                class="btn primary"
-                onClick={() => {
-                  if (isMandatory && mandatoryMenuId === null) {
-                    pushToast('warning', 'Menú requerido', 'Seleccione un menú para continuar.')
-                    return
-                  }
-                  // If mandatory menu selected, skip rice and group menu steps
-                  if (mandatoryMenuId !== null) {
-                    setWantsRice(false)
-                    setRiceType('')
-                    setRiceServings(null)
-                    setWantsGroupMenu(false)
-                    setGroupMenuId(null)
-                  }
-                  setStep('personal')
-                }}
-              >
-                Siguiente
-              </button>
+              {mandatoryMenuStepReady ? (
+                <button
+                  type="button"
+                  class="btn primary"
+                  onClick={() => {
+                    // If mandatory menu selected, skip rice and group menu steps
+                    if (mandatoryMenuId !== null) {
+                      setWantsRice(false)
+                      setRiceType('')
+                      setRiceServings(null)
+                      setWantsGroupMenu(false)
+                      setGroupMenuId(null)
+                    }
+                    setStep('personal')
+                  }}
+                >
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1672,8 +1688,8 @@ export function Reservas() {
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">Menú de grupos</div>
-              <div class="resvCardSub">Menús especiales para grupos.</div>
+              <div class="resvCardTitle">{text('Menú de grupos', 'Group menu')}</div>
+              <div class="resvCardSub">{text('Menús especiales para grupos.', 'Special menus for groups.')}</div>
             </div>
 
             <div class="resvYesNo">
@@ -1687,7 +1703,7 @@ export function Reservas() {
                   setRiceServings(null)
                 }}
               >
-                Sí
+                {text('Sí', 'Yes')}
               </button>
               <button
                 type="button"
@@ -1699,21 +1715,21 @@ export function Reservas() {
                   setPrincipalesRows([])
                 }}
               >
-                No
+                {text('No', 'No')}
               </button>
             </div>
 
             {wantsGroupMenu === true ? (
               <>
                 <div class="resvField">
-                  <div class="resvLabel">Seleccione un menú</div>
+                  <div class="resvLabel">{text('Seleccione un menú', 'Select a menu')}</div>
                   <PopoverSelect
-                    ariaLabel="Seleccione un menú"
+                    ariaLabel={text('Seleccione un menú', 'Select a menu')}
                     value={groupMenuId ? String(groupMenuId) : null}
-                    placeholder="Selecciona un menú"
+                    placeholder={text('Selecciona un menú', 'Select a menu')}
                     options={groupMenuOptions}
                     searchable={groupMenuOptions.length > 6}
-                    searchPlaceholder="Buscar menú"
+                    searchPlaceholder={text('Buscar menú', 'Search menus')}
                     onChange={(v) => {
                       const id = Number(v)
                       setGroupMenuId(Number.isFinite(id) && id > 0 ? id : null)
@@ -1726,17 +1742,17 @@ export function Reservas() {
                 {selectedMenu ? (
                   <div class="resvMenuDetails">
                     <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">Entrantes incluidos</div>
+                      <div class="resvMenuTitle">{text('Entrantes incluidos', 'Starters included')}</div>
                       <ul class="resvMenuList">
-                        {readStringArray(selectedMenu.entrantes).map((t) => (
+                        {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t) => (
                           <li key={t}>{t}</li>
                         ))}
                       </ul>
                     </div>
 
                     <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">{getPrincipalesTitle(selectedMenu)}</div>
-                      <div class="resvHint">¿Queréis elegir ahora los principales?</div>
+                      <div class="resvMenuTitle">{getPrincipalesTitle(selectedMenu, lang)}</div>
+                      <div class="resvHint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
                       <div class="resvYesNo">
                         <button
                           type="button"
@@ -1748,7 +1764,7 @@ export function Reservas() {
                             }
                           }}
                         >
-                          Sí
+                          {text('Sí', 'Yes')}
                         </button>
                         <button
                           type="button"
@@ -1758,7 +1774,7 @@ export function Reservas() {
                             setPrincipalesRows([])
                           }}
                         >
-                          No
+                          {text('No', 'No')}
                         </button>
                       </div>
 
@@ -1767,18 +1783,18 @@ export function Reservas() {
                           {principalesRows.map((row, idx) => (
                             <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
                               <PopoverSelect
-                                ariaLabel={`Principal ${idx + 1}`}
+                                ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
                                 value={row.name ? row.name : null}
-                                placeholder="Selecciona un principal"
+                                placeholder={text('Selecciona un principal', 'Select a main course')}
                                 options={principalesOptions}
                                 searchable={principalesOptions.length > 10}
-                                searchPlaceholder="Buscar principal"
+                                searchPlaceholder={text('Buscar principal', 'Search main courses')}
                                 onChange={(name) =>
                                   setPrincipalesRows((prev) => prev.map((p, i) => (i === idx ? { ...p, name } : p)))
                                 }
                               />
                               <InlineCounter
-                                ariaLabel={`Raciones principal ${idx + 1}`}
+                                ariaLabel={`${text('Raciones principal', 'Main course servings')} ${idx + 1}`}
                                 value={row.servings || 0}
                                 min={0}
                                 max={partySize || 99}
@@ -1791,7 +1807,7 @@ export function Reservas() {
                               <button
                                 type="button"
                                 class="resvIconBtn"
-                                aria-label="Eliminar"
+                                aria-label={text('Eliminar', 'Remove')}
                                 onClick={() => setPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
                               >
                                 <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
@@ -1811,14 +1827,14 @@ export function Reservas() {
                                 setPrincipalesRows((prev) => [...prev, { name: '', servings: 0 }])
                               }}
                             >
-                              Añadir principal
+                              {text('Añadir principal', 'Add main course')}
                             </button>
                             <div class="resvHint">
-                              Máximo:{' '}
+                              {text('Máximo:', 'Maximum:')}{' '}
                               {selectedMenu.main_dishes_limit
                                 ? selectedMenu.main_dishes_limit_number
                                 : Math.min(10, partySize || 10)}{' '}
-                              tipos
+                              {text('tipos', 'types')}
                             </div>
                           </div>
                         </div>
@@ -1831,11 +1847,13 @@ export function Reservas() {
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
-              <button type="button" class="btn primary" onClick={goNextFromGroupMenu}>
-                Siguiente
-              </button>
+              {groupMenuStepReady ? (
+                <button type="button" class="btn primary" onClick={goNextFromGroupMenu}>
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1847,8 +1865,8 @@ export function Reservas() {
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">Selección de arroz</div>
-              <div class="resvCardSub">Los arroces solo podrán servirse con reserva previa.</div>
+              <div class="resvCardTitle">{text('Selección de arroz', 'Rice selection')}</div>
+              <div class="resvCardSub">{text('Los arroces solo podrán servirse con reserva previa.', 'Rice dishes are only available when ordered in advance.')}</div>
             </div>
 
             <div class="resvYesNo">
@@ -1857,7 +1875,7 @@ export function Reservas() {
                 class={wantsRice === true ? 'resvChoice selected' : 'resvChoice'}
                 onClick={() => setWantsRice(true)}
               >
-                Sí
+                {text('Sí', 'Yes')}
               </button>
               <button
                 type="button"
@@ -1868,30 +1886,30 @@ export function Reservas() {
                   setRiceServings(null)
                 }}
               >
-                No
+                {text('No', 'No')}
               </button>
             </div>
 
             {wantsRice === true ? (
               <div class="resvRiceGrid">
                 <div class="resvField">
-                  <div class="resvLabel">Tipo de arroz</div>
+                  <div class="resvLabel">{text('Tipo de arroz', 'Rice dish')}</div>
                   <PopoverSelect
-                    ariaLabel="Tipo de arroz"
+                    ariaLabel={text('Tipo de arroz', 'Rice dish')}
                     value={riceType ? riceType : null}
-                    placeholder="Selecciona el tipo de arroz"
+                    placeholder={text('Selecciona el tipo de arroz', 'Select a rice dish')}
                     options={riceTypeOptions}
                     searchable={riceTypeOptions.length > 8}
-                    searchPlaceholder="Buscar arroz"
+                    searchPlaceholder={text('Buscar arroz', 'Search rice dishes')}
                     onChange={(v) => setRiceType(v)}
                   />
                 </div>
                 <div class="resvField">
-                  <div class="resvLabel">Raciones</div>
+                  <div class="resvLabel">{text('Raciones', 'Servings')}</div>
                   <PopoverSelect
-                    ariaLabel="Raciones"
+                    ariaLabel={text('Raciones', 'Servings')}
                     value={riceServings != null ? String(riceServings) : null}
-                    placeholder="Selecciona raciones"
+                    placeholder={text('Selecciona raciones', 'Select servings')}
                     options={riceServingsOptions}
                     onChange={(v) => {
                       const n = Number(v)
@@ -1904,11 +1922,13 @@ export function Reservas() {
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
-              <button type="button" class="btn primary" onClick={goNextFromRice}>
-                Siguiente
-              </button>
+              {riceStepReady ? (
+                <button type="button" class="btn primary" onClick={goNextFromRice}>
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1920,13 +1940,13 @@ export function Reservas() {
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">Datos personales</div>
-              <div class="resvCardSub">Estos datos son obligatorios para confirmar la reserva.</div>
+              <div class="resvCardTitle">{text('Datos personales', 'Personal details')}</div>
+              <div class="resvCardSub">{text('Estos datos son obligatorios para confirmar la reserva.', 'These details are required to confirm the reservation.')}</div>
             </div>
 
             <div class="resvForm">
               <div class="resvField">
-                <div class="resvLabel">Nombre y apellidos</div>
+                <div class="resvLabel">{text('Nombre y apellidos', 'Full name')}</div>
                 <input
                   class="resvInput"
                   type="text"
@@ -1947,41 +1967,43 @@ export function Reservas() {
               </div>
 
               <div class="resvField">
-                <div class="resvLabel">Teléfono</div>
+                <div class="resvLabel">{text('Teléfono', 'Phone')}</div>
                 <div class="resvPhoneRow">
                   <PopoverSelect
-                    ariaLabel="Prefijo"
+                    ariaLabel={text('Prefijo', 'Country code')}
                     value={countryCode}
                     placeholder="+34"
                     options={countryOptions}
                     searchable
                     autoFocusSearch={false}
-                    searchPlaceholder="Buscar país"
+                    searchPlaceholder={text('Buscar país', 'Search countries')}
                     onChange={(v) => setCountryCode(v)}
                   />
                   <input
                     class="resvInput"
                     type="tel"
                     inputMode="numeric"
-                    placeholder="Número"
+                    placeholder={text('Número', 'Number')}
                     value={phoneNational}
                     onInput={(e) => setPhoneNational(onlyDigits((e.target as HTMLInputElement).value))}
                     autoComplete="tel-national"
                   />
                 </div>
                 <div class="resvHint">
-                  Se guardará como +{onlyDigits(countryCode)} {onlyDigits(phoneNational)}
+                  {text('Se guardará como', 'It will be saved as')} +{onlyDigits(countryCode)} {onlyDigits(phoneNational)}
                 </div>
               </div>
             </div>
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
-              <button type="button" class="btn primary" onClick={goNextFromPersonal}>
-                Siguiente
-              </button>
+              {personalStepReady ? (
+                <button type="button" class="btn primary" onClick={goNextFromPersonal}>
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -1995,19 +2017,19 @@ export function Reservas() {
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">¿Cuántos adultos sois?</div>
+              <div class="resvCardTitle">{text('¿Cuántos adultos sois?', 'How many adults are there?')}</div>
             </div>
 
             <div class="resvAdultsPanel">
-              <Counter ariaLabel="Adultos" value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
+              <Counter ariaLabel={text('Adultos', 'Adults')} value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
             </div>
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
               <button type="button" class="btn primary" onClick={goNextFromAdults}>
-                Siguiente
+                {text('Siguiente', 'Next')}
               </button>
             </div>
           </div>
@@ -2020,35 +2042,35 @@ export function Reservas() {
         <div class="resvStep">
           <div class="resvCard">
             <div class="resvCardHead">
-              <div class="resvCardTitle">Accesorios para bebés</div>
-              <div class="resvCardSub">Indique si necesitáis tronas o vais a traer carrito.</div>
+              <div class="resvCardTitle">{text('Accesorios para bebés', 'Baby accessories')}</div>
+              <div class="resvCardSub">{text('Indique si necesitáis tronas o vais a traer carrito.', 'Tell us if you need high chairs or will bring a stroller.')}</div>
             </div>
 
             <div class="resvAccGrid">
               <Counter
-                ariaLabel="Tronas"
+                ariaLabel={text('Tronas', 'High chairs')}
                 value={highChairs}
                 min={0}
                 max={3}
                 onChange={(n) => setHighChairs(n)}
-                subtitle="Suplemento de 2€ por trona"
+                subtitle={text('Suplemento de 2€ por trona', '€2 surcharge per high chair')}
               />
               <Counter
-                ariaLabel="Carros de bebé"
+                ariaLabel={text('Carros de bebé', 'Baby strollers')}
                 value={babyStrollers}
                 min={0}
                 max={5}
                 onChange={(n) => setBabyStrollers(n)}
-                subtitle="Indique cuántos traerá"
+                subtitle={text('Indique cuántos traerá', 'How many will you bring?')}
               />
             </div>
 
             <div class="resvActions">
               <button type="button" class="btn" onClick={goPrev}>
-                Anterior
+                {text('Anterior', 'Back')}
               </button>
               <button type="button" class="btn primary" onClick={goNextFromAccessories}>
-                Siguiente
+                {text('Siguiente', 'Next')}
               </button>
             </div>
           </div>
@@ -2064,33 +2086,33 @@ export function Reservas() {
       <div class="resvStep">
         <div class="resvCard">
           <div class="resvCardHead">
-            <div class="resvCardTitle">Resumen de tu reserva</div>
-            <div class="resvCardSub">Revisa los datos antes de completar la reserva.</div>
+            <div class="resvCardTitle">{text('Resumen de tu reserva', 'Reservation summary')}</div>
+            <div class="resvCardSub">{text('Revisa los datos antes de completar la reserva.', 'Check the details before completing your reservation.')}</div>
           </div>
 
           <div class="resvSummary">
             <div class="resvSummaryRow">
-              <span>Fecha</span>
+              <span>{text('Fecha', 'Date')}</span>
               <span class="resvSummaryValue">{selectedDate || '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Hora</span>
+              <span>{text('Hora', 'Time')}</span>
               <span class="resvSummaryValue">{reservationTime || '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Turno</span>
+              <span>{text('Turno', 'Service')}</span>
               <span class="resvSummaryValue">{shiftLabel || '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Personas</span>
+              <span>{text('Personas', 'Guests')}</span>
               <span class="resvSummaryValue">{ps || '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Salón</span>
-              <span class="resvSummaryValue">{selectedFloor ? selectedFloor.name : '-'}</span>
+              <span>{text('Salón', 'Dining room')}</span>
+              <span class="resvSummaryValue">{selectedFloor ? (lang === 'en' ? (selectedFloor.isGround ? 'Ground floor' : `Floor ${selectedFloor.floorNumber}`) : selectedFloor.name) : '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Nombre</span>
+              <span>{text('Nombre', 'Name')}</span>
               <span class="resvSummaryValue">{fullName.trim() || '-'}</span>
             </div>
             <div class="resvSummaryRow">
@@ -2098,7 +2120,7 @@ export function Reservas() {
               <span class="resvSummaryValue">{email.trim() || '-'}</span>
             </div>
             <div class="resvSummaryRow">
-              <span>Teléfono</span>
+              <span>{text('Teléfono', 'Phone')}</span>
               <span class="resvSummaryValue">
                 +{onlyDigits(countryCode)} {onlyDigits(phoneNational)}
               </span>
@@ -2106,28 +2128,28 @@ export function Reservas() {
 
             {wantsMenu ? (
               <div class="resvSummaryBlock">
-                <div class="resvSummaryBlockTitle">Menú de grupo</div>
+                <div class="resvSummaryBlockTitle">{text('Menú de grupo', 'Group menu')}</div>
                 <div class="resvSummaryRow">
-                  <span>Menú</span>
+                  <span>{text('Menú', 'Menu')}</span>
                   <span class="resvSummaryValue">
-                    {selectedMenu.menu_title} ({selectedMenu.price}€/persona)
+                    {localized(selectedMenu.menu_title, selectedMenu.menu_title_english, lang)} ({selectedMenu.price}€/{text('persona', 'person')})
                   </span>
                 </div>
-                <div class="resvSummaryListTitle">Entrantes</div>
+                <div class="resvSummaryListTitle">{text('Entrantes', 'Starters')}</div>
                 <ul class="resvSummaryList">
-                  {readStringArray(selectedMenu.entrantes).map((t) => (
+                  {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t) => (
                     <li key={t}>{t}</li>
                   ))}
                 </ul>
                 {principalesEnabled === true && principalesRows.length > 0 ? (
                   <>
-                    <div class="resvSummaryListTitle">Principales</div>
+                    <div class="resvSummaryListTitle">{text('Principales', 'Main courses')}</div>
                     <ul class="resvSummaryList">
                       {principalesRows
                         .filter((r) => r.name && r.servings > 0)
                         .map((r) => (
                           <li key={r.name}>
-                            {r.name} x {r.servings}
+                            {localized(r.name, selectedMenu.principales_english?.items?.[principalesItems.indexOf(r.name)], lang)} x {r.servings}
                           </li>
                         ))}
                     </ul>
@@ -2136,11 +2158,13 @@ export function Reservas() {
               </div>
             ) : (
               <div class="resvSummaryBlock">
-              <div class="resvSummaryBlockTitle">Arroz</div>
+              <div class="resvSummaryBlockTitle">{text('Arroz', 'Rice')}</div>
               <div class="resvSummaryRow">
-                <span>Selección</span>
+                <span>{text('Selección', 'Selection')}</span>
                 <span class="resvSummaryValue">
-                  {wantsRice === true && riceType ? `${riceType} (${riceServings || 0} raciones)` : 'No arroz'}
+                  {wantsRice === true && riceType
+                    ? `${localized(riceType, riceTypesEnglish[riceTypes.indexOf(riceType)], lang)} (${riceServings || 0} ${text('raciones', 'servings')})`
+                    : text('No arroz', 'No rice')}
                 </span>
               </div>
             </div>
@@ -2148,13 +2172,13 @@ export function Reservas() {
 
             {hasAccessories ? (
               <div class="resvSummaryBlock">
-                <div class="resvSummaryBlockTitle">Accesorios</div>
+                <div class="resvSummaryBlockTitle">{text('Accesorios', 'Accessories')}</div>
                 <div class="resvSummaryRow">
-                  <span>Carros de bebé</span>
+                  <span>{text('Carros de bebé', 'Baby strollers')}</span>
                   <span class="resvSummaryValue">{babyStrollers}</span>
                 </div>
                 <div class="resvSummaryRow">
-                  <span>Tronas</span>
+                  <span>{text('Tronas', 'High chairs')}</span>
                   <span class="resvSummaryValue">
                     {highChairs} ({highChairs * 2}€)
                   </span>
@@ -2163,7 +2187,7 @@ export function Reservas() {
             ) : null}
 
             {showUpperFloorWarning ? (
-              <div class="resvNotice warn">Ubicación: primera planta sin ascensor.</div>
+              <div class="resvNotice warn">{text('Ubicación: primera planta sin ascensor.', 'Location: first floor, no lift access.')}</div>
             ) : null}
           </div>
 
@@ -2171,13 +2195,13 @@ export function Reservas() {
             <label class="resvCheck">
               <Checkbox checked={termsAccepted} onCheckedChange={setTermsAccepted} variant="accent" size="sm" />
               <span>
-                He leído y acepto las{' '}
+                {text('He leído y acepto las', 'I have read and accept the')}{' '}
                 <a href="/avisolegal" target="_blank" rel="noreferrer">
-                  condiciones de uso y aviso legal
+                  {text('condiciones de uso y aviso legal', 'terms of use and legal notice')}
                 </a>{' '}
-                y las{' '}
+                {text('y las', 'and the')}{' '}
                 <a href="/booking-policies" target="_blank" rel="noreferrer">
-                  políticas de reserva del restaurante
+                  {text('políticas de reserva del restaurante', 'restaurant booking policies')}
                 </a>
                 .
               </span>
@@ -2185,9 +2209,9 @@ export function Reservas() {
             <label class="resvCheck">
               <Checkbox checked={privacyAccepted} onCheckedChange={setPrivacyAccepted} variant="accent" size="sm" />
               <span>
-                He leído, acepto y consiento el{' '}
+                {text('He leído, acepto y consiento el', 'I have read, accept and consent to the')}{' '}
                 <a href="/protecciondatos" target="_blank" rel="noreferrer">
-                  tratamiento de datos personales
+                  {text('tratamiento de datos personales', 'processing of personal data')}
                 </a>
                 .
               </span>
@@ -2196,12 +2220,16 @@ export function Reservas() {
 
           <div class="resvActions">
             <button type="button" class="btn" onClick={goPrev} disabled={submitting}>
-              Anterior
+              {text('Anterior', 'Back')}
             </button>
-            {termsAccepted && privacyAccepted && (
+            {termsAccepted && privacyAccepted ? (
               <button type="button" class="btn primary" onClick={() => void submitBooking()} disabled={submitting}>
-                {submitting ? 'Enviando...' : 'Completar reserva'}
+                {submitting ? text('Enviando...', 'Sending...') : text('Completar reserva', 'Complete reservation')}
               </button>
+            ) : (
+              <span class="resvActionFallback">
+                {text('Acepta las condiciones para completar la reserva', 'Accept the conditions to complete the booking')}
+              </span>
             )}
           </div>
         </div>
@@ -2213,14 +2241,14 @@ export function Reservas() {
     <div class="page resvPage">
       <section class="page-hero resvHero">
         <div class="container">
-          <h1 class="page-title">Reservas</h1>
-          <p class="page-subtitle">Selecciona fecha, personas y completa tu reserva.</p>
+          <h1 class="page-title">{text('Reservas', 'Reservations')}</h1>
+          <p class="page-subtitle">{text('Selecciona fecha, personas y completa tu reserva.', 'Select a date and number of guests, then complete your reservation.')}</p>
         </div>
       </section>
 
       <section class="resvMain">
         <div class="container">
-          <div class="resvSteps" aria-label="Pasos" ref={stepsScrollerRef}>
+          <div class="resvSteps" aria-label={text('Pasos', 'Steps')} ref={stepsScrollerRef}>
             {steps.map((s, idx) => {
               const isActive = s.id === step
               const isDone = idx < currentStepIndex
@@ -2252,23 +2280,22 @@ export function Reservas() {
 
       <Modal
         open={sameDayOpen}
-        title="Reserva para el mismo día"
+        title={text('Reserva para el mismo día', 'Same-day reservation')}
         onClose={() => setSameDayOpen(false)}
         primaryHref="tel:638857294"
-        primaryLabel="Llamar"
+        primaryLabel={text('Llamar', 'Call')}
       >
-        No se admiten reservas por la web para el mismo día. Para completar su reserva, llame al 638 85 72 94.
+        {text('No se admiten reservas por la web para el mismo día. Para completar su reserva, llame al 638 85 72 94.', 'Same-day reservations cannot be made online. To complete your reservation, call 638 85 72 94.')}
       </Modal>
 
       <Modal
         open={moreThan10Open}
-        title="Reservas de más de 10 personas"
+        title={text('Reservas de más de 10 personas', 'Reservations for more than 10 guests')}
         onClose={() => setMoreThan10Open(false)}
         primaryHref="tel:638857294"
-        primaryLabel="Llamar"
+        primaryLabel={text('Llamar', 'Call')}
       >
-        Para mesas superiores a 10 comensales se ofrecerá el menú de grupo. Para finalizar la reserva por favor llame o
-        contacte por WhatsApp.
+        {text('Para mesas superiores a 10 comensales se ofrecerá el menú de grupo. Para finalizar la reserva por favor llame o contacte por WhatsApp.', 'A group menu is offered for parties of more than 10 guests. To complete your reservation, call or contact us via WhatsApp.')}
       </Modal>
 
       <Modal
@@ -2288,9 +2315,9 @@ export function Reservas() {
       </Modal>
 
       {submitting && (
-        <div class="resvOverlay" role="alert" aria-label="Enviando reserva">
+        <div class="resvOverlay" role="alert" aria-label={text('Enviando reserva', 'Sending reservation')}>
           <div class="resvOverlay__spinner" />
-          <div class="resvOverlay__text">Enviando reserva…</div>
+          <div class="resvOverlay__text">{text('Enviando reserva…', 'Sending reservation…')}</div>
         </div>
       )}
 

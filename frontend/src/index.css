@@ -1898,13 +1898,13 @@ svg {
 }
 
 .dishCard--withImage.dishCard--pickable {
-    padding-right: 0;
-    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .dishCard.dishCard--pickable {
-    padding-right: 0;
-    padding-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
     height: auto;
 }
 
@@ -1992,13 +1992,21 @@ svg {
     transform: translate3d(0, 0, 0);
 }
 
+.dishCardAction {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.dishCard--withImage .dishCardAction {
+    margin-top: 0;
+    padding: 0 12px 12px;
+}
+
 .dishAddBtn {
     appearance: none;
-    position: absolute;
-    right: 12px;
-    top: 76%;
-    bottom: auto;
-    transform: translateY(-50%);
+    position: relative;
+    transform: none;
     width: 44px;
     height: 44px;
     border-radius: 999px;
@@ -2021,7 +2029,7 @@ svg {
 }
 
 .dishAddBtn:active {
-    transform: translateY(0) scale(0.98);
+    transform: scale(0.98);
 }
 
 .dishAddIcon {
@@ -2120,6 +2128,12 @@ svg {
     padding-top: 14px;
     border-top: 1px dashed rgba(0, 0, 0, 0.18);
     text-align: left;
+}
+
+.groupPanel--plain .menuImportantBox,
+.groupPanel--plain .menuImportantTitle,
+.groupPanel--plain .menuImportantText {
+    text-align: center;
 }
 
 .menuImportantTitle {
@@ -2350,6 +2364,86 @@ svg {
     z-index: 1;
 }
 
+.groupPanel--plain .menuSectionTitle,
+.groupPanel--plain .menuSectionHeading,
+.groupPanel--plain .menuSubTitle,
+.groupPanel--plain .menuSectionLead,
+.groupPanel--plain .menuSectionAnnotations {
+    text-align: center;
+}
+
+.groupPanel--plain .menuSectionAnnotations {
+    padding: 0;
+    list-style: none;
+}
+
+.groupPanel--plain .menuSectionAnnotations > li {
+    text-align: center;
+}
+
+.groupPanel--plain .menuAsideCard,
+.groupPanel--plain .menuAsideTitle,
+.groupPanel--plain .menuPrice,
+.groupPanel--plain .menuPriceValue,
+.groupPanel--plain .menuPriceNotes,
+.groupPanel--plain .menuPriceNote,
+.groupPanel--plain .menuSubTitle {
+    text-align: center;
+}
+
+.groupPanel--plain .menuSectionNotes {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.groupPanel--plain .menuSectionNote {
+    padding-left: 0;
+    text-align: center;
+}
+
+.groupPanel--plain .menuSectionNote::before {
+    content: none;
+}
+
+.groupPanel--plain .menuSection {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.groupPanel--plain .dishGrid {
+    grid-template-columns: 1fr;
+}
+
+.groupPanel--plain .dishCard {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.groupPanel--plain .dishCardBody {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.groupPanel--plain .dishSupplementInfo {
+    order: 1;
+}
+
+.groupPanel--plain .dishDescriptionExtra {
+    order: 2;
+}
+
+.groupPanel--plain .dishAllergenRow {
+    order: 3;
+}
+
 .groupSubtitles {
     margin-top: 10px;
     display: flex;
@@ -2374,6 +2468,13 @@ svg {
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.groupPanel--plain .menuSubSection,
+.groupPanel--plain .menuSubSection .menuDishText,
+.groupPanel--plain .menuSubSection .menuMuted,
+.groupPanel--plain .menuSubSection .menuPrice {
+    text-align: center;
 }
 
 @media (min-width: 1024px) {
@@ -3155,11 +3256,12 @@ svg {
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius);
     box-shadow: var(--shadow-soft);
-    padding: 18px;
+    padding: 0;
 }
 
 .resvCardHead {
     margin-bottom: 14px;
+    padding: 1rem;
 }
 
 .resvCardTitle {
@@ -3180,6 +3282,7 @@ svg {
     width: 100%;
     max-width: 440px;
     margin: 0 auto;
+    padding: 0 0 1.5rem;
 }
 
 .resvCalendarHead {
@@ -3377,6 +3480,8 @@ svg {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    margin-bottom: 0;
+    padding: 0;
 }
 
 .resvField--inline .resvLabel {
@@ -3396,6 +3501,7 @@ svg {
     text-transform: uppercase;
     color: rgba(20, 37, 32, 0.74);
     margin-bottom: 8px;
+    padding: 1rem;
 }
 
 .resvHint {
@@ -3403,10 +3509,12 @@ svg {
     color: rgba(0, 0, 0, 0.62);
     font-size: 13px;
     line-height: 1.6;
+    padding: 0.5rem 1rem 1rem;
 }
 
 .resvEmpty {
-    padding: 12px 12px;
+    margin: 0 1rem 1rem;
+    padding: 12px;
     border-radius: 16px;
     border: 1px dashed rgba(0, 0, 0, 0.18);
     background: rgba(0, 0, 0, 0.02);
@@ -3420,10 +3528,12 @@ svg {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     overflow-x: clip;
+    padding: 0 1rem 1rem;
 }
 
 .resvSelectedTime {
-    margin-top: 12px;
+    width: fit-content;
+    margin: 12px auto 0;
     padding: 10px 12px;
     border-radius: 999px;
     display: flex;
@@ -3581,16 +3691,24 @@ svg {
     align-items: center;
     justify-content: flex-end;
     margin-top: 18px;
+    padding: 0 1rem 1rem;
 }
 
-.resvActions .btn:first-child:not(:last-child) {
+.resvActions .btn:not(.primary):first-child {
     margin-right: auto;
+}
+
+.resvActionFallback {
+    color: rgba(0, 0, 0, 0.62);
+    font-size: 13px;
+    text-align: right;
 }
 
 .resvYesNo {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    padding-inline: 1rem;
 }
 
 .resvChoice {
@@ -3715,6 +3833,7 @@ svg {
 .resvForm {
     display: grid;
     gap: 12px;
+    margin-inline: 1rem;
 }
 
 .resvPhoneRow {
@@ -3838,7 +3957,7 @@ svg {
 .resvSummary {
     margin-top: 12px;
     border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding-top: 12px;
+    padding: 12px 2rem 0;
 }
 
 .resvSummaryRow {
@@ -3891,6 +4010,7 @@ svg {
     margin-top: 16px;
     display: grid;
     gap: 10px;
+    padding-inline: 2rem;
 }
 
 .resvCheck {
@@ -4092,7 +4212,7 @@ svg {
 .pickSectionHead {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
 }
 
@@ -4287,6 +4407,7 @@ svg {
 /* Custom popover select */
 .resvSelect {
     position: relative;
+    padding: 0 1rem;
 }
 
 .resvSelectAnchor {

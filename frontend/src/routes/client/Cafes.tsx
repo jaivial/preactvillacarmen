@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { useI18n } from '../../lib/i18n'
+import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
@@ -13,7 +13,7 @@ type CafesState = {
 }
 
 export function Cafes() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
   const [state, setState] = useState<CafesState>({ loaded: false, itemsByTipo: {}, error: false })
   const [selectedTipo, setSelectedTipo] = useState<string>('')
@@ -50,7 +50,16 @@ export function Cafes() {
     [state.itemsByTipo]
   )
 
-  const items = selectedTipo ? state.itemsByTipo[selectedTipo] : undefined
+  const tipoLabels = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const [tipo, list] of Object.entries(state.itemsByTipo)) {
+      const withEn = (list || []).find((it) => String(it.tipo_english || '').trim())
+      if (withEn?.tipo_english) map[tipo] = withEn.tipo_english
+    }
+    return map
+  }, [state.itemsByTipo])
+
+  const items = selectedTipo ? (state.itemsByTipo[selectedTipo] || []) : []
 
   useEffect(() => {
     if (availableTypes.length > 0 && !selectedTipo) {
@@ -141,7 +150,7 @@ export function Cafes() {
                               transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }}
                             />
                           ) : null}
-                          <span class="cafeTabLabel">{tipo}</span>
+                          <span class="cafeTabLabel">{lang === 'en' ? (tipoLabels[tipo] || tipo) : tipo}</span>
                         </button>
                       )
                     })}
@@ -185,11 +194,11 @@ export function Cafes() {
 
                           <div class="cafeContent">
                             {item.tipo && (
-                              <div class="cafeMeta">{t(`cafe_type.${item.tipo}`) || item.tipo}</div>
+                              <div class="cafeMeta">{lang === 'en' ? (localized(item.tipo, item.tipo_english, lang)) : (t(`cafe_type.${item.tipo}`) || item.tipo)}</div>
                             )}
-                            <h2 class="cafeName">{item.nombre}</h2>
+                            <h2 class="cafeName">{localized(item.nombre, item.nombre_english, lang)}</h2>
                             {item.descripcion && item.nombre !== item.descripcion ? (
-                              <p class="cafeDesc">{item.descripcion}</p>
+                              <p class="cafeDesc">{localized(item.descripcion, item.descripcion_english, lang)}</p>
                             ) : null}
                           </div>
 

@@ -11,6 +11,8 @@ export type Dish = {
   active?: boolean
   foto_url?: string | null
   image_url?: string | null
+  descripcion_english?: string | null
+  description_english?: string | null
 }
 
 export type MenuResponse = {
@@ -34,11 +36,14 @@ export type PostresResponse = {
 export type GroupMenuDisplay = {
   id: number
   menu_title: string
+  menu_title_english?: string
   price: number
   included_coffee: boolean
   menu_subtitle: unknown
   entrantes: unknown
+  entrantes_english?: string[]
   principales: unknown
+  principales_english?: { items?: string[]; titulo_principales?: string }
   postre: unknown
   beverage: unknown
   comments: unknown
@@ -74,6 +79,8 @@ export type PublicMenuDish = {
   price: number | null
   active?: boolean
   position: number
+  title_english?: string
+  description_english?: string
 }
 
 export type PublicMenuSection = {
@@ -83,6 +90,8 @@ export type PublicMenuSection = {
   position: number
   annotations: string[]
   dishes: PublicMenuDish[]
+  title_english?: string
+  annotations_english?: string[]
 }
 
 export type PublicMenuSettings = {
@@ -92,6 +101,7 @@ export type PublicMenuSettings = {
   min_party_size: number
   main_dishes_limit: boolean
   main_dishes_limit_number: number
+  comments_english?: string[]
 }
 
 export type PublicMenu = {
@@ -117,6 +127,8 @@ export type PublicMenu = {
   show_dish_images: boolean
   created_at: string
   modified_at: string
+  menu_title_english?: string
+  menu_subtitle_english?: string[]
 }
 
 export type PublicMenusResponse = {
@@ -138,6 +150,11 @@ export type Vino = {
   active: 0 | 1
   has_foto: boolean
   foto_url?: string
+  nombre_english?: string
+  descripcion_english?: string
+  bodega_english?: string
+  denominacion_origen_english?: string
+  tipo_english?: string
 }
 
 export type VinosResponse = {
@@ -172,6 +189,7 @@ export type MonthAvailabilityResponse = {
 export type RiceTypesResponse = {
   success: true
   riceTypes: string[]
+  riceTypesEnglish?: string[]
 }
 
 export type DailyLimitResponse = {
@@ -263,9 +281,11 @@ export type HomeMenu = {
   id: number
   slug: string
   menu_title: string
+  menu_title_english?: string
   menu_type: PublicMenuType
   active: boolean
   menu_subtitle: string[]
+  menu_subtitle_english?: string[]
   show_menu_preview_image: boolean
   menu_preview_image_url: string
 }
@@ -301,6 +321,11 @@ export type ComidaItem = {
   categoria?: string
   category_id?: number
   category_slug?: string
+  nombre_english?: string
+  descripcion_english?: string
+  titulo_english?: string
+  tipo_english?: string
+  categoria_english?: string
 }
 
 export type ComidaItemsResponse = {
@@ -321,10 +346,13 @@ export type MenuHomeResponse = {
 export type MandatoryMenuDisplay = {
   menuId: number
   menuTitle: string
+  menuTitleEnglish?: string
   menuSubtitle: string
   menuType: string
   entrantes: string[]
+  entrantesEnglish?: string[]
   principales: { items: string[]; titulo_principales?: string }
+  principalesEnglish?: { items?: string[]; titulo_principales?: string }
   minPartySize: number
   mainDishesLimit: boolean
   mainDishesLimitNumber: number

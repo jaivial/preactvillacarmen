@@ -1,14 +1,44 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
-import { useI18n } from '../../lib/i18n'
-import { isGroupMenuType } from '../../lib/publicMenus'
+import { useI18n, localizedArray } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
-import { normalizePublicMenusResponse } from '../../lib/backendAdapters'
-import type { PublicMenu, PublicMenuSection } from '../../lib/types'
-import { formatEuro } from './MenuShared'
+import type { Dish } from '../../lib/types'
+import { formatEuro, MenuSection } from './MenuShared'
+
+type GroupMenuDishValue = {
+  id?: unknown
+  nombre?: unknown
+  descripcion?: unknown
+  suplemento?: unknown
+  suplemento_activo?: unknown
+  active?: unknown
+  alergenos?: unknown
+}
+
+type GroupMenuApi = {
+  id: number
+  menu_title: string
+  menu_title_english?: string
+  price: number | string
+  included_coffee: boolean
+  menu_subtitle: unknown
+  menu_subtitle_english?: unknown
+  entrantes: unknown
+  principales: unknown
+  postre: unknown
+  beverage: unknown
+  comments: unknown
+  comments_english?: unknown
+  min_party_size: number
+}
+
+type GroupMenusApiResponse = {
+  success: boolean
+  menus: GroupMenuApi[]
+}
 
 type NormalizedPrincipales = {
   title: string
-  items: string[]
+  items: Dish[]
 }
 
 type NormalizedBeverage = {
@@ -19,24 +49,62 @@ type NormalizedBeverage = {
 type GroupMenuView = {
   id: number
   menuTitle: string
+  menuTitleEnglish: string
   subtitles: string[]
-  entrantes: string[]
+  subtitlesEnglish: string[]
+  entrantes: Dish[]
   principales: NormalizedPrincipales
-  postres: string[]
+  postres: Dish[]
   beverage: NormalizedBeverage
   comments: string[]
+  commentsEnglish: string[]
   priceValue: number | null
   priceLabel: string
   minPartySize: number
   includedCoffee: boolean
 }
 
-function asStringArray(v: unknown) {
+function asStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return []
   return v
     .filter((x): x is string => typeof x === 'string')
     .map((s) => s.trim())
     .filter(Boolean)
+}
+
+function asDishes(v: unknown): Dish[] {
+  if (!Array.isArray(v)) return []
+  return v
+    .map((value): Dish | null => {
+      if (typeof value === 'string') {
+        const descripcion = value.trim()
+        return descripcion ? { descripcion, alergenos: [], active: true } : null
+      }
+      if (!value || typeof value !== 'object') return null
+      const item = value as GroupMenuDishValue
+      const nombre = String(item.nombre ?? '').trim()
+      if (!nombre) return null
+      const suplemento = asNumberOrNull(item.suplemento)
+      const alergenos = asStringArray(item.alergenos)
+      return {
+        descripcion: nombre,
+        description: String(item.descripcion ?? '').trim() || null,
+        alergenos,
+        supplement_enabled: item.suplemento_activo === true || suplemento !== null,
+        supplement_price: suplemento,
+        active: item.active !== false && item.active !== 0 && item.active !== '0',
+      }
+    })
+    .filter((dish): dish is Dish => Boolean(dish && dish.active !== false))
+}
+
+function asPrincipales(v: unknown): { title: string; items: Dish[] } {
+  if (!v || typeof v !== 'object') return { title: '', items: [] }
+  const obj = v as Record<string, unknown>
+  return {
+    title: String(obj.titulo_principales ?? '').trim(),
+    items: asDishes(obj.items),
+  }
 }
 
 function asNumberOrNull(v: unknown): number | null {
@@ -55,83 +123,27 @@ function asBeverage(v: unknown): NormalizedBeverage {
   return { type, pricePerPerson: asNumberOrNull(obj.price_per_person) }
 }
 
-function sectionDishes(section: PublicMenuSection): string[] {
-  if (!Array.isArray(section.dishes)) return []
-  return section.dishes
-    .map((dish) => String(dish.title || '').trim())
-    .filter(Boolean)
-}
-
-function sectionTitleIncludes(section: PublicMenuSection, term: string): boolean {
-  return String(section.title || '')
-    .trim()
-    .toLowerCase()
-    .includes(term)
-}
-
-function fallbackFromSections(menu: PublicMenu) {
-  const starters: string[] = []
-  const mains: string[] = []
-  const desserts: string[] = []
-  let mainsTitle = ''
-
-  for (const section of menu.sections || []) {
-    const dishes = sectionDishes(section)
-    if (dishes.length === 0) continue
-    const kind = String(section.kind || '').trim().toLowerCase()
-
-    if (kind === 'entrantes' || sectionTitleIncludes(section, 'entrante')) {
-      starters.push(...dishes)
-      continue
-    }
-    if (kind === 'postres' || sectionTitleIncludes(section, 'postre')) {
-      desserts.push(...dishes)
-      continue
-    }
-    if (kind === 'principales') {
-      if (!mainsTitle) mainsTitle = String(section.title || '').trim()
-      mains.push(...dishes)
-      continue
-    }
-  }
-
-  return { starters, mains, mainsTitle, desserts }
-}
-
-function normalizeGroupMenu(menu: PublicMenu, fallbackMainsTitle: string): GroupMenuView {
-  const subtitles = asStringArray(menu.menu_subtitle)
-  const comments = asStringArray(menu.settings.comments)
-  let entrantes = asStringArray(menu.entrantes)
-  let postres = asStringArray(menu.postre)
-  let principalesTitle = String(menu.principales.titulo_principales || '').trim() || fallbackMainsTitle
-  let principalesItems = asStringArray(menu.principales.items)
-
-  if (entrantes.length === 0 || principalesItems.length === 0 || postres.length === 0) {
-    const fallback = fallbackFromSections(menu)
-    if (entrantes.length === 0) entrantes = fallback.starters
-    if (principalesItems.length === 0) principalesItems = fallback.mains
-    if (!String(menu.principales.titulo_principales || '').trim() && fallback.mainsTitle) {
-      principalesTitle = fallback.mainsTitle
-    }
-    if (postres.length === 0) postres = fallback.desserts
-  }
-
+function normalizeGroupMenu(menu: GroupMenuApi, fallbackMainsTitle: string): GroupMenuView {
+  const principais = asPrincipales(menu.principales)
   return {
     id: menu.id,
     menuTitle: menu.menu_title,
-    subtitles,
-    entrantes,
+    menuTitleEnglish: String(menu.menu_title_english || '').trim(),
+    subtitles: asStringArray(menu.menu_subtitle),
+    subtitlesEnglish: asStringArray(menu.menu_subtitle_english),
+    entrantes: asDishes(menu.entrantes),
     principales: {
-      title: principalesTitle,
-      items: principalesItems,
+      title: principais.title || fallbackMainsTitle,
+      items: principais.items,
     },
-    postres,
-    beverage: asBeverage(menu.settings.beverage),
-    comments,
+    postres: asDishes(menu.postre),
+    beverage: asBeverage(menu.beverage),
+    comments: asStringArray(menu.comments),
+    commentsEnglish: asStringArray(menu.comments_english),
     priceValue: asNumberOrNull(menu.price),
     priceLabel: String(menu.price || '').trim(),
-    minPartySize: Math.max(1, Number(menu.settings.min_party_size) || 8),
-    includedCoffee: menu.settings.included_coffee === true,
+    minPartySize: Math.max(1, Number(menu.min_party_size) || 8),
+    includedCoffee: menu.included_coffee === true,
   }
 }
 
@@ -168,14 +180,14 @@ function renderBeverageText(beverage: NormalizedBeverage, t: (key: string) => st
 
 export function MenusDeGrupos() {
   const { t, lang } = useI18n()
-  const [publicMenus, setPublicMenus] = useState<PublicMenu[] | null>(null)
+  const [publicMenus, setPublicMenus] = useState<GroupMenuApi[] | null | undefined>(undefined)
   const [active, setActive] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-    apiGetJson<unknown>('/api/menus/public')
+    apiGetJson<GroupMenusApiResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay')
       .then((data) => {
-        if (!cancelled) setPublicMenus(normalizePublicMenusResponse(data))
+        if (!cancelled) setPublicMenus(data.success ? data.menus : null)
       })
       .catch(() => {
         if (!cancelled) setPublicMenus(null)
@@ -188,9 +200,7 @@ export function MenusDeGrupos() {
   const menus = useMemo(() => {
     if (!publicMenus) return null
 
-    const groupMenus = publicMenus.filter((menu) => menu.active && isGroupMenuType(menu.menu_type))
-
-    return groupMenus.map((menu) => normalizeGroupMenu(menu, t('menus.preview.mains')))
+    return publicMenus.map((menu) => normalizeGroupMenu(menu, t('menus.preview.mains')))
   }, [publicMenus, t])
 
   useEffect(() => {
@@ -240,24 +250,24 @@ export function MenusDeGrupos() {
                       role="tab"
                       aria-selected={idx === active}
                     >
-                      {menu.menuTitle}
+                      {lang === 'en' && menu.menuTitleEnglish ? menu.menuTitleEnglish : menu.menuTitle}
                     </button>
                   ))}
                 </div>
               ) : null}
 
               {current ? (
-                <article class="menuSectionCard groupPanel" role={shouldShowTabs ? 'tabpanel' : undefined}>
+                <article class="menuSectionCard groupPanel groupPanel--plain" role={shouldShowTabs ? 'tabpanel' : undefined}>
                   <div class="menugrupos-decor">
                     <img class="menugrupos-flower-top-left" src="/media/menugrupos/pngegg.png" alt="" loading="lazy" />
                     <img class="menugrupos-flower-bottom-right" src="/media/menugrupos/pngegg2.png" alt="" loading="lazy" />
                     <img class="menugrupos-vine" src="/media/menugrupos/enredadera.png" alt="" loading="lazy" />
                   </div>
-                  <h2 class="menuSectionTitle">{current.menuTitle}</h2>
+                  <h2 class="menuSectionTitle">{lang === 'en' && current.menuTitleEnglish ? current.menuTitleEnglish : current.menuTitle}</h2>
 
                   {current.subtitles.length > 0 ? (
                     <div class="groupSubtitles">
-                      {current.subtitles.map((subtitle, idx) => (
+                      {localizedArray(current.subtitles, current.subtitlesEnglish, lang).map((subtitle, idx) => (
                         <p class="menuDishText menuMuted" key={`${subtitle}-${idx}`}>
                           {subtitle}
                         </p>
@@ -272,44 +282,9 @@ export function MenusDeGrupos() {
                   )}
 
                   <div class="menuGrid menuGrid--single">
-                    {current.entrantes.length > 0 ? (
-                      <section class="menuSubSection">
-                        <h3 class="menuSubTitle">{t('groupMenus.section.starters')}</h3>
-                        <ul class="menuDishList">
-                          {current.entrantes.map((item, idx) => (
-                            <li class="menuDish" key={`${item}-${idx}`}>
-                              <div class="menuDishText">{item}</div>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    ) : null}
-
-                    {current.principales.items.length > 0 ? (
-                      <section class="menuSubSection">
-                        <h3 class="menuSubTitle">{current.principales.title}</h3>
-                        <ul class="menuDishList">
-                          {current.principales.items.map((item, idx) => (
-                            <li class="menuDish" key={`${item}-${idx}`}>
-                              <div class="menuDishText">{item}</div>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    ) : null}
-
-                    {current.postres.length > 0 ? (
-                      <section class="menuSubSection">
-                        <h3 class="menuSubTitle">{t('groupMenus.section.dessert')}</h3>
-                        <ul class="menuDishList">
-                          {current.postres.map((item, idx) => (
-                            <li class="menuDish" key={`${item}-${idx}`}>
-                              <div class="menuDishText">{item}</div>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    ) : null}
+                    <MenuSection title={t('groupMenus.section.starters')} dishes={current.entrantes} />
+                    <MenuSection title={current.principales.title} dishes={current.principales.items} />
+                    <MenuSection title={t('groupMenus.section.dessert')} dishes={current.postres} />
 
                     {current.beverage.type !== 'no_incluida' ? (
                       <section class="menuSubSection">
@@ -329,7 +304,7 @@ export function MenusDeGrupos() {
                     {current.comments.length > 0 ? (
                       <section class="menuSubSection">
                         <h3 class="menuSubTitle">{t('groupMenus.section.comments')}</h3>
-                        {current.comments.map((comment, idx) => (
+                        {localizedArray(current.comments, current.commentsEnglish, lang).map((comment, idx) => (
                           <p class="menuDishText menuMuted" key={`${comment}-${idx}`}>
                             {comment}
                           </p>
