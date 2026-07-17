@@ -778,7 +778,7 @@ export function Reservas() {
 
   const isDisabledDate = (iso: string, inMonth: boolean) => {
     if (!inMonth) return true
-    if (iso <= todayISO) return true
+    if (iso < todayISO) return true
     if (iso > maxISO) return true
     if (isClosedByDefault(iso)) return true
     const free = monthAvailability?.[iso]?.freeBookingSeats
