@@ -129,6 +129,8 @@ export type PublicMenu = {
   modified_at: string
   menu_title_english?: string
   menu_subtitle_english?: string[]
+  slider_mode?: 'default' | 'custom' | 'both' | 'hidden'
+  slider_images?: string[]
 }
 
 export type PublicMenusResponse = {
