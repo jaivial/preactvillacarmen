@@ -3504,6 +3504,10 @@ svg {
     padding: 1rem;
 }
 
+.resvLabel--compact {
+    padding-bottom: 0;
+}
+
 .resvHint {
     margin-top: 8px;
     color: rgba(0, 0, 0, 0.62);
@@ -3755,7 +3759,7 @@ svg {
 }
 
 .resvMenuDetails {
-    margin-top: 14px;
+    margin: 14px 1rem 0;
     display: grid;
     gap: 12px;
 }
@@ -3795,7 +3799,7 @@ svg {
 
 .resvPrincipalRow {
     display: grid;
-    grid-template-columns: 1fr 130px 40px;
+    grid-template-columns: minmax(0, 1fr) 130px 40px;
     gap: 10px;
     align-items: center;
     margin-top: 10px;

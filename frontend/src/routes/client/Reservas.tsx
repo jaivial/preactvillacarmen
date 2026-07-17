@@ -1946,7 +1946,7 @@ export function Reservas() {
 
             <div class="resvForm">
               <div class="resvField">
-                <div class="resvLabel">{text('Nombre y apellidos', 'Full name')}</div>
+                <div class="resvLabel resvLabel--compact">{text('Nombre y apellidos', 'Full name')}</div>
                 <input
                   class="resvInput"
                   type="text"
@@ -1956,7 +1956,7 @@ export function Reservas() {
                 />
               </div>
               <div class="resvField">
-                <div class="resvLabel">Email</div>
+                <div class="resvLabel resvLabel--compact">Email</div>
                 <input
                   class="resvInput"
                   type="email"
