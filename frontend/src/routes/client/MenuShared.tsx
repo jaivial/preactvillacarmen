@@ -481,19 +481,22 @@ export function AllergensLegend() {
   )
 }
 
-export function MenuHeroSlider() {
+export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = {}) {
   const { t } = useI18n()
   const reduced = prefersReducedMotion()
 
+  // Server-provided images win; fall back to the legacy hardcoded set only when
+  // the prop is absent (older responses / SSR safety). Empty array = show nothing.
+  const fallback = [
+    'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_04%20%281%29.webp',
+    'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_32_50.webp',
+    'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comid9_16_4.webp',
+    'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comida9_16_2.webp',
+    'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp',
+  ]
   const paths = useMemo(
-    () => [
-      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_04%20%281%29.webp',
-      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/ChatGPT%20Image%2017%20feb%202026%2C%2002_32_50.webp',
-      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comid9_16_4.webp',
-      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/comida9_16_2.webp',
-      'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp',
-    ],
-    []
+    () => (props.images !== undefined ? props.images : fallback),
+    [props.images]
   )
 
   const [active, setActive] = useState(0)
@@ -563,6 +566,8 @@ export function MenuHeroSlider() {
   return (
     <div class="menuHeroSlider" aria-label={t('menu.slider.aria')}>
       <div class="menuHeroSliderStage" aria-hidden="true">
+        {props.hidden || paths.length === 0 ? null : (
+          <>
         {prev !== null && !bad[prev] ? (
           <img
             key={`prev-${paths[prev]}`}
@@ -586,6 +591,8 @@ export function MenuHeroSlider() {
             onError={() => onError(active)}
           />
         ) : null}
+          </>
+        )}
       </div>
     </div>
   )
