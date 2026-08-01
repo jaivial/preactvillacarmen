@@ -66,8 +66,7 @@ async function reachAdults(page: Page, party: string) {
 
   // Some dates cap capacity below the requested party, or only expose slots on one
   // shift. Scan bookable dates (advancing months if needed) until one yields a slot.
-  const days = page.locator('.resvDay:not(.disabled):not(.other)')
-  await expect(days.first()).toBeVisible()
+  const days = page.locator('.resvDay:not(.disabled):not(.other):not(.today)')
 
   let booked = false
   for (let month = 0; month < 3 && !booked; month++) {

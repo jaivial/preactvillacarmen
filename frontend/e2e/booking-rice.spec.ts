@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 // Rice step E2E — runs against the live dev backend.
 // Rice step only shows when NO mandatory/group menu is chosen.
@@ -21,12 +21,15 @@ function popover(page: Page, ariaLabel: string) {
 // Try to book `party`; if no selectable date on dev has an hour slot with that
 // per-slot capacity, fall back to smaller sizes. Returns the party size actually used.
 async function pickDatePartyTime(page: Page, party: number): Promise<number> {
-  await expect(page.locator('.resvDay').first()).toBeVisible()
+  // Boot splash overlays the wizard until the app mounts; cold vite compiles can
+  // stall first paint past the default expect timeout.
+  await page.locator('#vc-boot').waitFor({ state: 'detached', timeout: 30_000 }).catch(() => {})
+  await expect(page.locator('.resvDay').first()).toBeVisible({ timeout: 30_000 })
   const pop = popover(page, 'Number of guests')
   for (let want = party; want >= 2; want--) {
     for (let attempt = 0; attempt < 3; attempt++) {
       await page.waitForTimeout(1500) // let month-availability populate & settle
-      const days = page.locator('.resvDay:not(.disabled):not(.other)')
+      const days = page.locator('.resvDay:not(.disabled):not(.other):not(.today)')
       const n = await days.count()
       for (let i = 0; i < n; i++) {
         const day = days.nth(i)
@@ -207,10 +210,32 @@ test('completes booking with rice', async ({ page }) => {
   await page.locator('.resvCheck').nth(0).locator('button, input').first().click()
   await page.locator('.resvCheck').nth(1).locator('button, input').first().click()
 
-  const [res] = await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/api/bookings/front')),
-    page.getByRole('button', { name: 'Complete reservation' }).click(),
-  ])
+  // Backend rate-limits the shared 127.0.0.1 bucket (5/60s); retry on 429.
+  let res: any = null
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const [r] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/api/bookings/front')),
+      page.getByRole('button', { name: 'Complete reservation' }).click(),
+    ])
+    res = r
+    if (r.status() !== 429) break
+    await page.waitForTimeout(15000)
+  }
   expect(res.ok()).toBe(true)
+  const body = await res.json().catch(() => null)
+  if (typeof body?.booking_id === 'number') createdIds.push(body.booking_id)
   await expect(page.locator('.resvModal')).toBeVisible()
+})
+
+const createdIds: number[] = []
+
+test.afterAll(async ({ playwright }, testInfo) => {
+  if (!createdIds.length) return
+  const base = process.env.PLAYWRIGHT_BASE_URL || testInfo.project.use.baseURL
+  if (!base) return
+  const req: APIRequestContext = await playwright.request.newContext({ baseURL: base })
+  for (const id of createdIds) {
+    await req.post('/api/public/booking/cancel', { data: { id, cancelledBy: 'e2e' } }).catch(() => {})
+  }
+  await req.dispose()
 })

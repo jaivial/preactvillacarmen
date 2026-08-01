@@ -22,7 +22,7 @@ test.beforeAll(async ({ request, baseURL }) => {
 // Pick the first bookable calendar day, advancing month up to 2x (max 40 days ahead).
 async function pickFirstBookableDate(page: Page) {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const day = page.locator('.resvDay:not(.disabled):not(.other)').first()
+    const day = page.locator('.resvDay:not(.disabled):not(.other):not(.today)').first()
     if (await day.count()) {
       await day.click()
       return
@@ -167,10 +167,17 @@ test.describe('booking group-menu flow', () => {
     // summary — accept terms, submit
     await page.locator('.resvCheck').nth(0).click()
     await page.locator('.resvCheck').nth(1).click()
-    const bookingResponse = page.waitForResponse('**/api/bookings/front')
-    await page.getByRole('button', { name: /Completar reserva|Complete reservation/ }).click()
-    const res = await bookingResponse
-    const body = await res.json()
+    // Backend rate-limits the shared 127.0.0.1 bucket (5/60s); retry on 429.
+    let res: any = null
+    let body: any = null
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const bookingResponse = page.waitForResponse('**/api/bookings/front')
+      await page.getByRole('button', { name: /Completar reserva|Complete reservation/ }).click()
+      res = await bookingResponse
+      body = await res.json()
+      if (res.status() !== 429) break
+      await page.waitForTimeout(15000)
+    }
     expect(body.success).toBe(true)
     await expect(page.locator('.resvConfirm')).toBeVisible()
   })

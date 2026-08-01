@@ -88,12 +88,13 @@ test('calendar renders with current month', async ({ page }) => {
 
 test('past dates are disabled', async ({ page }) => {
   await gotoReservas(page)
-  // Today and earlier in-month days are disabled. Find today's cell (in current month view).
-  const today = Number(TODAY_ISO.slice(8, 10))
-  const cell = dayCells(page)
-    .filter({ hasNot: page.locator('.other') })
-    .filter({ hasText: new RegExp(`^${today}$`) })
-    .first()
+  // Days strictly before today are disabled. Today itself is clickable (opens the
+  // same-day call modal, see 'same-day date shows call redirect').
+  const yesterday = addDays(TODAY, -1)
+  if (yesterday.getMonth() !== TODAY.getMonth()) {
+    test.skip(true, 'Yesterday is in the previous month; current-month view only')
+  }
+  const cell = await cellForISO(page, iso(yesterday))
   await expect(cell).toBeDisabled()
   await expect(cell).toHaveClass(/disabled/)
 })
@@ -145,15 +146,21 @@ test('closed weekdays are disabled (Mon/Tue/Wed)', async ({ page }) => {
 
 test('same-day date shows call redirect', async ({ page }) => {
   await gotoReservas(page)
-  // Today's cell is always disabled (isDisabledDate: iso <= todayISO), so the
-  // same-day call modal (onPickDate handles todayISO) is unreachable via a click.
-  const today = Number(TODAY_ISO.slice(8, 10))
-  const cell = dayCells(page)
-    .filter({ hasNot: page.locator('.other') })
-    .filter({ hasText: new RegExp(`^${today}$`) })
-    .first()
-  await expect(cell).toBeDisabled()
-  test.skip(true, "Today's cell is disabled in the grid; same-day modal cannot be triggered by clicking. Phone 638 85 72 94 lives in the Modal but is unreachable from the calendar.")
+  // Today's cell is enabled (iso < todayISO disables only strictly-past days) and
+  // clicking it opens the same-day call-redirect modal.
+  const cell = await cellForISO(page, TODAY_ISO)
+  // Real-data suite: leftover e2e bookings can fill today's capacity. A `full`
+  // cell is correct UI (covered by the 'fully booked date is disabled' test),
+  // so skip the call-redirect path instead of failing on data state.
+  const cellClass = (await cell.getAttribute('class')) ?? ''
+  test.skip(cellClass.includes('full'), 'Today is fully booked; no same-day slot to redirect')
+  await expect(cell).toBeEnabled()
+  await cell.click()
+  const dialog = page.getByRole('dialog', { name: 'Reserva para el mismo día' })
+  await expect(dialog).toBeVisible({ timeout: 10_000 })
+  await expect(dialog).toContainText('638 85 72 94')
+  await dialog.getByRole('button', { name: 'Cerrar' }).click()
+  await expect(dialog).not.toBeVisible()
 })
 
 test('fully booked date is disabled', async ({ page }) => {

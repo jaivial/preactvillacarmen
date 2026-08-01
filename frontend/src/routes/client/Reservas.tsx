@@ -809,25 +809,7 @@ export function Reservas() {
           `/api/reservations/two-top-availability?date=${encodeURIComponent(iso)}`
         )
       } catch {
-        try {
-          const body = new URLSearchParams({ date: iso })
-          const res = await apiFetch('/api/fetch_mesas_de_dos.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-              Accept: 'application/json',
-            },
-            body: body.toString(),
-          })
-          const data = (await res.json().catch(() => null)) as MesasDeDosResponse | null
-          const apiError = data as { success?: boolean } | null
-          if (!res.ok || !data || apiError?.success === false) {
-            throw new Error('No se pudo cargar disponibilidad de mesas de 2')
-          }
-          return data
-        } catch {
-          return null
-        }
+        return null
       }
     }
 
@@ -835,7 +817,7 @@ export function Reservas() {
       try {
         return await apiGetJson<HourDataResponse>(`/api/reservations/hour-data?date=${encodeURIComponent(iso)}`)
       } catch {
-        return apiGetJson<HourDataResponse>(`/api/gethourdata.php?date=${encodeURIComponent(iso)}`)
+        return null
       }
     }
 
@@ -843,9 +825,7 @@ export function Reservas() {
       try {
         return await apiGetJson<ReservationDayContextResponse>(`/api/reservations/day-context?date=${encodeURIComponent(iso)}`)
       } catch {
-        return apiGetJson<ReservationDayContextResponse>(
-          `/api/get_reservation_day_context.php?date=${encodeURIComponent(iso)}`
-        )
+        return null
       }
     }
 
@@ -863,17 +843,19 @@ export function Reservas() {
 
       setHourData(hours)
       setDayContext(context)
-      const nextActiveFloors = Array.isArray(context.activeFloors)
-        ? context.activeFloors
-        : (context.floors || []).filter((floor) => floor.active)
+      const nextActiveFloors = context
+        ? Array.isArray(context.activeFloors)
+          ? context.activeFloors
+          : (context.floors || []).filter((floor) => floor.active)
+        : []
       setActiveFloors(nextActiveFloors)
 
       if (nextActiveFloors.length === 1) {
         setSelectedFloorNumber(nextActiveFloors[0].floorNumber)
       }
-      if (context.openingMode === 'morning') {
+      if (context?.openingMode === 'morning') {
         setSelectedShift('morning')
-      } else if (context.openingMode === 'night') {
+      } else if (context?.openingMode === 'night') {
         setSelectedShift('night')
       }
     } catch (e) {
