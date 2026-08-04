@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { request as httpRequest, type IncomingHttpHeaders, type IncomingMessage, type ServerResponse } from 'node:http'
 import { request as httpsRequest } from 'node:https'
+import path from 'node:path'
 
 import preact from '@preact/preset-vite'
 import { defineConfig, loadEnv, type Plugin, type Alias } from 'vite'
@@ -111,6 +112,36 @@ function proxyToTarget(
   proxyReq.end()
 }
 
+/**
+ * Resolves react/react-dom to the REAL packages for the Forky assistant
+ * island only. The rest of the app keeps @preact/preset-vite's compat aliases
+ * (its own components rely on motion/react under preact/compat).
+ */
+function scopedRealReactPlugin(): Plugin {
+  const realReact = path.resolve(__dirname, 'node_modules/react/index.js')
+  const realReactDom = path.resolve(__dirname, 'node_modules/react-dom/index.js')
+  const realReactDomClient = path.resolve(__dirname, 'node_modules/react-dom/client.js')
+  const realJsxRuntime = path.resolve(__dirname, 'node_modules/react/jsx-runtime.js')
+  const realJsxDevRuntime = path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime.js')
+  console.log('[forky-scoped-react] plugin factory called')
+  return {
+    name: 'forky-scoped-real-react',
+    enforce: 'pre',
+    resolveId(source: string, importer?: string) {
+      if (source === 'react' || source === 'react-dom' || source === 'react-dom/client' || source === 'react/jsx-runtime' || source === 'react/jsx-dev-runtime') {
+        console.log('[forky-scoped-react] resolveId called for', source, 'importer:', importer ? importer.split('/').slice(-3).join('/') : '(none)')
+      }
+      if (!importer || !importer.includes('/src/components/forky/')) return null
+      if (source === 'react') return realReact
+      if (source === 'react-dom/client') return realReactDomClient
+      if (source === 'react-dom') return realReactDom
+      if (source === 'react/jsx-runtime') return realJsxRuntime
+      if (source === 'react/jsx-dev-runtime') return realJsxDevRuntime
+      return null
+    },
+  }
+}
+
 function devApiProxyPlugin(targets: string[]): Plugin {
   return {
     name: 'dev-api-proxy',
@@ -134,6 +165,88 @@ function devApiProxyPlugin(targets: string[]): Plugin {
           }
         }
       })
+
+      // WebSocket tunneling for /api/* (e.g. the public Forky assistant chat).
+      // Registered in the post hook: server.httpServer is not yet available
+      // during configureServer in Vite 7.
+      return () => {
+        console.log('[api-proxy] post hook, httpServer:', !!server.httpServer, 'addr:', JSON.stringify(server.httpServer?.address() ?? null), 'upgrade listeners:', server.httpServer?.listeners('upgrade').length ?? 0)
+        setTimeout(() => {
+          console.log('[api-proxy] after 2s, addr:', JSON.stringify(server.httpServer?.address() ?? null), 'listeners:', server.httpServer?.listeners('upgrade').length ?? 0)
+        }, 2000)
+        server.httpServer?.on('upgrade', (req, socket, head) => {
+          const path = req.url ?? ''
+          console.log('[api-proxy] upgrade:', path)
+          if (!path.startsWith('/api')) {
+            return
+          }
+          let settled = false
+          const tryTarget = (index: number) => {
+            if (settled || index >= targets.length) {
+              socket.destroy()
+              return
+            }
+            const baseTarget = targets[index]
+            const targetUrl = new URL(path, `${baseTarget}/`)
+            const requestImpl = targetUrl.protocol === 'https:' ? httpsRequest : httpRequest
+            const proxyReq = requestImpl(
+              {
+                hostname: targetUrl.hostname,
+                port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),
+                path: targetUrl.pathname + targetUrl.search,
+                method: req.method,
+                headers: {
+                  ...buildProxyHeaders(req.headers, targetUrl),
+                  connection: 'Upgrade',
+                  upgrade: 'websocket',
+                },
+              },
+              (proxyRes) => {
+                if (settled) return
+                // A non-101 answer means this target did not upgrade (e.g. a
+                // foreign backend without the route) — move to the next target.
+                if (proxyRes.statusCode !== 101) {
+                  proxyRes.resume()
+                  tryTarget(index + 1)
+                  return
+                }
+                settled = true
+                socket.write(
+                  `HTTP/1.1 ${proxyRes.statusCode ?? 502} ${proxyRes.statusMessage ?? ''}\r\n` +
+                    Object.entries(proxyRes.headers)
+                      .map(([k, v]) => `${k}: ${v}\r\n`)
+                      .join('') +
+                    '\r\n'
+                )
+                proxyRes.pipe(socket)
+              }
+            )
+            proxyReq.on('upgrade', (proxyRes, proxySocket) => {
+              if (settled) {
+                proxySocket.destroy()
+                return
+              }
+              settled = true
+              proxySocket.write(head)
+              socket.write(
+                `HTTP/1.1 101 Switching Protocols\r\n` +
+                  Object.entries(proxyRes.headers)
+                    .map(([k, v]) => `${k}: ${v}\r\n`)
+                    .join('') +
+                  '\r\n'
+              )
+              proxySocket.pipe(socket)
+              socket.pipe(proxySocket)
+            })
+            proxyReq.on('error', () => {
+              if (settled) return
+              tryTarget(index + 1)
+            })
+            proxyReq.end()
+          }
+          tryTarget(0)
+        })
+      }
     },
   }
 }
@@ -141,8 +254,10 @@ function devApiProxyPlugin(targets: string[]): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  console.log('[api-proxy] port env:', { processPort: process.env.VITE_PORT, filePort: env.VITE_PORT, processHmr: process.env.VITE_HMR_PORT, fileHmr: env.VITE_HMR_PORT, mode })
   const port = Number(env.VITE_PORT) || 5174
   const hmrPort = Number(env.VITE_HMR_PORT) || port
+  const hmrClientPort = Number(env.VITE_HMR_CLIENT_PORT) || hmrPort
   const apiProxyTargets = uniqueProxyTargets([
     env.VITE_API_PROXY_TARGET,
     env.BACKEND_ORIGIN,
@@ -154,14 +269,32 @@ export default defineConfig(({ mode }) => {
   ])
 
   return {
-    plugins: [preact(), devApiProxyPlugin(apiProxyTargets)],
+    // Private dep-optimization cache: this dev server can run concurrently
+    // with another vite instance sharing node_modules (contended caches hang
+    // module loading). Set VITE_CACHE_DIR to isolate.
+    cacheDir: process.env.VITE_CACHE_DIR ?? undefined,
+    // The Forky assistant modal is loaded via dynamic import; pre-bundle its
+    // graph so vite never triggers on-demand optimization + page reload while
+    // the island is mounting.
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom/client',
+        'jotai',
+        '@assistant-ui/react',
+        '@assistant-ui/react-markdown',
+        'three',
+        '@react-three/fiber',
+        '@react-three/drei',
+      ],
+    },
+    plugins: [preact(), scopedRealReactPlugin(), devApiProxyPlugin(apiProxyTargets)],
+    // Note: react is intentionally NOT aliased to preact/compat. The Forky
+    // assistant modal runs as a real-React island (assistant-ui 0.15's tap
+    // runtime is incompatible with preact/compat contexts); the app shell uses
+    // preact directly.
     resolve: {
-      alias: [
-        { find: 'react', replacement: 'preact/compat' },
-        { find: 'react-dom', replacement: 'preact/compat' },
-        { find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' },
-        { find: 'react/jsx-dev-runtime', replacement: 'preact/jsx-runtime' },
-      ] as Alias[],
+      alias: [] as Alias[],
     },
     define: {
       __DEV__: JSON.stringify(mode !== 'production'),
@@ -176,7 +309,7 @@ export default defineConfig(({ mode }) => {
         '.menustudioai.com',
       ],
       hmr: {
-        clientPort: hmrPort,
+        clientPort: hmrClientPort,
         port: hmrPort,
       },
     },
