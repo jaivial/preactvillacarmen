@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs'
 import { request as httpRequest, type IncomingHttpHeaders, type IncomingMessage, type ServerResponse } from 'node:http'
 import { request as httpsRequest } from 'node:https'
-import path from 'node:path'
 
 import preact from '@preact/preset-vite'
 import { defineConfig, loadEnv, type Plugin, type Alias } from 'vite'
@@ -110,36 +109,6 @@ function proxyToTarget(
     proxyReq.write(body)
   }
   proxyReq.end()
-}
-
-/**
- * Resolves react/react-dom to the REAL packages for the Forky assistant
- * island only. The rest of the app keeps @preact/preset-vite's compat aliases
- * (its own components rely on motion/react under preact/compat).
- */
-function scopedRealReactPlugin(): Plugin {
-  const realReact = path.resolve(__dirname, 'node_modules/react/index.js')
-  const realReactDom = path.resolve(__dirname, 'node_modules/react-dom/index.js')
-  const realReactDomClient = path.resolve(__dirname, 'node_modules/react-dom/client.js')
-  const realJsxRuntime = path.resolve(__dirname, 'node_modules/react/jsx-runtime.js')
-  const realJsxDevRuntime = path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime.js')
-  console.log('[forky-scoped-react] plugin factory called')
-  return {
-    name: 'forky-scoped-real-react',
-    enforce: 'pre',
-    resolveId(source: string, importer?: string) {
-      if (source === 'react' || source === 'react-dom' || source === 'react-dom/client' || source === 'react/jsx-runtime' || source === 'react/jsx-dev-runtime') {
-        console.log('[forky-scoped-react] resolveId called for', source, 'importer:', importer ? importer.split('/').slice(-3).join('/') : '(none)')
-      }
-      if (!importer || !importer.includes('/src/components/forky/')) return null
-      if (source === 'react') return realReact
-      if (source === 'react-dom/client') return realReactDomClient
-      if (source === 'react-dom') return realReactDom
-      if (source === 'react/jsx-runtime') return realJsxRuntime
-      if (source === 'react/jsx-dev-runtime') return realJsxDevRuntime
-      return null
-    },
-  }
 }
 
 function devApiProxyPlugin(targets: string[]): Plugin {
@@ -273,26 +242,7 @@ export default defineConfig(({ mode }) => {
     // with another vite instance sharing node_modules (contended caches hang
     // module loading). Set VITE_CACHE_DIR to isolate.
     cacheDir: process.env.VITE_CACHE_DIR ?? undefined,
-    // The Forky assistant modal is loaded via dynamic import; pre-bundle its
-    // graph so vite never triggers on-demand optimization + page reload while
-    // the island is mounting.
-    optimizeDeps: {
-      include: [
-        'react',
-        'react-dom/client',
-        'jotai',
-        '@assistant-ui/react',
-        '@assistant-ui/react-markdown',
-        'three',
-        '@react-three/fiber',
-        '@react-three/drei',
-      ],
-    },
-    plugins: [preact(), scopedRealReactPlugin(), devApiProxyPlugin(apiProxyTargets)],
-    // Note: react is intentionally NOT aliased to preact/compat. The Forky
-    // assistant modal runs as a real-React island (assistant-ui 0.15's tap
-    // runtime is incompatible with preact/compat contexts); the app shell uses
-    // preact directly.
+    plugins: [preact(), devApiProxyPlugin(apiProxyTargets)],
     resolve: {
       alias: [] as Alias[],
     },

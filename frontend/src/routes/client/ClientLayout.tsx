@@ -2,8 +2,6 @@ import { useEffect } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
-import { ForkyButton } from '../../components/forky/ForkyButton'
-import { ForkyModalHost } from '../../components/forky/ForkyModalHost'
 import { useLocation } from 'wouter-preact'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
@@ -30,8 +28,6 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
-      <ForkyButton />
-      <ForkyModalHost />
     </div>
   )
 }

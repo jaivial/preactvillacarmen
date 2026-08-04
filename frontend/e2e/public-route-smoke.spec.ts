@@ -26,9 +26,9 @@ test.describe('Public route smoke', () => {
       const response = await page.goto(route, { waitUntil: 'domcontentloaded' })
       expect(response?.status(), `${route} HTTP status`).toBe(200)
       await expect(page.locator('body')).not.toBeEmpty()
-      // Forky is mounted globally. Its remote WebSocket upgrade failure has a
-      // dedicated regression test, so it must not make unrelated route smoke
-      // checks report every page as broken.
+      // The dev-server Vite HMR websocket can fail to open when the HMR client
+      // port is tunneled (e.g. Cloudflare). It is environmental, not an app
+      // error, so it must not make unrelated route smoke checks fail.
       const unrelatedErrors = pageErrors.filter(
         (error) => !error.includes('WebSocket closed without opened.')
       )
