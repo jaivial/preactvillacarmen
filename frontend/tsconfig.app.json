@@ -35,9 +35,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "exclude": [
-    "src/components/forky"
-  ],
   "include": [
     "src"
   ]
