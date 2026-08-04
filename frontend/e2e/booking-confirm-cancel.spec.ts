@@ -89,7 +89,12 @@ async function apiCreateBooking(
     form.arroz_type = RICE_TYPE
     form.arroz_servings = '2'
   }
-  const res = await postWithRetry(request, '/api/bookings/front', { multipart: form })
+  // Random X-Forwarded-For: each created booking gets its own rate-limit bucket
+  // so parallel wizard specs (127.0.0.1, 5/60s) cannot 429 these API creations.
+  const res = await postWithRetry(request, '/api/bookings/front', {
+    multipart: form,
+    headers: { 'X-Forwarded-For': `203.0.113.${100 + Math.floor(Math.random() * 100)}` },
+  })
   expect(res.ok(), `create booking failed: ${res.status()} ${await res.text()}`).toBeTruthy()
   const data = await res.json()
   expect(data.success, `create booking not success: ${JSON.stringify(data)}`).toBeTruthy()
@@ -108,6 +113,11 @@ async function wizardCreateBooking(page: Page, date: string, time: string): Prom
     .locator('.resvDay:not(.other):not(.disabled)')
     .filter({ hasText: new RegExp(`^${day}$`) })
     .first()
+  // The picked date may live in a later month than the initial calendar view.
+  for (let hop = 0; hop < 3 && !(await dayBtn.isVisible().catch(() => false)); hop++) {
+    await page.getByRole('button', { name: 'Mes siguiente' }).click()
+    await page.waitForTimeout(400)
+  }
   await expect(dayBtn).toBeVisible({ timeout: 15_000 })
   await dayBtn.click()
 
@@ -148,21 +158,28 @@ async function wizardCreateBooking(page: Page, date: string, time: string): Prom
   // Summary: accept both checkboxes, submit, capture booking_id from the response.
   await page.locator('.resvCheck').nth(0).click()
   await page.locator('.resvCheck').nth(1).click()
-  const [res] = await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/api/bookings/front') && r.request().method() === 'POST'),
-    page.getByRole('button', { name: 'Completar reserva' }).click(),
-  ])
-  const data = await res.json()
+  // Backend rate-limits the shared 127.0.0.1 bucket (5/60s); retry on 429.
+  let data: any = null
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes('/api/bookings/front') && r.request().method() === 'POST'),
+      page.getByRole('button', { name: 'Completar reserva' }).click(),
+    ])
+    data = await res.json()
+    if (res.status() !== 429) break
+    await page.waitForTimeout(15000)
+  }
   expect(data.success, `wizard submit not success: ${JSON.stringify(data)}`).toBeTruthy()
   expect(typeof data.booking_id).toBe('number')
   created.push(data.booking_id)
   return data.booking_id
 }
 
-test.afterAll(async ({ playwright }) => {
-  const request = await playwright.request.newContext({
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://preact-dev.menustudioai.com',
-  })
+test.afterAll(async ({ playwright }, testInfo) => {
+  // Local runs never set PLAYWRIGHT_BASE_URL (Playwright starts webServer itself):
+  // never cancel against the prod fallback, use the configured baseURL.
+  const base = process.env.PLAYWRIGHT_BASE_URL || testInfo.project.use.baseURL || 'http://127.0.0.1:4173'
+  const request = await playwright.request.newContext({ baseURL: base })
   for (const id of created) {
     // Best-effort cleanup; same-day bookings return 409 and are left as-is.
     await request

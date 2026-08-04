@@ -17,7 +17,7 @@ async function gotoReservas(page: Page) {
 // Advances up to 2 months if the current view has no open day.
 async function pickFirstAvailableDate(page: Page): Promise<string | null> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const day = page.locator('.resvDay:not(.disabled)').first()
+    const day = page.locator('.resvDay:not(.disabled):not(.today)').first()
     if (await day.count()) {
       const [req] = await Promise.all([
         page.waitForRequest((u) => u.url().includes('/api/reservations/day-context')),

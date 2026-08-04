@@ -47,7 +47,12 @@ async function cancelBooking(request: APIRequestContext, id: number) {
 async function gotoSummary(page: Page) {
   await page.goto('/reservas')
 
-  const day = page.locator('.resvDay:not(.disabled):not(.other)').first()
+  // First enabled non-today day; hop months when the current view has none open.
+  const day = page.locator('.resvDay:not(.disabled):not(.other):not(.today)').first()
+  for (let hop = 0; hop < 3 && !(await day.isVisible().catch(() => false)); hop++) {
+    await page.getByRole('button', { name: /Mes siguiente|Next month/ }).click()
+    await page.waitForTimeout(400)
+  }
   await day.waitFor({ state: 'visible', timeout: 15_000 })
   await day.click()
 
@@ -150,8 +155,11 @@ test('both terms AND privacy required', async ({ page }) => {
 })
 
 test('honeypot field rejects submission', async ({ request }) => {
+  // Own X-Forwarded-For bucket: the shared 127.0.0.1 booking bucket (5/60s) is
+  // exhausted by the parallel wizard specs, which would turn 403 into 429.
   const res = await request.post('/api/bookings/front', {
     multipart: frontBody({ website_url: 'spam' }),
+    headers: { 'X-Forwarded-For': '203.0.113.101' },
   })
   expect(res.status()).toBe(403)
 })
@@ -159,6 +167,7 @@ test('honeypot field rejects submission', async ({ request }) => {
 test('fast form submission is rejected', async ({ request }) => {
   const res = await request.post('/api/bookings/front', {
     multipart: frontBody({ form_load_time: String(nowSec() - 2) }),
+    headers: { 'X-Forwarded-For': '203.0.113.102' },
   })
   expect(res.status()).toBe(403)
 })
@@ -173,6 +182,8 @@ test('rate limiting blocks after 5 submissions', async ({ request }) => {
         customer_name: `RL Test ${i}`,
         contact_email: `rl-test-${i}-${nowSec()}@test.com`,
       }),
+      // Fixed IP: all 6 posts share one bucket so the 6th trips the 429 guard.
+      headers: { 'X-Forwarded-For': '203.0.113.103' },
     })
     statuses.push(res.status())
     const body = await res.json().catch(() => null)
@@ -190,6 +201,7 @@ test('valid form_load_time is accepted', async ({ request }) => {
       form_load_time: String(nowSec() - 30),
       contact_email: `valid-timing-${nowSec()}@test.com`,
     }),
+    headers: { 'X-Forwarded-For': '203.0.113.104' },
   })
   // Not rejected for timing. May be 200 (booking) or 429 (rate budget spent by
   // the prior test), but never a timing 403.
