@@ -10,7 +10,7 @@ test.describe.configure({ mode: 'serial', timeout: 120_000 })
 // Pick a bookable date in the calendar: first enabled in-month day, hop months if none.
 async function pickFirstOpenDate(page: Page) {
   for (let hop = 0; hop < 3; hop++) {
-    const day = page.locator('.resvDay:not(.disabled):not(.other)').first()
+    const day = page.locator('.resvDay:not(.disabled):not(.other):not(.today)').first()
     if (await day.count()) {
       const ctx = page.waitForResponse((r) => r.url().includes('/api/reservations/day-context'))
       await day.click()
@@ -68,20 +68,33 @@ async function completeBooking(page: Page) {
   // Next off date step (may go to mandatoryMenu / groupMenu / rice).
   await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
 
-  // If a mandatory-menu step appears, skip it (no mandatory menu expected on dev).
-  const skipMandatory = page.getByRole('button', { name: 'Continuar sin reservar menú recomendado' })
-  if (await skipMandatory.count()) await skipMandatory.click()
-
-  // Group menu step: choose "No" if present.
-  const noBtns = page.locator('.resvChoice', { hasText: 'No' })
-  // Rice step OR group-menu step both use "No". Click whichever "No" is visible, then Next, repeatedly.
+  // Rice / group-menu steps both answer "No". goNextFromDate runs async fetches before
+  // switching step, so wait for the active step to actually change instead of polling a
+  // mid-transition DOM (count() can see the stale date card and miss the choice buttons).
   for (let i = 0; i < 3; i++) {
-    if (await page.locator('.resvInput').count()) break // reached personal step
-    const no = noBtns.first()
-    if (await no.count()) await no.click()
-    const next = page.getByRole('button', { name: 'Siguiente', exact: true })
-    if (await next.count()) await next.click()
-    await page.waitForTimeout(200)
+    await page.waitForFunction(
+      () => {
+        const dot = document.querySelector('.resvDot.active')
+        const step = dot && dot.closest('.resvStepDot')
+        return step && step.getAttribute('data-step-id') !== 'date'
+      },
+      { timeout: 30_000 },
+    )
+    const stepId = await page.locator('.resvStepDot:has(.resvDot.active)').getAttribute('data-step-id')
+    if (stepId === 'personal') break // reached personal data
+    if (stepId === 'rice' || stepId === 'groupMenu') {
+      await page.locator('.resvChoice', { hasText: 'No' }).first().click()
+      await page.getByRole('button', { name: 'Siguiente', exact: true }).click()
+    } else if (stepId === 'mandatoryMenu') {
+      const skip = page.getByRole('button', { name: 'Continuar sin reservar menú recomendado' })
+      if (await skip.count()) {
+        await skip.click()
+      } else {
+        throw new Error('mandatoryMenu step with no skip option')
+      }
+    } else {
+      throw new Error(`unexpected step after date: ${stepId}`)
+    }
   }
 
   // Personal data.
@@ -118,9 +131,11 @@ async function completeBooking(page: Page) {
   return { resp: resp!, body }
 }
 
-test.afterAll(async ({ playwright }) => {
+test.afterAll(async ({ playwright }, testInfo) => {
   if (!createdIds.length) return
-  const base = process.env.PLAYWRIGHT_BASE_URL
+  // When Playwright starts the webServer itself PLAYWRIGHT_BASE_URL is unset;
+  // fall back to the configured baseURL so created bookings actually get cancelled.
+  const base = process.env.PLAYWRIGHT_BASE_URL || testInfo.project.use.baseURL
   if (!base) return
   const req: APIRequestContext = await playwright.request.newContext({ baseURL: base })
   for (const id of createdIds) {

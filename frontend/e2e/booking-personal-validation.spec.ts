@@ -5,7 +5,12 @@ async function reachPersonal(page: Page) {
   await page.addInitScript(() => window.localStorage.setItem('villacarmen_lang', 'es'))
   await page.goto('/reservas')
 
-  const day = page.locator('.resvDay:not(.disabled):not(.other)').first()
+  // First enabled non-today day; hop months when the current view has none open.
+  const day = page.locator('.resvDay:not(.disabled):not(.other):not(.today)').first()
+  for (let hop = 0; hop < 3 && !(await day.isVisible().catch(() => false)); hop++) {
+    await page.getByRole('button', { name: 'Mes siguiente' }).click()
+    await page.waitForTimeout(400)
+  }
   await day.waitFor({ state: 'visible', timeout: 20_000 })
   await day.click()
 
