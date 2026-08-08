@@ -10,8 +10,19 @@ export type PopoverSelectOption = {
   disabled?: boolean
 }
 
+function slugifyTestId(value: string) {
+  const slug = value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return slug || 'option'
+}
+
 export function PopoverSelect(props: {
   ariaLabel: string
+  testId?: string
   value: string | null
   options: PopoverSelectOption[]
   placeholder: string
@@ -24,6 +35,7 @@ export function PopoverSelect(props: {
   searchPlaceholder?: string
   footer?: ComponentChildren
 }) {
+  const tid = props.testId || 'popover-select'
   const maxPopoverHeight = 320
   const popoverGap = 8
   const [open, setOpen] = useState(false)
@@ -246,22 +258,23 @@ export function PopoverSelect(props: {
   }, [open, props.autoScrollPageOnOpen, reservedBottomSpace])
 
   const displayNode = selected ? (
-    <span class="resvSelectBtn__opt">
-      {selected.left ? <span class="resvSelectBtn__left">{selected.left}</span> : null}
-      <span class="resvSelectBtn__label">{selected.label}</span>
-      {selected.right ? <span class="resvSelectBtn__right">{selected.right}</span> : null}
+    <span class="resvSelectBtn__opt" data-testid={`${tid}-selected`}>
+      {selected.left ? <span class="resvSelectBtn__left" data-testid={`${tid}-selected-left`}>{selected.left}</span> : null}
+      <span class="resvSelectBtn__label" data-testid={`${tid}-selected-label`}>{selected.label}</span>
+      {selected.right ? <span class="resvSelectBtn__right" data-testid={`${tid}-selected-right`}>{selected.right}</span> : null}
     </span>
   ) : (
-    <span class="resvSelectBtn__placeholder">{props.placeholder}</span>
+    <span class="resvSelectBtn__placeholder" data-testid={`${tid}-placeholder`}>{props.placeholder}</span>
   )
 
   return (
-    <div class="resvSelect" ref={rootRef}>
-      <div class="resvSelectAnchor">
+    <div class="resvSelect" ref={rootRef} data-testid={tid}>
+      <div class="resvSelectAnchor" data-testid={`${tid}-anchor`}>
         <button
           ref={buttonRef}
           type="button"
           class="resvSelectBtn"
+          data-testid={`${tid}-trigger`}
           aria-label={props.ariaLabel}
           aria-haspopup="listbox"
           aria-expanded={open}
@@ -277,8 +290,8 @@ export function PopoverSelect(props: {
             else clearOpenLayoutTimers()
           }}
         >
-          <span class="resvSelectBtn__value">{displayNode}</span>
-          <span class="resvSelectBtn__chev" aria-hidden="true">
+          <span class="resvSelectBtn__value" data-testid={`${tid}-value`}>{displayNode}</span>
+          <span class="resvSelectBtn__chev" aria-hidden="true" data-testid={`${tid}-chevron`}>
             ▾
           </span>
         </button>
@@ -288,14 +301,16 @@ export function PopoverSelect(props: {
             class="resvSelectPopover"
             role="listbox"
             aria-label={props.ariaLabel}
+            data-testid={`${tid}-popover`}
             ref={popoverRef}
             style={popoverMaxHeight != null ? { maxHeight: `${popoverMaxHeight}px` } : undefined}
           >
             {props.searchable ? (
-              <div class="resvSelectSearch">
+              <div class="resvSelectSearch" data-testid={`${tid}-search`}>
                 <input
                   ref={searchRef}
                   class="resvSelectSearch__input"
+                  data-testid={`${tid}-search-input`}
                   type="search"
                   value={query}
                   onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
@@ -306,15 +321,17 @@ export function PopoverSelect(props: {
               </div>
             ) : null}
 
-            <div class="resvSelectList" ref={listRef}>
-              {filtered.length === 0 ? <div class="resvSelectEmpty">Sin resultados</div> : null}
+            <div class="resvSelectList" ref={listRef} data-testid={`${tid}-list`}>
+              {filtered.length === 0 ? <div class="resvSelectEmpty" data-testid={`${tid}-empty`}>Sin resultados</div> : null}
               {filtered.map((o) => {
                 const isSelected = selected?.value === o.value
+                const optTid = `${tid}-option-${slugifyTestId(o.value)}`
                 return (
                   <button
                     key={o.value}
                     type="button"
                     class={isSelected ? 'resvSelectOpt selected' : 'resvSelectOpt'}
+                    data-testid={optTid}
                     role="option"
                     aria-selected={isSelected}
                     disabled={o.disabled}
@@ -325,20 +342,20 @@ export function PopoverSelect(props: {
                       buttonRef.current?.focus()
                     }}
                   >
-                    {o.left ? <span class="resvSelectOpt__left">{o.left}</span> : null}
-                    <span class="resvSelectOpt__label">{o.label}</span>
-                    {o.right ? <span class="resvSelectOpt__right">{o.right}</span> : null}
+                    {o.left ? <span class="resvSelectOpt__left" data-testid={`${optTid}-left`}>{o.left}</span> : null}
+                    <span class="resvSelectOpt__label" data-testid={`${optTid}-label`}>{o.label}</span>
+                    {o.right ? <span class="resvSelectOpt__right" data-testid={`${optTid}-right`}>{o.right}</span> : null}
                   </button>
                 )
               })}
             </div>
 
-            {props.footer ? <div class="resvSelectFooter">{props.footer}</div> : null}
+            {props.footer ? <div class="resvSelectFooter" data-testid={`${tid}-footer`}>{props.footer}</div> : null}
           </div>
         ) : null}
       </div>
 
-      {reservedBottomSpace > 0 ? <div aria-hidden="true" style={{ height: `${reservedBottomSpace}px` }} /> : null}
+      {reservedBottomSpace > 0 ? <div aria-hidden="true" data-testid={`${tid}-spacer`} style={{ height: `${reservedBottomSpace}px` }} /> : null}
     </div>
   )
 }

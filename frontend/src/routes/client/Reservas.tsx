@@ -130,7 +130,8 @@ function buildCalendarCells(year: number, month0: number) {
   return cells
 }
 
-function ToastIcon(props: { type: ToastType }) {
+function ToastIcon(props: { type: ToastType; testId: string }) {
+  const tid = props.testId
   const common = {
     width: 18,
     height: 18,
@@ -142,8 +143,9 @@ function ToastIcon(props: { type: ToastType }) {
 
   if (props.type === 'success') {
     return (
-      <svg {...common}>
+      <svg {...common} data-testid={tid}>
         <path
+          data-testid={`${tid}-check`}
           d="M20 7L10.5 16.5L4 10"
           stroke="currentColor"
           stroke-width="2.4"
@@ -156,8 +158,9 @@ function ToastIcon(props: { type: ToastType }) {
 
   if (props.type === 'error') {
     return (
-      <svg {...common}>
+      <svg {...common} data-testid={tid}>
         <path
+          data-testid={`${tid}-cross`}
           d="M18 6L6 18M6 6l12 12"
           stroke="currentColor"
           stroke-width="2.4"
@@ -170,8 +173,9 @@ function ToastIcon(props: { type: ToastType }) {
 
   if (props.type === 'info') {
     return (
-      <svg {...common}>
+      <svg {...common} data-testid={tid}>
         <path
+          data-testid={`${tid}-stem`}
           d="M12 17v-6"
           stroke="currentColor"
           stroke-width="2.4"
@@ -179,6 +183,7 @@ function ToastIcon(props: { type: ToastType }) {
           stroke-linejoin="round"
         />
         <path
+          data-testid={`${tid}-dot`}
           d="M12 7h.01"
           stroke="currentColor"
           stroke-width="3.4"
@@ -186,6 +191,7 @@ function ToastIcon(props: { type: ToastType }) {
           stroke-linejoin="round"
         />
         <path
+          data-testid={`${tid}-circle`}
           d="M21 12a9 9 0 11-18 0a9 9 0 0118 0Z"
           stroke="currentColor"
           stroke-width="2.0"
@@ -199,8 +205,9 @@ function ToastIcon(props: { type: ToastType }) {
 
   // warning
   return (
-    <svg {...common}>
+    <svg {...common} data-testid={tid}>
       <path
+        data-testid={`${tid}-stem`}
         d="M12 9v5"
         stroke="currentColor"
         stroke-width="2.4"
@@ -208,6 +215,7 @@ function ToastIcon(props: { type: ToastType }) {
         stroke-linejoin="round"
       />
       <path
+        data-testid={`${tid}-dot`}
         d="M12 17h.01"
         stroke="currentColor"
         stroke-width="3.4"
@@ -215,6 +223,7 @@ function ToastIcon(props: { type: ToastType }) {
         stroke-linejoin="round"
       />
       <path
+        data-testid={`${tid}-triangle`}
         d="M10.3 3.7h3.4l9 16.6a1.2 1.2 0 01-1.05 1.8H2.35A1.2 1.2 0 011.3 20.3l9-16.6Z"
         stroke="currentColor"
         stroke-width="2.0"
@@ -234,7 +243,9 @@ function Modal(props: {
   primaryHref?: string
   primaryLabel?: string
   secondaryLabel?: string
+  testId: string
 }) {
+  const tid = props.testId
   const { lang } = useI18n()
   useEffect(() => {
     if (!props.open) return
@@ -247,17 +258,17 @@ function Modal(props: {
 
   if (!props.open) return null
   return (
-    <div class="resvModal" role="dialog" aria-modal="true" aria-label={props.title}>
-      <div class="resvModal__backdrop" onClick={props.onClose} />
-      <div class="resvModal__card" onClick={(e) => e.stopPropagation()}>
-        <div class="resvModal__title">{props.title}</div>
-        <div class="resvModal__body">{props.children}</div>
-        <div class="resvModal__actions">
-          <button type="button" class="btn" onClick={props.onClose}>
+    <div class="resvModal" role="dialog" aria-modal="true" aria-label={props.title} data-testid={tid}>
+      <div class="resvModal__backdrop" onClick={props.onClose} data-testid={`${tid}-backdrop`} />
+      <div class="resvModal__card" onClick={(e) => e.stopPropagation()} data-testid={`${tid}-card`}>
+        <div class="resvModal__title" data-testid={`${tid}-title`}>{props.title}</div>
+        <div class="resvModal__body" data-testid={`${tid}-body`}>{props.children}</div>
+        <div class="resvModal__actions" data-testid={`${tid}-actions`}>
+          <button type="button" class="btn" onClick={props.onClose} data-testid={`${tid}-close`}>
             {props.secondaryLabel || textFor(lang, 'Cerrar', 'Close')}
           </button>
           {props.primaryHref ? (
-            <a class="btn primary" href={props.primaryHref}>
+            <a class="btn primary" href={props.primaryHref} data-testid={`${tid}-primary`}>
               {props.primaryLabel || textFor(lang, 'Continuar', 'Continue')}
             </a>
           ) : null}
@@ -1201,18 +1212,19 @@ export function Reservas() {
   const stepContent = (() => {
     if (step === 'date') {
       return (
-        <div class="resvStep">
-          <div class="resvGrid2">
-            <div class="resvCard">
-              <div class="resvCardHead">
-                <div class="resvCardTitle">{text('Selecciona una fecha', 'Select a date')}</div>
+        <div class="resvStep" data-testid="reservas-step-date">
+          <div class="resvGrid2" data-testid="reservas-date-grid">
+            <div class="resvCard" data-testid="reservas-calendar-card">
+              <div class="resvCardHead" data-testid="reservas-calendar-card-head">
+                <div class="resvCardTitle" data-testid="reservas-calendar-card-title">{text('Selecciona una fecha', 'Select a date')}</div>
               </div>
 
-              <div class="resvCalendar">
-                <div class="resvCalendarHead">
+              <div class="resvCalendar" data-testid="reservas-calendar">
+                <div class="resvCalendarHead" data-testid="reservas-calendar-head">
                   <button
                     type="button"
                     class="resvCalNav"
+                    data-testid="reservas-calendar-prev-month"
                     aria-label={text('Mes anterior', 'Previous month')}
                     onClick={() => {
                       const m = viewMonth0 - 1
@@ -1226,12 +1238,13 @@ export function Reservas() {
                   >
                     ‹
                   </button>
-                  <div class="resvCalTitle">
+                  <div class="resvCalTitle" data-testid="reservas-calendar-month-title">
                     {monthName(viewMonth0, lang)} {viewYear}
                   </div>
                   <button
                     type="button"
                     class="resvCalNav"
+                    data-testid="reservas-calendar-next-month"
                     aria-label={text('Mes siguiente', 'Next month')}
                     onClick={() => {
                       const m = viewMonth0 + 1
@@ -1247,11 +1260,11 @@ export function Reservas() {
                   </button>
                 </div>
 
-                <div class="resvCalWeekdays" aria-hidden="true">
-                  {(lang === 'en' ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['L', 'M', 'X', 'J', 'V', 'S', 'D']).map((day, index) => <div key={index}>{day}</div>)}
+                <div class="resvCalWeekdays" aria-hidden="true" data-testid="reservas-calendar-weekdays">
+                  {(lang === 'en' ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['L', 'M', 'X', 'J', 'V', 'S', 'D']).map((day, index) => <div key={index} data-testid={`reservas-calendar-weekday-${index}`}>{day}</div>)}
                 </div>
 
-                <div class="resvCalDays">
+                <div class="resvCalDays" data-testid="reservas-calendar-days">
                   {cells.map((c) => {
                     const free = monthAvailability?.[c.iso]?.freeBookingSeats
                     const fullyBooked = typeof free === 'number' && free <= 0
@@ -1271,6 +1284,7 @@ export function Reservas() {
                         type="button"
                         class={cls}
                         key={c.iso}
+                        data-testid={`reservas-calendar-day-${c.iso}`}
                         disabled={disabled}
                         onClick={() => onPickDate(c.iso, c.inMonth)}
                       >
@@ -1280,18 +1294,18 @@ export function Reservas() {
                   })}
                 </div>
 
-                <div class="resvLegend" aria-hidden="true">
-                  <div class="resvLegendItem">
-                    <i class="swatch available" /> {text('Disponible', 'Available')}
+                <div class="resvLegend" aria-hidden="true" data-testid="reservas-calendar-legend">
+                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-available">
+                    <i class="swatch available" data-testid="reservas-calendar-legend-available-swatch" /> {text('Disponible', 'Available')}
                   </div>
-                  <div class="resvLegendItem">
-                    <i class="swatch selected" /> {text('Seleccionado', 'Selected')}
+                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-selected">
+                    <i class="swatch selected" data-testid="reservas-calendar-legend-selected-swatch" /> {text('Seleccionado', 'Selected')}
                   </div>
-                  <div class="resvLegendItem">
-                    <i class="swatch disabled" /> {text('No disponible', 'Unavailable')}
+                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-unavailable">
+                    <i class="swatch disabled" data-testid="reservas-calendar-legend-unavailable-swatch" /> {text('No disponible', 'Unavailable')}
                   </div>
-                  <div class="resvLegendItem">
-                    <i class="swatch full" /> {text('Completo', 'Full')}
+                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-full">
+                    <i class="swatch full" data-testid="reservas-calendar-legend-full-swatch" /> {text('Completo', 'Full')}
                   </div>
                 </div>
               </div>
@@ -1300,22 +1314,24 @@ export function Reservas() {
             {selectedDate ? (
               <motion.div
                 class="resvCard"
+                data-testid="reservas-booking-card"
                 initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
               >
-                <div class="resvCardHead">
-                  <div class="resvCardTitle">{text('Tu reserva', 'Your reservation')}</div>
-                  <div class="resvCardSub">{selectedDate ? dateDisplay : text('Elige fecha, personas y hora.', 'Choose date, guests and time.')}</div>
+                <div class="resvCardHead" data-testid="reservas-booking-card-head">
+                  <div class="resvCardTitle" data-testid="reservas-booking-card-title">{text('Tu reserva', 'Your reservation')}</div>
+                  <div class="resvCardSub" data-testid="reservas-booking-card-subtitle">{selectedDate ? dateDisplay : text('Elige fecha, personas y hora.', 'Choose date, guests and time.')}</div>
                 </div>
 
                 {showUpperFloorWarning ? (
-                  <div class="resvNotice warn">{text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
+                  <div class="resvNotice warn" data-testid="reservas-booking-upper-floor-warning">{text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
                 ) : null}
 
-                <div class="resvField resvField--inline">
-                  <div class="resvLabel">{t('reservations.people.label')}</div>
+                <div class="resvField resvField--inline" data-testid="reservas-party-size-field">
+                  <div class="resvLabel" data-testid="reservas-party-size-label">{t('reservations.people.label')}</div>
                   <PopoverSelect
+                    testId="reservas-party-size-select"
                     ariaLabel={text('Número de personas', 'Number of guests')}
                     value={partySize ? String(partySize) : null}
                     placeholder={freeSeats == null ? text('Selecciona una fecha', 'Select a date') : text('Selecciona', 'Select')}
@@ -1343,9 +1359,10 @@ export function Reservas() {
                 </div>
 
                 {activeFloors.length > 1 ? (
-                  <div class="resvField">
-                    <div class="resvLabel">{text('Salón', 'Dining room')}</div>
+                  <div class="resvField" data-testid="reservas-floor-field">
+                    <div class="resvLabel" data-testid="reservas-floor-label">{text('Salón', 'Dining room')}</div>
                     <PopoverSelect
+                      testId="reservas-floor-select"
                       ariaLabel={text('Salón', 'Dining room')}
                       value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
                       placeholder={text('Selecciona un salón', 'Select a dining room')}
@@ -1359,9 +1376,10 @@ export function Reservas() {
                 ) : null}
 
                 {dayContext?.openingMode === 'both' ? (
-                  <div class="resvField">
-                    <div class="resvLabel">{text('Turno', 'Service')}</div>
+                  <div class="resvField" data-testid="reservas-shift-field">
+                    <div class="resvLabel" data-testid="reservas-shift-label">{text('Turno', 'Service')}</div>
                     <PopoverSelect
+                      testId="reservas-shift-select"
                       ariaLabel={text('Turno', 'Service')}
                       value={selectedShift}
                       placeholder={text('Selecciona comida o cena', 'Select lunch or dinner')}
@@ -1375,18 +1393,19 @@ export function Reservas() {
                   </div>
                 ) : null}
 
-                <div class="resvField">
-                  <div class="resvLabel">{text('Horas disponibles', 'Available times')}</div>
+                <div class="resvField" data-testid="reservas-hours-field">
+                  <div class="resvLabel" data-testid="reservas-hours-label">{text('Horas disponibles', 'Available times')}</div>
                   {partySize ? (
                     dayContext?.openingMode === 'both' && !selectedShift ? (
-                      <div class="resvHint">{text('Selecciona primero el turno para ver las horas disponibles.', 'Select lunch or dinner first to see available times.')}</div>
+                      <div class="resvHint" data-testid="reservas-hours-shift-hint">{text('Selecciona primero el turno para ver las horas disponibles.', 'Select lunch or dinner first to see available times.')}</div>
                     ) : availableHours.length > 0 ? (
                       <>
-                        <div class="resvHours">
+                        <div class="resvHours" data-testid="reservas-hours-list">
                           {availableHours.map((h) => (
                             <button
                               type="button"
                               key={h.hour}
+                              data-testid={`reservas-hour-option-${h.hour.replace(/[^0-9]/g, '-')}`}
                               class={
                                 reservationTime === h.hour
                                   ? h.status === 'limited'
@@ -1404,6 +1423,7 @@ export function Reservas() {
                         </div>
                         {selectedHour ? (
                           <div
+                            data-testid="reservas-selected-hour"
                             class={selectedHour.status === 'limited' ? 'resvSelectedTime limited' : 'resvSelectedTime'}
                           >
                             {text('Hora seleccionada:', 'Selected time:')} {selectedHour.hour}
@@ -1411,18 +1431,19 @@ export function Reservas() {
                         ) : null}
                       </>
                     ) : (
-                      <div class="resvEmpty">
+                      <div class="resvEmpty" data-testid="reservas-hours-empty">
                         {text('No hay horas disponibles para', 'No times available for')} {partySize} {t('reservations.people.suffix')} {text('en esta fecha.', 'on this date.')}
                       </div>
                     )
                   ) : (
-                    <div class="resvHint">{text('Selecciona primero el número de personas.', 'Select the number of guests first.')}</div>
+                    <div class="resvHint" data-testid="reservas-hours-party-size-hint">{text('Selecciona primero el número de personas.', 'Select the number of guests first.')}</div>
                   )}
                 </div>
 
                 {dateStepReady ? (
                   <motion.div
                     class="resvActions"
+                    data-testid="reservas-date-actions"
                     initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeInOut' }}
@@ -1430,6 +1451,7 @@ export function Reservas() {
                     <button
                       type="button"
                       class="btn primary"
+                      data-testid="reservas-date-next"
                       onClick={() => void goNextFromDate()}
                     >
                       {text('Siguiente', 'Next')}
@@ -1473,20 +1495,21 @@ export function Reservas() {
       }, [selectedMandatoryMenu, lang])
 
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('Menú recomendado del día', 'Recommended menu of the day')}</div>
-              <div class="resvCardSub">
+        <div class="resvStep" data-testid="reservas-step-mandatory-menu">
+          <div class="resvCard" data-testid="reservas-mandatory-menu-card">
+            <div class="resvCardHead" data-testid="reservas-mandatory-menu-card-head">
+              <div class="resvCardTitle" data-testid="reservas-mandatory-menu-card-title">{text('Menú recomendado del día', 'Recommended menu of the day')}</div>
+              <div class="resvCardSub" data-testid="reservas-mandatory-menu-card-subtitle">
                 {isMandatory
                   ? text('Seleccione un menú recomendado del día para su reserva. Para la fecha seleccionada solo se admitirán reservas con uno de los menús disponibles.', 'Select a recommended menu for your reservation. On this date, reservations are only accepted with one of the available menus.')
                   : text('¿Desea reservar un menú recomendado del día?', 'Would you like to book a recommended menu?')}
               </div>
             </div>
 
-            <div class="resvField">
-              <div class="resvLabel">{text('Seleccione un menú', 'Select a menu')}</div>
+            <div class="resvField" data-testid="reservas-mandatory-menu-field">
+              <div class="resvLabel" data-testid="reservas-mandatory-menu-label">{text('Seleccione un menú', 'Select a menu')}</div>
               <PopoverSelect
+                testId="reservas-mandatory-menu-select"
                 ariaLabel={text('Seleccione un menú', 'Select a menu')}
                 value={mandatoryMenuId ? String(mandatoryMenuId) : null}
                 placeholder={text('Selecciona un menú', 'Select a menu')}
@@ -1503,25 +1526,26 @@ export function Reservas() {
             </div>
 
             {selectedMandatoryMenu ? (
-              <div class="resvMenuDetails">
+              <div class="resvMenuDetails" data-testid="reservas-mandatory-menu-details">
                 {selectedMandatoryMenu.menuType !== 'special' && (
                   <>
-                    <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">{text('Entrantes incluidos', 'Starters included')}</div>
-                      <ul class="resvMenuList">
-                        {mandatoryEntrantes.map((t) => (
-                          <li key={t}>{t}</li>
+                    <div class="resvMenuBlock" data-testid="reservas-mandatory-starters-block">
+                      <div class="resvMenuTitle" data-testid="reservas-mandatory-starters-title">{text('Entrantes incluidos', 'Starters included')}</div>
+                      <ul class="resvMenuList" data-testid="reservas-mandatory-starters-list">
+                        {mandatoryEntrantes.map((t, starterIndex) => (
+                          <li key={t} data-testid={`reservas-mandatory-starter-${starterIndex}`}>{t}</li>
                         ))}
                       </ul>
                     </div>
 
                     {selectedMandatoryMenu.menuChooseMain ? (
-                      <div class="resvMenuBlock">
-                        <div class="resvMenuTitle">{text('Principales', 'Main courses')}</div>
-                        <div class="resvHint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
-                        <div class="resvYesNo">
+                      <div class="resvMenuBlock" data-testid="reservas-mandatory-mains-block">
+                        <div class="resvMenuTitle" data-testid="reservas-mandatory-mains-title">{text('Principales', 'Main courses')}</div>
+                        <div class="resvHint" data-testid="reservas-mandatory-mains-hint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
+                        <div class="resvYesNo" data-testid="reservas-mandatory-mains-choice">
                           <button
                             type="button"
+                            data-testid="reservas-mandatory-mains-yes"
                             class={mandatoryPrincipalesEnabled === true ? 'resvChoice selected' : 'resvChoice'}
                             onClick={() => {
                               setMandatoryPrincipalesEnabled(true)
@@ -1534,6 +1558,7 @@ export function Reservas() {
                           </button>
                           <button
                             type="button"
+                            data-testid="reservas-mandatory-mains-no"
                             class={mandatoryPrincipalesEnabled === false ? 'resvChoice selected' : 'resvChoice'}
                             onClick={() => {
                               setMandatoryPrincipalesEnabled(false)
@@ -1545,10 +1570,11 @@ export function Reservas() {
                         </div>
 
                         {mandatoryPrincipalesEnabled === true ? (
-                          <div class="resvPrincipales">
+                          <div class="resvPrincipales" data-testid="reservas-mandatory-mains-rows">
                             {mandatoryPrincipalesRows.map((row, idx) => (
-                              <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
+                              <div class="resvPrincipalRow" key={idx} data-ui="principal-row" data-testid={`reservas-mandatory-main-row-${idx}`}>
                                 <PopoverSelect
+                                  testId={`reservas-mandatory-main-select-${idx}`}
                                   ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
                                   value={row.name ? row.name : null}
                                   placeholder={text('Selecciona un principal', 'Select a main course')}
@@ -1560,6 +1586,7 @@ export function Reservas() {
                                   }
                                 />
                                 <InlineCounter
+                                  testId={`reservas-mandatory-main-servings-${idx}`}
                                   ariaLabel={`${text('Raciones principal', 'Main course servings')} ${idx + 1}`}
                                   value={row.servings || 0}
                                   min={0}
@@ -1573,18 +1600,20 @@ export function Reservas() {
                                 <button
                                   type="button"
                                   class="resvIconBtn"
+                                  data-testid={`reservas-mandatory-main-remove-${idx}`}
                                   aria-label={text('Eliminar', 'Remove')}
                                   onClick={() => setMandatoryPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
                                 >
-                                  <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
+                                  <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" data-testid={`reservas-mandatory-main-remove-icon-${idx}`} />
                                 </button>
                               </div>
                             ))}
 
-                            <div class="resvPrincipalesActions">
+                            <div class="resvPrincipalesActions" data-testid="reservas-mandatory-mains-actions">
                               <button
                                 type="button"
                                 class="btn"
+                                data-testid="reservas-mandatory-main-add"
                                 onClick={() => {
                                   const max = selectedMandatoryMenu.mainDishesLimit
                                     ? Math.max(1, selectedMandatoryMenu.mainDishesLimitNumber || 1)
@@ -1595,7 +1624,7 @@ export function Reservas() {
                               >
                                 {text('Añadir principal', 'Add main course')}
                               </button>
-                              <div class="resvHint">
+                              <div class="resvHint" data-testid="reservas-mandatory-mains-max-hint">
                                 {text('Máximo:', 'Maximum:')}{' '}
                                 {selectedMandatoryMenu.mainDishesLimit
                                   ? selectedMandatoryMenu.mainDishesLimitNumber
@@ -1607,11 +1636,11 @@ export function Reservas() {
                         ) : null}
                       </div>
                     ) : (
-                      <div class="resvMenuBlock">
-                        <div class="resvMenuTitle">{text('Principales', 'Main courses')}</div>
-                        <ul class="resvMenuList">
-                          {localizedArray(readStringArray(selectedMandatoryMenu.principales?.items || []), selectedMandatoryMenu.principalesEnglish?.items, lang).map((t) => (
-                            <li key={t}>{t}</li>
+                      <div class="resvMenuBlock" data-testid="reservas-mandatory-mains-static-block">
+                        <div class="resvMenuTitle" data-testid="reservas-mandatory-mains-static-title">{text('Principales', 'Main courses')}</div>
+                        <ul class="resvMenuList" data-testid="reservas-mandatory-mains-static-list">
+                          {localizedArray(readStringArray(selectedMandatoryMenu.principales?.items || []), selectedMandatoryMenu.principalesEnglish?.items, lang).map((t, mainIndex) => (
+                            <li key={t} data-testid={`reservas-mandatory-main-item-${mainIndex}`}>{t}</li>
                           ))}
                         </ul>
                       </div>
@@ -1625,6 +1654,7 @@ export function Reservas() {
               <button
                 type="button"
                 class="btn !mt-4"
+                data-testid="reservas-mandatory-menu-skip"
                 style={{ marginTop: "20px", marginLeft: "auto", marginRight: "auto", display: "flex" }}
                 onClick={() => {
                   setMandatoryMenuId(null)
@@ -1636,14 +1666,15 @@ export function Reservas() {
               </button>
             )}
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-mandatory-menu-actions">
+              <button type="button" class="btn" data-testid="reservas-mandatory-menu-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
               {mandatoryMenuStepReady ? (
                 <button
                   type="button"
                   class="btn primary"
+                  data-testid="reservas-mandatory-menu-next"
                   onClick={() => {
                     // If mandatory menu selected, skip rice and group menu steps
                     if (mandatoryMenuId !== null) {
@@ -1667,16 +1698,17 @@ export function Reservas() {
 
     if (step === 'groupMenu') {
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('Menú de grupos', 'Group menu')}</div>
-              <div class="resvCardSub">{text('Menús especiales para grupos.', 'Special menus for groups.')}</div>
+        <div class="resvStep" data-testid="reservas-step-group-menu">
+          <div class="resvCard" data-testid="reservas-group-menu-card">
+            <div class="resvCardHead" data-testid="reservas-group-menu-card-head">
+              <div class="resvCardTitle" data-testid="reservas-group-menu-card-title">{text('Menú de grupos', 'Group menu')}</div>
+              <div class="resvCardSub" data-testid="reservas-group-menu-card-subtitle">{text('Menús especiales para grupos.', 'Special menus for groups.')}</div>
             </div>
 
-            <div class="resvYesNo">
+            <div class="resvYesNo" data-testid="reservas-group-menu-choice">
               <button
                 type="button"
+                data-testid="reservas-group-menu-yes"
                 class={wantsGroupMenu === true ? 'resvChoice selected' : 'resvChoice'}
                 onClick={() => {
                   setWantsGroupMenu(true)
@@ -1689,6 +1721,7 @@ export function Reservas() {
               </button>
               <button
                 type="button"
+                data-testid="reservas-group-menu-no"
                 class={wantsGroupMenu === false ? 'resvChoice selected' : 'resvChoice'}
                 onClick={() => {
                   setWantsGroupMenu(false)
@@ -1703,9 +1736,10 @@ export function Reservas() {
 
             {wantsGroupMenu === true ? (
               <>
-                <div class="resvField">
-                  <div class="resvLabel">{text('Seleccione un menú', 'Select a menu')}</div>
+                <div class="resvField" data-testid="reservas-group-menu-field">
+                  <div class="resvLabel" data-testid="reservas-group-menu-label">{text('Seleccione un menú', 'Select a menu')}</div>
                   <PopoverSelect
+                    testId="reservas-group-menu-select"
                     ariaLabel={text('Seleccione un menú', 'Select a menu')}
                     value={groupMenuId ? String(groupMenuId) : null}
                     placeholder={text('Selecciona un menú', 'Select a menu')}
@@ -1722,22 +1756,23 @@ export function Reservas() {
                 </div>
 
                 {selectedMenu ? (
-                  <div class="resvMenuDetails">
-                    <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">{text('Entrantes incluidos', 'Starters included')}</div>
-                      <ul class="resvMenuList">
-                        {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t) => (
-                          <li key={t}>{t}</li>
+                  <div class="resvMenuDetails" data-testid="reservas-group-menu-details">
+                    <div class="resvMenuBlock" data-testid="reservas-group-starters-block">
+                      <div class="resvMenuTitle" data-testid="reservas-group-starters-title">{text('Entrantes incluidos', 'Starters included')}</div>
+                      <ul class="resvMenuList" data-testid="reservas-group-starters-list">
+                        {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t, starterIndex) => (
+                          <li key={t} data-testid={`reservas-group-starter-${starterIndex}`}>{t}</li>
                         ))}
                       </ul>
                     </div>
 
-                    <div class="resvMenuBlock">
-                      <div class="resvMenuTitle">{getPrincipalesTitle(selectedMenu, lang)}</div>
-                      <div class="resvHint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
-                      <div class="resvYesNo">
+                    <div class="resvMenuBlock" data-testid="reservas-group-mains-block">
+                      <div class="resvMenuTitle" data-testid="reservas-group-mains-title">{getPrincipalesTitle(selectedMenu, lang)}</div>
+                      <div class="resvHint" data-testid="reservas-group-mains-hint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
+                      <div class="resvYesNo" data-testid="reservas-group-mains-choice">
                         <button
                           type="button"
+                          data-testid="reservas-group-mains-yes"
                           class={principalesEnabled === true ? 'resvChoice selected' : 'resvChoice'}
                           onClick={() => {
                             setPrincipalesEnabled(true)
@@ -1750,6 +1785,7 @@ export function Reservas() {
                         </button>
                         <button
                           type="button"
+                          data-testid="reservas-group-mains-no"
                           class={principalesEnabled === false ? 'resvChoice selected' : 'resvChoice'}
                           onClick={() => {
                             setPrincipalesEnabled(false)
@@ -1761,10 +1797,11 @@ export function Reservas() {
                       </div>
 
                       {principalesEnabled === true ? (
-                        <div class="resvPrincipales">
+                        <div class="resvPrincipales" data-testid="reservas-group-mains-rows">
                           {principalesRows.map((row, idx) => (
-                            <div class="resvPrincipalRow" key={idx} data-ui="principal-row">
+                            <div class="resvPrincipalRow" key={idx} data-ui="principal-row" data-testid={`reservas-group-main-row-${idx}`}>
                               <PopoverSelect
+                                testId={`reservas-group-main-select-${idx}`}
                                 ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
                                 value={row.name ? row.name : null}
                                 placeholder={text('Selecciona un principal', 'Select a main course')}
@@ -1776,6 +1813,7 @@ export function Reservas() {
                                 }
                               />
                               <InlineCounter
+                                testId={`reservas-group-main-servings-${idx}`}
                                 ariaLabel={`${text('Raciones principal', 'Main course servings')} ${idx + 1}`}
                                 value={row.servings || 0}
                                 min={0}
@@ -1789,18 +1827,20 @@ export function Reservas() {
                               <button
                                 type="button"
                                 class="resvIconBtn"
+                                data-testid={`reservas-group-main-remove-${idx}`}
                                 aria-label={text('Eliminar', 'Remove')}
                                 onClick={() => setPrincipalesRows((prev) => prev.filter((_, i) => i !== idx))}
                               >
-                                <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" />
+                                <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" data-testid={`reservas-group-main-remove-icon-${idx}`} />
                               </button>
                             </div>
                           ))}
 
-                          <div class="resvPrincipalesActions">
+                          <div class="resvPrincipalesActions" data-testid="reservas-group-mains-actions">
                             <button
                               type="button"
                               class="btn"
+                              data-testid="reservas-group-main-add"
                               onClick={() => {
                                 const max = selectedMenu.main_dishes_limit
                                   ? Math.max(1, selectedMenu.main_dishes_limit_number || 1)
@@ -1811,7 +1851,7 @@ export function Reservas() {
                             >
                               {text('Añadir principal', 'Add main course')}
                             </button>
-                            <div class="resvHint">
+                            <div class="resvHint" data-testid="reservas-group-mains-max-hint">
                               {text('Máximo:', 'Maximum:')}{' '}
                               {selectedMenu.main_dishes_limit
                                 ? selectedMenu.main_dishes_limit_number
@@ -1827,12 +1867,12 @@ export function Reservas() {
               </>
             ) : null}
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-group-menu-actions">
+              <button type="button" class="btn" data-testid="reservas-group-menu-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
               {groupMenuStepReady ? (
-                <button type="button" class="btn primary" onClick={goNextFromGroupMenu}>
+                <button type="button" class="btn primary" data-testid="reservas-group-menu-next" onClick={goNextFromGroupMenu}>
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}
@@ -1844,16 +1884,17 @@ export function Reservas() {
 
     if (step === 'rice') {
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('Selección de arroz', 'Rice selection')}</div>
-              <div class="resvCardSub">{text('Los arroces solo podrán servirse con reserva previa.', 'Rice dishes are only available when ordered in advance.')}</div>
+        <div class="resvStep" data-testid="reservas-step-rice">
+          <div class="resvCard" data-testid="reservas-rice-card">
+            <div class="resvCardHead" data-testid="reservas-rice-card-head">
+              <div class="resvCardTitle" data-testid="reservas-rice-card-title">{text('Selección de arroz', 'Rice selection')}</div>
+              <div class="resvCardSub" data-testid="reservas-rice-card-subtitle">{text('Los arroces solo podrán servirse con reserva previa.', 'Rice dishes are only available when ordered in advance.')}</div>
             </div>
 
-            <div class="resvYesNo">
+            <div class="resvYesNo" data-testid="reservas-rice-choice">
               <button
                 type="button"
+                data-testid="reservas-rice-yes"
                 class={wantsRice === true ? 'resvChoice selected' : 'resvChoice'}
                 onClick={() => setWantsRice(true)}
               >
@@ -1861,6 +1902,7 @@ export function Reservas() {
               </button>
               <button
                 type="button"
+                data-testid="reservas-rice-no"
                 class={wantsRice === false ? 'resvChoice selected' : 'resvChoice'}
                 onClick={() => {
                   setWantsRice(false)
@@ -1873,10 +1915,11 @@ export function Reservas() {
             </div>
 
             {wantsRice === true ? (
-              <div class="resvRiceGrid">
-                <div class="resvField">
-                  <div class="resvLabel">{text('Tipo de arroz', 'Rice dish')}</div>
+              <div class="resvRiceGrid" data-testid="reservas-rice-grid">
+                <div class="resvField" data-testid="reservas-rice-type-field">
+                  <div class="resvLabel" data-testid="reservas-rice-type-label">{text('Tipo de arroz', 'Rice dish')}</div>
                   <PopoverSelect
+                    testId="reservas-rice-type-select"
                     ariaLabel={text('Tipo de arroz', 'Rice dish')}
                     value={riceType ? riceType : null}
                     placeholder={text('Selecciona el tipo de arroz', 'Select a rice dish')}
@@ -1886,9 +1929,10 @@ export function Reservas() {
                     onChange={(v) => setRiceType(v)}
                   />
                 </div>
-                <div class="resvField">
-                  <div class="resvLabel">{text('Raciones', 'Servings')}</div>
+                <div class="resvField" data-testid="reservas-rice-servings-field">
+                  <div class="resvLabel" data-testid="reservas-rice-servings-label">{text('Raciones', 'Servings')}</div>
                   <PopoverSelect
+                    testId="reservas-rice-servings-select"
                     ariaLabel={text('Raciones', 'Servings')}
                     value={riceServings != null ? String(riceServings) : null}
                     placeholder={text('Selecciona raciones', 'Select servings')}
@@ -1902,12 +1946,12 @@ export function Reservas() {
               </div>
             ) : null}
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-rice-actions">
+              <button type="button" class="btn" data-testid="reservas-rice-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
               {riceStepReady ? (
-                <button type="button" class="btn primary" onClick={goNextFromRice}>
+                <button type="button" class="btn primary" data-testid="reservas-rice-next" onClick={goNextFromRice}>
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}
@@ -1919,28 +1963,30 @@ export function Reservas() {
 
     if (step === 'personal') {
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('Datos personales', 'Personal details')}</div>
-              <div class="resvCardSub">{text('Estos datos son obligatorios para confirmar la reserva.', 'These details are required to confirm the reservation.')}</div>
+        <div class="resvStep" data-testid="reservas-step-personal">
+          <div class="resvCard" data-testid="reservas-personal-card">
+            <div class="resvCardHead" data-testid="reservas-personal-card-head">
+              <div class="resvCardTitle" data-testid="reservas-personal-card-title">{text('Datos personales', 'Personal details')}</div>
+              <div class="resvCardSub" data-testid="reservas-personal-card-subtitle">{text('Estos datos son obligatorios para confirmar la reserva.', 'These details are required to confirm the reservation.')}</div>
             </div>
 
-            <div class="resvForm">
-              <div class="resvField">
-                <div class="resvLabel resvLabel--compact">{text('Nombre y apellidos', 'Full name')}</div>
+            <div class="resvForm" data-testid="reservas-personal-form">
+              <div class="resvField" data-testid="reservas-personal-name-field">
+                <div class="resvLabel resvLabel--compact" data-testid="reservas-personal-name-label">{text('Nombre y apellidos', 'Full name')}</div>
                 <input
                   class="resvInput"
+                  data-testid="reservas-personal-name-input"
                   type="text"
                   value={fullName}
                   onInput={(e) => setFullName((e.target as HTMLInputElement).value)}
                   autoComplete="name"
                 />
               </div>
-              <div class="resvField">
-                <div class="resvLabel resvLabel--compact">Email</div>
+              <div class="resvField" data-testid="reservas-personal-email-field">
+                <div class="resvLabel resvLabel--compact" data-testid="reservas-personal-email-label">Email</div>
                 <input
                   class="resvInput"
+                  data-testid="reservas-personal-email-input"
                   type="email"
                   value={email}
                   onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
@@ -1948,10 +1994,11 @@ export function Reservas() {
                 />
               </div>
 
-              <div class="resvField">
-                <div class="resvLabel">{text('Teléfono', 'Phone')}</div>
-                <div class="resvPhoneRow">
+              <div class="resvField" data-testid="reservas-personal-phone-field">
+                <div class="resvLabel" data-testid="reservas-personal-phone-label">{text('Teléfono', 'Phone')}</div>
+                <div class="resvPhoneRow" data-testid="reservas-personal-phone-row">
                   <PopoverSelect
+                    testId="reservas-personal-country-code-select"
                     ariaLabel={text('Prefijo', 'Country code')}
                     value={countryCode}
                     placeholder="+34"
@@ -1963,6 +2010,7 @@ export function Reservas() {
                   />
                   <input
                     class="resvInput"
+                    data-testid="reservas-personal-phone-input"
                     type="tel"
                     inputMode="numeric"
                     placeholder={text('Número', 'Number')}
@@ -1971,18 +2019,18 @@ export function Reservas() {
                     autoComplete="tel-national"
                   />
                 </div>
-                <div class="resvHint">
+                <div class="resvHint" data-testid="reservas-personal-phone-hint">
                   {text('Se guardará como', 'It will be saved as')} +{onlyDigits(countryCode)} {onlyDigits(phoneNational)}
                 </div>
               </div>
             </div>
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-personal-actions">
+              <button type="button" class="btn" data-testid="reservas-personal-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
               {personalStepReady ? (
-                <button type="button" class="btn primary" onClick={goNextFromPersonal}>
+                <button type="button" class="btn primary" data-testid="reservas-personal-next" onClick={goNextFromPersonal}>
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}
@@ -1996,21 +2044,21 @@ export function Reservas() {
       const ps = partySize || 2
       const a = adults == null ? ps : clamp(adults, 1, ps)
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('¿Cuántos adultos sois?', 'How many adults are there?')}</div>
+        <div class="resvStep" data-testid="reservas-step-adults">
+          <div class="resvCard" data-testid="reservas-adults-card">
+            <div class="resvCardHead" data-testid="reservas-adults-card-head">
+              <div class="resvCardTitle" data-testid="reservas-adults-card-title">{text('¿Cuántos adultos sois?', 'How many adults are there?')}</div>
             </div>
 
-            <div class="resvAdultsPanel">
-              <Counter ariaLabel={text('Adultos', 'Adults')} value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
+            <div class="resvAdultsPanel" data-testid="reservas-adults-panel">
+              <Counter testId="reservas-adults-counter" ariaLabel={text('Adultos', 'Adults')} value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
             </div>
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-adults-actions">
+              <button type="button" class="btn" data-testid="reservas-adults-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
-              <button type="button" class="btn primary" onClick={goNextFromAdults}>
+              <button type="button" class="btn primary" data-testid="reservas-adults-next" onClick={goNextFromAdults}>
                 {text('Siguiente', 'Next')}
               </button>
             </div>
@@ -2021,15 +2069,16 @@ export function Reservas() {
 
     if (step === 'accessories') {
       return (
-        <div class="resvStep">
-          <div class="resvCard">
-            <div class="resvCardHead">
-              <div class="resvCardTitle">{text('Accesorios para bebés', 'Baby accessories')}</div>
-              <div class="resvCardSub">{text('Indique si necesitáis tronas o vais a traer carrito.', 'Tell us if you need high chairs or will bring a stroller.')}</div>
+        <div class="resvStep" data-testid="reservas-step-accessories">
+          <div class="resvCard" data-testid="reservas-accessories-card">
+            <div class="resvCardHead" data-testid="reservas-accessories-card-head">
+              <div class="resvCardTitle" data-testid="reservas-accessories-card-title">{text('Accesorios para bebés', 'Baby accessories')}</div>
+              <div class="resvCardSub" data-testid="reservas-accessories-card-subtitle">{text('Indique si necesitáis tronas o vais a traer carrito.', 'Tell us if you need high chairs or will bring a stroller.')}</div>
             </div>
 
-            <div class="resvAccGrid">
+            <div class="resvAccGrid" data-testid="reservas-accessories-grid">
               <Counter
+                testId="reservas-high-chairs-counter"
                 ariaLabel={text('Tronas', 'High chairs')}
                 value={highChairs}
                 min={0}
@@ -2038,6 +2087,7 @@ export function Reservas() {
                 subtitle={text('Suplemento de 2€ por trona', '€2 surcharge per high chair')}
               />
               <Counter
+                testId="reservas-baby-strollers-counter"
                 ariaLabel={text('Carros de bebé', 'Baby strollers')}
                 value={babyStrollers}
                 min={0}
@@ -2047,11 +2097,11 @@ export function Reservas() {
               />
             </div>
 
-            <div class="resvActions">
-              <button type="button" class="btn" onClick={goPrev}>
+            <div class="resvActions" data-testid="reservas-accessories-actions">
+              <button type="button" class="btn" data-testid="reservas-accessories-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
-              <button type="button" class="btn primary" onClick={goNextFromAccessories}>
+              <button type="button" class="btn primary" data-testid="reservas-accessories-next" onClick={goNextFromAccessories}>
                 {text('Siguiente', 'Next')}
               </button>
             </div>
@@ -2065,72 +2115,72 @@ export function Reservas() {
     const wantsMenu = wantsGroupMenu === true && selectedMenu
     const hasAccessories = highChairs > 0 || babyStrollers > 0
     return (
-      <div class="resvStep">
-        <div class="resvCard">
-          <div class="resvCardHead">
-            <div class="resvCardTitle">{text('Resumen de tu reserva', 'Reservation summary')}</div>
-            <div class="resvCardSub">{text('Revisa los datos antes de completar la reserva.', 'Check the details before completing your reservation.')}</div>
+      <div class="resvStep" data-testid="reservas-step-summary">
+        <div class="resvCard" data-testid="reservas-summary-card">
+          <div class="resvCardHead" data-testid="reservas-summary-card-head">
+            <div class="resvCardTitle" data-testid="reservas-summary-card-title">{text('Resumen de tu reserva', 'Reservation summary')}</div>
+            <div class="resvCardSub" data-testid="reservas-summary-card-subtitle">{text('Revisa los datos antes de completar la reserva.', 'Check the details before completing your reservation.')}</div>
           </div>
 
-          <div class="resvSummary">
-            <div class="resvSummaryRow">
-              <span>{text('Fecha', 'Date')}</span>
-              <span class="resvSummaryValue">{selectedDate || '-'}</span>
+          <div class="resvSummary" data-testid="reservas-summary">
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-date">
+              <span data-testid="reservas-summary-label-date">{text('Fecha', 'Date')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-date">{selectedDate || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Hora', 'Time')}</span>
-              <span class="resvSummaryValue">{reservationTime || '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-time">
+              <span data-testid="reservas-summary-label-time">{text('Hora', 'Time')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-time">{reservationTime || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Turno', 'Service')}</span>
-              <span class="resvSummaryValue">{shiftLabel || '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-shift">
+              <span data-testid="reservas-summary-label-shift">{text('Turno', 'Service')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-shift">{shiftLabel || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Personas', 'Guests')}</span>
-              <span class="resvSummaryValue">{ps || '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-guests">
+              <span data-testid="reservas-summary-label-guests">{text('Personas', 'Guests')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-guests">{ps || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Salón', 'Dining room')}</span>
-              <span class="resvSummaryValue">{selectedFloor ? (lang === 'en' ? (selectedFloor.isGround ? 'Ground floor' : `Floor ${selectedFloor.floorNumber}`) : selectedFloor.name) : '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-floor">
+              <span data-testid="reservas-summary-label-floor">{text('Salón', 'Dining room')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-floor">{selectedFloor ? (lang === 'en' ? (selectedFloor.isGround ? 'Ground floor' : `Floor ${selectedFloor.floorNumber}`) : selectedFloor.name) : '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Nombre', 'Name')}</span>
-              <span class="resvSummaryValue">{fullName.trim() || '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-name">
+              <span data-testid="reservas-summary-label-name">{text('Nombre', 'Name')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-name">{fullName.trim() || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>Email</span>
-              <span class="resvSummaryValue">{email.trim() || '-'}</span>
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-email">
+              <span data-testid="reservas-summary-label-email">Email</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-email">{email.trim() || '-'}</span>
             </div>
-            <div class="resvSummaryRow">
-              <span>{text('Teléfono', 'Phone')}</span>
-              <span class="resvSummaryValue">
+            <div class="resvSummaryRow" data-testid="reservas-summary-row-phone">
+              <span data-testid="reservas-summary-label-phone">{text('Teléfono', 'Phone')}</span>
+              <span class="resvSummaryValue" data-testid="reservas-summary-value-phone">
                 +{onlyDigits(countryCode)} {onlyDigits(phoneNational)}
               </span>
             </div>
 
             {wantsMenu ? (
-              <div class="resvSummaryBlock">
-                <div class="resvSummaryBlockTitle">{text('Menú de grupo', 'Group menu')}</div>
-                <div class="resvSummaryRow">
-                  <span>{text('Menú', 'Menu')}</span>
-                  <span class="resvSummaryValue">
+              <div class="resvSummaryBlock" data-testid="reservas-summary-group-menu-block">
+                <div class="resvSummaryBlockTitle" data-testid="reservas-summary-group-menu-title">{text('Menú de grupo', 'Group menu')}</div>
+                <div class="resvSummaryRow" data-testid="reservas-summary-row-group-menu">
+                  <span data-testid="reservas-summary-label-group-menu">{text('Menú', 'Menu')}</span>
+                  <span class="resvSummaryValue" data-testid="reservas-summary-value-group-menu">
                     {localized(selectedMenu.menu_title, selectedMenu.menu_title_english, lang)} ({selectedMenu.price}€/{text('persona', 'person')})
                   </span>
                 </div>
-                <div class="resvSummaryListTitle">{text('Entrantes', 'Starters')}</div>
-                <ul class="resvSummaryList">
-                  {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t) => (
-                    <li key={t}>{t}</li>
+                <div class="resvSummaryListTitle" data-testid="reservas-summary-group-starters-title">{text('Entrantes', 'Starters')}</div>
+                <ul class="resvSummaryList" data-testid="reservas-summary-group-starters-list">
+                  {localizedArray(readStringArray(selectedMenu.entrantes), selectedMenu.entrantes_english, lang).map((t, starterIndex) => (
+                    <li key={t} data-testid={`reservas-summary-group-starter-${starterIndex}`}>{t}</li>
                   ))}
                 </ul>
                 {principalesEnabled === true && principalesRows.length > 0 ? (
                   <>
-                    <div class="resvSummaryListTitle">{text('Principales', 'Main courses')}</div>
-                    <ul class="resvSummaryList">
+                    <div class="resvSummaryListTitle" data-testid="reservas-summary-group-mains-title">{text('Principales', 'Main courses')}</div>
+                    <ul class="resvSummaryList" data-testid="reservas-summary-group-mains-list">
                       {principalesRows
                         .filter((r) => r.name && r.servings > 0)
-                        .map((r) => (
-                          <li key={r.name}>
+                        .map((r, mainIndex) => (
+                          <li key={r.name} data-testid={`reservas-summary-group-main-${mainIndex}`}>
                             {localized(r.name, selectedMenu.principales_english?.items?.[principalesItems.indexOf(r.name)], lang)} x {r.servings}
                           </li>
                         ))}
@@ -2139,11 +2189,11 @@ export function Reservas() {
                 ) : null}
               </div>
             ) : (
-              <div class="resvSummaryBlock">
-              <div class="resvSummaryBlockTitle">{text('Arroz', 'Rice')}</div>
-              <div class="resvSummaryRow">
-                <span>{text('Selección', 'Selection')}</span>
-                <span class="resvSummaryValue">
+              <div class="resvSummaryBlock" data-testid="reservas-summary-rice-block">
+              <div class="resvSummaryBlockTitle" data-testid="reservas-summary-rice-title">{text('Arroz', 'Rice')}</div>
+              <div class="resvSummaryRow" data-testid="reservas-summary-row-rice">
+                <span data-testid="reservas-summary-label-rice">{text('Selección', 'Selection')}</span>
+                <span class="resvSummaryValue" data-testid="reservas-summary-value-rice">
                   {wantsRice === true && riceType
                     ? `${localized(riceType, riceTypesEnglish[riceTypes.indexOf(riceType)], lang)} (${riceServings || 0} ${text('raciones', 'servings')})`
                     : text('No arroz', 'No rice')}
@@ -2153,15 +2203,15 @@ export function Reservas() {
           )}
 
             {hasAccessories ? (
-              <div class="resvSummaryBlock">
-                <div class="resvSummaryBlockTitle">{text('Accesorios', 'Accessories')}</div>
-                <div class="resvSummaryRow">
-                  <span>{text('Carros de bebé', 'Baby strollers')}</span>
-                  <span class="resvSummaryValue">{babyStrollers}</span>
+              <div class="resvSummaryBlock" data-testid="reservas-summary-accessories-block">
+                <div class="resvSummaryBlockTitle" data-testid="reservas-summary-accessories-title">{text('Accesorios', 'Accessories')}</div>
+                <div class="resvSummaryRow" data-testid="reservas-summary-row-baby-strollers">
+                  <span data-testid="reservas-summary-label-baby-strollers">{text('Carros de bebé', 'Baby strollers')}</span>
+                  <span class="resvSummaryValue" data-testid="reservas-summary-value-baby-strollers">{babyStrollers}</span>
                 </div>
-                <div class="resvSummaryRow">
-                  <span>{text('Tronas', 'High chairs')}</span>
-                  <span class="resvSummaryValue">
+                <div class="resvSummaryRow" data-testid="reservas-summary-row-high-chairs">
+                  <span data-testid="reservas-summary-label-high-chairs">{text('Tronas', 'High chairs')}</span>
+                  <span class="resvSummaryValue" data-testid="reservas-summary-value-high-chairs">
                     {highChairs} ({highChairs * 2}€)
                   </span>
                 </div>
@@ -2169,30 +2219,30 @@ export function Reservas() {
             ) : null}
 
             {showUpperFloorWarning ? (
-              <div class="resvNotice warn">{text('Ubicación: primera planta sin ascensor.', 'Location: first floor, no lift access.')}</div>
+              <div class="resvNotice warn" data-testid="reservas-summary-upper-floor-warning">{text('Ubicación: primera planta sin ascensor.', 'Location: first floor, no lift access.')}</div>
             ) : null}
           </div>
 
-          <div class="resvTerms">
-            <label class="resvCheck">
-              <Checkbox checked={termsAccepted} onCheckedChange={setTermsAccepted} variant="accent" size="sm" />
-              <span>
+          <div class="resvTerms" data-testid="reservas-terms">
+            <label class="resvCheck" data-testid="reservas-terms-legal-label">
+              <Checkbox testId="reservas-terms-legal-checkbox" checked={termsAccepted} onCheckedChange={setTermsAccepted} variant="accent" size="sm" />
+              <span data-testid="reservas-terms-legal-text">
                 {text('He leído y acepto las', 'I have read and accept the')}{' '}
-                <a href="/avisolegal" target="_blank" rel="noreferrer">
+                <a href="/avisolegal" target="_blank" rel="noreferrer" data-testid="reservas-terms-legal-notice-link">
                   {text('condiciones de uso y aviso legal', 'terms of use and legal notice')}
                 </a>{' '}
                 {text('y las', 'and the')}{' '}
-                <a href="/booking-policies" target="_blank" rel="noreferrer">
+                <a href="/booking-policies" target="_blank" rel="noreferrer" data-testid="reservas-terms-booking-policies-link">
                   {text('políticas de reserva del restaurante', 'restaurant booking policies')}
                 </a>
                 .
               </span>
             </label>
-            <label class="resvCheck">
-              <Checkbox checked={privacyAccepted} onCheckedChange={setPrivacyAccepted} variant="accent" size="sm" />
-              <span>
+            <label class="resvCheck" data-testid="reservas-terms-privacy-label">
+              <Checkbox testId="reservas-terms-privacy-checkbox" checked={privacyAccepted} onCheckedChange={setPrivacyAccepted} variant="accent" size="sm" />
+              <span data-testid="reservas-terms-privacy-text">
                 {text('He leído, acepto y consiento el', 'I have read, accept and consent to the')}{' '}
-                <a href="/protecciondatos" target="_blank" rel="noreferrer">
+                <a href="/protecciondatos" target="_blank" rel="noreferrer" data-testid="reservas-terms-data-protection-link">
                   {text('tratamiento de datos personales', 'processing of personal data')}
                 </a>
                 .
@@ -2200,16 +2250,16 @@ export function Reservas() {
             </label>
           </div>
 
-          <div class="resvActions">
-            <button type="button" class="btn" onClick={goPrev} disabled={submitting}>
+          <div class="resvActions" data-testid="reservas-summary-actions">
+            <button type="button" class="btn" data-testid="reservas-summary-back" onClick={goPrev} disabled={submitting}>
               {text('Anterior', 'Back')}
             </button>
             {termsAccepted && privacyAccepted ? (
-              <button type="button" class="btn primary" onClick={() => void submitBooking()} disabled={submitting}>
+              <button type="button" class="btn primary" data-testid="reservas-summary-submit" onClick={() => void submitBooking()} disabled={submitting}>
                 {submitting ? text('Enviando...', 'Sending...') : text('Completar reserva', 'Complete reservation')}
               </button>
             ) : (
-              <span class="resvActionFallback">
+              <span class="resvActionFallback" data-testid="reservas-summary-terms-fallback">
                 {text('Acepta las condiciones para completar la reserva', 'Accept the conditions to complete the booking')}
               </span>
             )}
@@ -2220,29 +2270,29 @@ export function Reservas() {
   })()
 
   return (
-    <div class="page resvPage">
-      <section class="page-hero resvHero">
-        <div class="container">
-          <h1 class="page-title">{text('Reservas', 'Reservations')}</h1>
-          <p class="page-subtitle">{text('Selecciona fecha, personas y completa tu reserva.', 'Select a date and number of guests, then complete your reservation.')}</p>
+    <div class="page resvPage" data-testid="reservas-page">
+      <section class="page-hero resvHero" data-testid="reservas-hero">
+        <div class="container" data-testid="reservas-hero-container">
+          <h1 class="page-title" data-testid="reservas-hero-title">{text('Reservas', 'Reservations')}</h1>
+          <p class="page-subtitle" data-testid="reservas-hero-subtitle">{text('Selecciona fecha, personas y completa tu reserva.', 'Select a date and number of guests, then complete your reservation.')}</p>
         </div>
       </section>
 
-      <section class="resvMain">
-        <div class="container">
-          <div class="resvSteps" aria-label={text('Pasos', 'Steps')} ref={stepsScrollerRef}>
+      <section class="resvMain" data-testid="reservas-main">
+        <div class="container" data-testid="reservas-main-container">
+          <div class="resvSteps" aria-label={text('Pasos', 'Steps')} ref={stepsScrollerRef} data-testid="reservas-stepper">
             {steps.map((s, idx) => {
               const isActive = s.id === step
               const isDone = idx < currentStepIndex
               const barDone = idx < currentStepIndex
               return (
-                <div class="resvStepSeg" key={s.id}>
-                  <div class="resvStepDot" data-step-id={s.id}>
-                    <div class={isActive ? 'resvDot active' : isDone ? 'resvDot done' : 'resvDot'}>{idx + 1}</div>
-                    <div class={isActive ? 'resvDotLabel active' : 'resvDotLabel'}>{s.label}</div>
+                <div class="resvStepSeg" key={s.id} data-testid={`reservas-stepper-segment-${s.id}`}>
+                  <div class="resvStepDot" data-step-id={s.id} data-testid={`reservas-stepper-dot-${s.id}`}>
+                    <div class={isActive ? 'resvDot active' : isDone ? 'resvDot done' : 'resvDot'} data-testid={`reservas-stepper-number-${s.id}`}>{idx + 1}</div>
+                    <div class={isActive ? 'resvDotLabel active' : 'resvDotLabel'} data-testid={`reservas-stepper-label-${s.id}`}>{s.label}</div>
                   </div>
                   {idx < steps.length - 1 ? (
-                    <div class={barDone ? 'resvStepBar done' : 'resvStepBar'} aria-hidden="true" />
+                    <div class={barDone ? 'resvStepBar done' : 'resvStepBar'} aria-hidden="true" data-testid={`reservas-stepper-bar-${s.id}`} />
                   ) : null}
                 </div>
               )
@@ -2251,6 +2301,7 @@ export function Reservas() {
 
           <motion.div
             key={step}
+            data-testid="reservas-step-content"
             initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
@@ -2261,6 +2312,7 @@ export function Reservas() {
       </section>
 
       <Modal
+        testId="reservas-same-day-modal"
         open={sameDayOpen}
         title={text('Reserva para el mismo día', 'Same-day reservation')}
         onClose={() => setSameDayOpen(false)}
@@ -2271,6 +2323,7 @@ export function Reservas() {
       </Modal>
 
       <Modal
+        testId="reservas-more-than-10-modal"
         open={moreThan10Open}
         title={text('Reservas de más de 10 personas', 'Reservations for more than 10 guests')}
         onClose={() => setMoreThan10Open(false)}
@@ -2281,6 +2334,7 @@ export function Reservas() {
       </Modal>
 
       <Modal
+        testId="reservas-confirmation-modal"
         open={confirmationOpen}
         title={t('reservations.confirm.title')}
         onClose={() => {
@@ -2289,29 +2343,29 @@ export function Reservas() {
         }}
         secondaryLabel={t('common.ok')}
       >
-        <div class="resvConfirm">
-          <div class="resvConfirm__lead">{t('reservations.confirm.lead')}</div>
-          <div class="resvConfirm__fine">{t('reservations.confirm.fine')}</div>
-          <div class="resvConfirm__elegant">{t('reservations.confirm.elegant')}</div>
+        <div class="resvConfirm" data-testid="reservas-confirmation-content">
+          <div class="resvConfirm__lead" data-testid="reservas-confirmation-lead">{t('reservations.confirm.lead')}</div>
+          <div class="resvConfirm__fine" data-testid="reservas-confirmation-fine">{t('reservations.confirm.fine')}</div>
+          <div class="resvConfirm__elegant" data-testid="reservas-confirmation-elegant">{t('reservations.confirm.elegant')}</div>
         </div>
       </Modal>
 
       {submitting && (
-        <div class="resvOverlay" role="alert" aria-label={text('Enviando reserva', 'Sending reservation')}>
-          <div class="resvOverlay__spinner" />
-          <div class="resvOverlay__text">{text('Enviando reserva…', 'Sending reservation…')}</div>
+        <div class="resvOverlay" role="alert" aria-label={text('Enviando reserva', 'Sending reservation')} data-testid="reservas-submitting-overlay">
+          <div class="resvOverlay__spinner" data-testid="reservas-submitting-spinner" />
+          <div class="resvOverlay__text" data-testid="reservas-submitting-text">{text('Enviando reserva…', 'Sending reservation…')}</div>
         </div>
       )}
 
-      <div class="resvToastStack" aria-live="polite" aria-relevant="additions removals">
+      <div class="resvToastStack" aria-live="polite" aria-relevant="additions removals" data-testid="reservas-toast-stack">
         {toasts.map((t) => (
-          <div key={t.id} class={`resvToast ${t.type}`}>
-            <div class="resvToast__icon" aria-hidden="true">
-              <ToastIcon type={t.type} />
+          <div key={t.id} class={`resvToast ${t.type}`} data-testid={`reservas-toast-${t.id}`}>
+            <div class="resvToast__icon" aria-hidden="true" data-testid={`reservas-toast-${t.id}-icon`}>
+              <ToastIcon type={t.type} testId={`reservas-toast-${t.id}-icon-svg`} />
             </div>
-            <div class="resvToast__content">
-              <div class="resvToast__title">{t.title}</div>
-              <div class="resvToast__msg">{t.message}</div>
+            <div class="resvToast__content" data-testid={`reservas-toast-${t.id}-content`}>
+              <div class="resvToast__title" data-testid={`reservas-toast-${t.id}-title`}>{t.title}</div>
+              <div class="resvToast__msg" data-testid={`reservas-toast-${t.id}-message`}>{t.message}</div>
             </div>
           </div>
         ))}
