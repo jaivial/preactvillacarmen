@@ -40,7 +40,9 @@ async function pickPartyAndTime(page: Page, party: string): Promise<boolean> {
     await selectPopover(page, 'Salón')
   }
 
-  const shiftBtn = page.getByRole('button', { name: 'Turno', exact: true })
+  // Two services -> both shifts are worth trying; one service -> the select is
+  // read-only (aria-disabled) and the hours are already the only ones there are.
+  const shiftBtn = page.locator('button[aria-label="Turno"]:not([aria-disabled="true"])')
   const hasShift = await shiftBtn.isVisible().catch(() => false)
   const shifts = hasShift ? [0, 1] : [-1]
 

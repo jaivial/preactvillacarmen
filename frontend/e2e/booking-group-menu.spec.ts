@@ -54,8 +54,11 @@ async function reachGroupMenuStep(page: Page): Promise<boolean> {
     await floorBtn.first().click()
     await page.getByRole('option').first().click()
   }
-  // Optional shift selector (only when openingMode === 'both').
-  const shiftBtn = page.getByRole('button', { name: /^Turno$|^Service$/ })
+  // Optional shift selector (pickable only when openingMode === 'both'; on
+  // one-service days it renders read-only via aria-disabled).
+  const shiftBtn = page.locator(
+    'button[aria-label="Turno"]:not([aria-disabled="true"]), button[aria-label="Service"]:not([aria-disabled="true"])'
+  )
   if (await shiftBtn.count()) {
     await shiftBtn.first().click()
     await page.getByRole('option').first().click()
