@@ -57,8 +57,9 @@ async function gotoDateAndSelectTime(page: Page, date: string) {
   await partySelect.click()
   await page.locator('[role="option"]').first().click()
 
-  // Shift selector may appear (openingMode 'both'); pick lunch if present.
-  const shift = page.getByLabel('Turno')
+  // Shift selector is pickable on openingMode 'both'; pick lunch if so.
+  // One-service days render it read-only via aria-disabled.
+  const shift = page.locator('button[aria-label="Turno"]:not([aria-disabled="true"])')
   if (await shift.count()) {
     await shift.click()
     await page.getByRole('option', { name: 'Comida' }).click()

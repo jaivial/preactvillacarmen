@@ -11,6 +11,7 @@ export function Checkbox(props: {
   disabled?: boolean
   className?: string
   id?: string
+  testId?: string
   'aria-label'?: string
 }) {
   const {
@@ -21,8 +22,10 @@ export function Checkbox(props: {
     disabled,
     className,
     id,
+    testId,
     'aria-label': ariaLabel,
   } = props
+  const tid = testId || 'checkbox'
 
   const classes = [
     'resvCheckbox',
@@ -39,12 +42,13 @@ export function Checkbox(props: {
       type="button"
       id={id}
       className={classes}
+      data-testid={tid}
       checked={checked}
       disabled={disabled}
       aria-label={ariaLabel}
       onCheckedChange={(v) => onCheckedChange(v === true)}
     >
-      <CheckboxPrimitive.Indicator className="resvCheckboxIndicator" forceMount>
+      <CheckboxPrimitive.Indicator className="resvCheckboxIndicator" forceMount data-testid={`${tid}-indicator`}>
         <svg
           width="16"
           height="16"
@@ -52,8 +56,10 @@ export function Checkbox(props: {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
+          data-testid={`${tid}-icon`}
         >
           <path
+            data-testid={`${tid}-icon-path`}
             d="M20 7L10.5 16.5L4 10"
             stroke="currentColor"
             stroke-width="2.6"

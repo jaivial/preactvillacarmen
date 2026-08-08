@@ -24,8 +24,9 @@ async function reachPersonal(page: Page) {
     .first()
     .click()
 
-  // Shift (only if openingMode === 'both').
-  const shift = page.getByRole('button', { name: 'Turno' })
+  // Shift (pickable only if openingMode === 'both'; one-service days render it
+  // read-only via aria-disabled).
+  const shift = page.locator('button[aria-label="Turno"]:not([aria-disabled="true"])')
   if (await shift.isVisible().catch(() => false)) {
     await shift.click()
     await page.getByRole('option', { name: 'Comida' }).click()

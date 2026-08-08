@@ -53,8 +53,9 @@ async function completeBooking(page: Page) {
   // Floor selector only shows when >1 active floor.
   const floorBtn = page.getByRole('button', { name: 'Salón', exact: true })
   if (await floorBtn.count()) await selectPopoverOption(page, 'Salón', '')
-  // Shift selector only when openingMode === 'both'.
-  const shiftBtn = page.getByRole('button', { name: 'Turno', exact: true })
+  // Shift selector is pickable only when openingMode === 'both'; on one-service
+  // days it renders read-only (aria-disabled) with the day's only service.
+  const shiftBtn = page.locator('button[aria-label="Turno"]:not([aria-disabled="true"])')
   if (await shiftBtn.count()) {
     await shiftBtn.click()
     await page.locator('.resvSelectOpt').first().click()

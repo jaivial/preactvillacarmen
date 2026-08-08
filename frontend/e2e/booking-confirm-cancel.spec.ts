@@ -128,8 +128,9 @@ async function wizardCreateBooking(page: Page, date: string, time: string): Prom
     .first()
     .click()
 
-  // openingMode 'both' -> a shift selector appears; choose Comida (morning) for the morning hour.
-  const shiftBtn = page.getByRole('button', { name: 'Turno' })
+  // openingMode 'both' -> a pickable shift selector appears; choose Comida (morning)
+  // for the morning hour. One-service days render it read-only via aria-disabled.
+  const shiftBtn = page.locator('button[aria-label="Turno"]:not([aria-disabled="true"])')
   if (await shiftBtn.count()) {
     await shiftBtn.click()
     await page.locator('.resvSelectOpt', { hasText: 'Comida' }).first().click()
