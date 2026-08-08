@@ -67,9 +67,12 @@ async function maybePickFloorAndShift(page: Page) {
     await floor.locator('button[aria-label="Dining room"]').click()
     await floor.locator('.resvSelectOpt').first().click()
   }
+  // Only openingMode 'both' gives a pickable shift; one-service days render the
+  // select read-only via aria-disabled.
   const shift = popover(page, 'Service')
-  if (await shift.locator('button[aria-label="Service"]').count()) {
-    await shift.locator('button[aria-label="Service"]').click()
+  const shiftBtn = shift.locator('button[aria-label="Service"]:not([aria-disabled="true"])')
+  if (await shiftBtn.count()) {
+    await shiftBtn.click()
     await shift.locator('.resvSelectOpt').first().click()
   }
 }

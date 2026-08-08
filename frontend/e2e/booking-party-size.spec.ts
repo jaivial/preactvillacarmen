@@ -156,9 +156,12 @@ test('single shift mode reveals a read-only shift together with the hours', asyn
   await expect(page.getByTestId('reservas-shift-field')).toBeVisible()
   await expect(page.getByTestId('reservas-hours-field')).toBeVisible()
 
+  // Read-only rather than disabled, so screen readers still announce the service.
   const shift = page.locator(SHIFT_BTN)
-  await expect(shift).toBeDisabled()
+  await expect(shift).toHaveAttribute('aria-disabled', 'true')
   await expect(shift).toContainText(mode === 'morning' ? 'Comida' : 'Cena')
+  await shift.click()
+  await expect(page.getByTestId('reservas-shift-select-popover')).toHaveCount(0)
 })
 
 test('party size 10+ shows redirect modal', async ({ page }) => {

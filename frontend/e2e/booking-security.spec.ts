@@ -68,7 +68,10 @@ async function gotoSummary(page: Page) {
     await page.locator('.resvSelectOpt').first().click()
   }
   // Optional shift selector (openingMode 'both') — must pick before hours show.
-  const shiftBtn = page.getByRole('button', { name: /^(Turno|Service)$/ })
+  // One-service days render it read-only via aria-disabled, so exclude those.
+  const shiftBtn = page.locator(
+    'button[aria-label="Turno"]:not([aria-disabled="true"]), button[aria-label="Service"]:not([aria-disabled="true"])'
+  )
   if (await shiftBtn.count()) {
     await shiftBtn.first().click()
     await page.locator('.resvSelectOpt').first().click()

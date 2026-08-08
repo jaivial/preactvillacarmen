@@ -28,6 +28,7 @@ export function PopoverSelect(props: {
   placeholder: string
   onChange: (value: string) => void
   disabled?: boolean
+  readOnly?: boolean
   searchable?: boolean
   autoFocusSearch?: boolean
   autoScrollPageOnOpen?: boolean
@@ -273,13 +274,15 @@ export function PopoverSelect(props: {
         <button
           ref={buttonRef}
           type="button"
-          class="resvSelectBtn"
+          class={props.readOnly ? 'resvSelectBtn resvSelectBtn--readonly' : 'resvSelectBtn'}
           data-testid={`${tid}-trigger`}
           aria-label={props.ariaLabel}
-          aria-haspopup="listbox"
-          aria-expanded={open}
+          aria-haspopup={props.readOnly ? undefined : 'listbox'}
+          aria-expanded={props.readOnly ? undefined : open}
+          aria-disabled={props.readOnly ? 'true' : undefined}
           disabled={props.disabled}
           onClick={() => {
+            if (props.readOnly) return
             const nextOpen = !open
             if (nextOpen) {
               window.setTimeout(prepositionButtonForOpen, 0)
@@ -291,9 +294,11 @@ export function PopoverSelect(props: {
           }}
         >
           <span class="resvSelectBtn__value" data-testid={`${tid}-value`}>{displayNode}</span>
-          <span class="resvSelectBtn__chev" aria-hidden="true" data-testid={`${tid}-chevron`}>
-            ▾
-          </span>
+          {props.readOnly ? null : (
+            <span class="resvSelectBtn__chev" aria-hidden="true" data-testid={`${tid}-chevron`}>
+              ▾
+            </span>
+          )}
         </button>
 
         {open ? (

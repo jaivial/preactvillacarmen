@@ -1402,7 +1402,7 @@ export function Reservas() {
                       value={selectedShift}
                       placeholder={text('Selecciona comida o cena', 'Select lunch or dinner')}
                       options={shiftOptions}
-                      disabled={hasSingleShift}
+                      readOnly={hasSingleShift}
                       onChange={(v) => {
                         if (v !== 'morning' && v !== 'night') return
                         setSelectedShift(v)
