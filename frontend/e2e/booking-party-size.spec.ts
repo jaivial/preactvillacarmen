@@ -55,6 +55,13 @@ async function dayContext(request: APIRequestContext, base: string, iso: string)
   return res.ok() ? await res.json() : null
 }
 
+// On days with two services the hours block only appears once a shift is picked.
+async function pickShiftIfNeeded(page: Page, ctx: any) {
+  if (ctx?.openingMode !== 'both') return
+  await page.locator(SHIFT_BTN).click()
+  await page.locator('[role="option"]').first().click()
+}
+
 const BASE = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:4173'
 
 test('party size selector shows options 2 through 10', async ({ page }) => {
@@ -72,31 +79,86 @@ test('party size selector shows options 2 through 10', async ({ page }) => {
   for (let i = 1; i < nums.length; i++) expect(nums[i]).toBe(nums[i - 1] + 1)
 })
 
-test('selecting party size 2 works', async ({ page }) => {
+test('selecting party size 2 works', async ({ page, request }) => {
   await gotoReservas(page)
   const iso = await pickFirstAvailableDate(page)
   test.skip(!iso, 'No open date')
   await partyEnabled(page)
 
+  const ctx = await dayContext(request, BASE, iso!)
   const opts = await partyOptions(page)
   const first = opts.find((o) => /^\d+$/.test(o))!
   await selectParty(page, first)
   await expect(page.locator(PARTY_BTN)).toContainText(first)
   // Flow continues: floor/shift/time section is rendered.
-  await expect(page.getByText('Horas disponibles').first()).toBeVisible()
+  await pickShiftIfNeeded(page, ctx)
+  await expect(page.getByTestId('reservas-hours-field')).toBeVisible()
 })
 
-test('selecting party size 10 works', async ({ page }) => {
+test('selecting party size 10 works', async ({ page, request }) => {
   await gotoReservas(page)
   const iso = await pickFirstAvailableDate(page)
   test.skip(!iso, 'No open date')
   await partyEnabled(page)
 
+  const ctx = await dayContext(request, BASE, iso!)
   const opts = await partyOptions(page)
   test.skip(!opts.includes('10'), 'Fewer than 10 free seats on this date')
   await selectParty(page, '10')
   await expect(page.locator(PARTY_BTN)).toContainText('10')
-  await expect(page.getByText('Horas disponibles').first()).toBeVisible()
+  await pickShiftIfNeeded(page, ctx)
+  await expect(page.getByTestId('reservas-hours-field')).toBeVisible()
+})
+
+test('shift and hours stay hidden until a party size is picked', async ({ page }) => {
+  await gotoReservas(page)
+  const iso = await pickFirstAvailableDate(page)
+  test.skip(!iso, 'No open date')
+  await partyEnabled(page)
+
+  await expect(page.getByTestId('reservas-party-size-field')).toBeVisible()
+  await expect(page.getByTestId('reservas-shift-field')).toHaveCount(0)
+  await expect(page.getByTestId('reservas-hours-field')).toHaveCount(0)
+})
+
+test('both mode reveals the shift first and the hours after choosing it', async ({ page, request }) => {
+  await gotoReservas(page)
+  const iso = await pickFirstAvailableDate(page)
+  test.skip(!iso, 'No open date')
+  await partyEnabled(page)
+
+  const ctx = await dayContext(request, BASE, iso!)
+  test.skip(ctx?.openingMode !== 'both', `openingMode is ${ctx?.openingMode}, not 'both'`)
+
+  const opts = await partyOptions(page)
+  await selectParty(page, opts.find((o) => /^\d+$/.test(o))!)
+
+  await expect(page.getByTestId('reservas-shift-field')).toBeVisible()
+  await expect(page.getByTestId('reservas-hours-field')).toHaveCount(0)
+
+  await pickShiftIfNeeded(page, ctx)
+  await expect(page.getByTestId('reservas-hours-field')).toBeVisible()
+})
+
+test('single shift mode reveals a read-only shift together with the hours', async ({ page, request }) => {
+  await gotoReservas(page)
+  const iso = await pickFirstAvailableDate(page)
+  test.skip(!iso, 'No open date')
+  await partyEnabled(page)
+
+  const ctx = await dayContext(request, BASE, iso!)
+  const mode = ctx?.openingMode
+  test.skip(mode !== 'morning' && mode !== 'night', `openingMode is ${mode}, not a single service`)
+
+  const opts = await partyOptions(page)
+  await selectParty(page, opts.find((o) => /^\d+$/.test(o))!)
+
+  await expect(page.getByTestId('reservas-shift-field')).toBeVisible()
+  await expect(page.getByTestId('reservas-hours-field')).toBeVisible()
+
+  const shift = page.locator(SHIFT_BTN)
+  await expect(shift).toBeDisabled()
+  await expect(shift).toContainText(mode === 'morning' ? 'Comida' : 'Cena')
 })
 
 test('party size 10+ shows redirect modal', async ({ page }) => {

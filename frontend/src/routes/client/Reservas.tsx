@@ -653,13 +653,25 @@ export function Reservas() {
     return activeFloors.some((floor) => !floor.isGround)
   }, [activeFloors])
 
-  const shiftOptions = useMemo<PopoverSelectOption[]>(
-    () => [
+  const openingMode = dayContext?.openingMode
+  const hasShiftChoice = openingMode === 'both'
+  const hasSingleShift = openingMode === 'morning' || openingMode === 'night'
+  // The shift and hours blocks are revealed progressively: nothing is shown
+  // until a party size is picked, and on days with two services the hours
+  // wait until the shift has been chosen.
+  const showShiftField = Boolean(partySize) && (hasShiftChoice || hasSingleShift)
+  const showHoursField = Boolean(partySize) && (!showShiftField || Boolean(selectedShift))
+
+  const shiftOptions = useMemo<PopoverSelectOption[]>(() => {
+    const all: PopoverSelectOption[] = [
       { value: 'morning', label: text('Comida', 'Lunch'), keywords: 'comida lunch mañana mediodia' },
       { value: 'night', label: text('Cena', 'Dinner'), keywords: 'cena dinner noche' },
-    ],
-    [lang]
-  )
+    ]
+    if (openingMode === 'morning' || openingMode === 'night') {
+      return all.filter((o) => o.value === openingMode)
+    }
+    return all
+  }, [lang, openingMode])
 
   const shiftLabel = useMemo(() => {
     if (dayContext?.openingMode === 'morning') return text('Comida', 'Lunch')
@@ -1328,7 +1340,7 @@ export function Reservas() {
                   <div class="resvNotice warn" data-testid="reservas-booking-upper-floor-warning">{text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
                 ) : null}
 
-                <div class="resvField resvField--inline" data-testid="reservas-party-size-field">
+                <div class="resvField" data-testid="reservas-party-size-field">
                   <div class="resvLabel" data-testid="reservas-party-size-label">{t('reservations.people.label')}</div>
                   <PopoverSelect
                     testId="reservas-party-size-select"
@@ -1375,8 +1387,14 @@ export function Reservas() {
                   </div>
                 ) : null}
 
-                {dayContext?.openingMode === 'both' ? (
-                  <div class="resvField" data-testid="reservas-shift-field">
+                {showShiftField ? (
+                  <motion.div
+                    class="resvField"
+                    data-testid="reservas-shift-field"
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeOut' }}
+                  >
                     <div class="resvLabel" data-testid="reservas-shift-label">{text('Turno', 'Service')}</div>
                     <PopoverSelect
                       testId="reservas-shift-select"
@@ -1384,21 +1402,26 @@ export function Reservas() {
                       value={selectedShift}
                       placeholder={text('Selecciona comida o cena', 'Select lunch or dinner')}
                       options={shiftOptions}
+                      disabled={hasSingleShift}
                       onChange={(v) => {
                         if (v !== 'morning' && v !== 'night') return
                         setSelectedShift(v)
                         setReservationTime(null)
                       }}
                     />
-                  </div>
+                  </motion.div>
                 ) : null}
 
-                <div class="resvField" data-testid="reservas-hours-field">
-                  <div class="resvLabel" data-testid="reservas-hours-label">{text('Horas disponibles', 'Available times')}</div>
-                  {partySize ? (
-                    dayContext?.openingMode === 'both' && !selectedShift ? (
-                      <div class="resvHint" data-testid="reservas-hours-shift-hint">{text('Selecciona primero el turno para ver las horas disponibles.', 'Select lunch or dinner first to see available times.')}</div>
-                    ) : availableHours.length > 0 ? (
+                {showHoursField ? (
+                  <motion.div
+                    class="resvField"
+                    data-testid="reservas-hours-field"
+                    initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeOut' }}
+                  >
+                    <div class="resvLabel" data-testid="reservas-hours-label">{text('Horas disponibles', 'Available times')}</div>
+                    {availableHours.length > 0 ? (
                       <>
                         <div class="resvHours" data-testid="reservas-hours-list">
                           {availableHours.map((h) => (
@@ -1434,11 +1457,9 @@ export function Reservas() {
                       <div class="resvEmpty" data-testid="reservas-hours-empty">
                         {text('No hay horas disponibles para', 'No times available for')} {partySize} {t('reservations.people.suffix')} {text('en esta fecha.', 'on this date.')}
                       </div>
-                    )
-                  ) : (
-                    <div class="resvHint" data-testid="reservas-hours-party-size-hint">{text('Selecciona primero el número de personas.', 'Select the number of guests first.')}</div>
-                  )}
-                </div>
+                    )}
+                  </motion.div>
+                ) : null}
 
                 {dateStepReady ? (
                   <motion.div

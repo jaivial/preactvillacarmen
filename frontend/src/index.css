@@ -3543,26 +3543,6 @@ svg {
     margin-top: 14px;
 }
 
-.resvField--inline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 0;
-    padding: 0;
-}
-
-.resvField--inline .resvLabel {
-    margin: 0;
-    white-space: nowrap;
-}
-
-.resvField--inline .resvSelect {
-    flex: 1;
-    min-width: 0;
-    max-width: 260px;
-}
-
 .resvLabel {
     font-size: 12px;
     letter-spacing: 0.12em;
