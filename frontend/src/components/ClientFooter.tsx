@@ -12,36 +12,56 @@ export function ClientFooter() {
             <br />
             46470 Catarroja, Valencia
           </p>
-        </div>
-
-        <div class="footer-col">
-          <p class="footer-title">{t('footer.contact')}</p>
-          <a class="footer-link" href="https://wa.me/34638857294" target="_blank" rel="noreferrer">
-            WhatsApp: 638 85 72 94
-          </a>
           <a
-            class="footer-link"
+            class="footer-maps"
             href="https://www.google.com/maps?q=alqueria+villacarmen&um=1&ie=UTF-8&sa=X"
             target="_blank"
             rel="noreferrer"
           >
-            {t('footer.openMaps')}
+            <img
+              class="footer-maps-icon"
+              src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/google-maps-dark.svg"
+              alt=""
+              width="18"
+              height="18"
+              loading="lazy"
+              decoding="async"
+            />
+            <span>{t('footer.openMaps')}</span>
+          </a>
+        </div>
+
+        <div class="footer-col">
+          <p class="footer-title">{t('footer.contact')}</p>
+          <a class="footer-link footer-link--icon" href="https://wa.me/34638857294" target="_blank" rel="noreferrer">
+            <img
+              class="footer-link-icon"
+              src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whatsapp.svg"
+              alt=""
+              width="18"
+              height="18"
+              loading="lazy"
+              decoding="async"
+            />
+            <span>638 85 72 94</span>
+          </a>
+          <a class="footer-link footer-link--icon" href="mailto:reservas@alqueriavillacarmen.com">
+            <MailIcon />
+            <span>reservas@alqueriavillacarmen.com</span>
           </a>
         </div>
 
         <div class="footer-col">
           <p class="footer-title">{t('footer.social')}</p>
           <div class="footer-social">
-            <a href="https://www.facebook.com/villacarmenalqueria/" target="_blank" rel="noreferrer" aria-label="Facebook">
-              <FacebookIcon />
-            </a>
             <a
+              class="footer-social-link"
               href="https://www.instagram.com/alqueria_villacarmen/?hl=es"
               target="_blank"
               rel="noreferrer"
-              aria-label="Instagram"
             >
               <InstagramIcon />
+              <span>@alqueria_villacarmen</span>
             </a>
           </div>
         </div>
@@ -53,13 +73,23 @@ export function ClientFooter() {
   )
 }
 
-function FacebookIcon() {
+function MailIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
-      <path
-        fill="currentColor"
-        d="M13.5 22v-8h2.7l.4-3H13.5V9.1c0-.9.2-1.6 1.6-1.6h1.6V4.8c-.3 0-1.3-.1-2.5-.1-2.5 0-4.1 1.5-4.1 4.3V11H7.5v3h2.6v8h3.4z"
-      />
+    <svg
+      class="footer-link-icon"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   )
 }

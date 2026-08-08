@@ -3020,9 +3020,77 @@ svg {
     color: rgba(0, 0, 0, 0.96);
 }
 
+.footer-link--icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.footer-link--icon span {
+    overflow-wrap: anywhere;
+}
+
+.footer-link-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    opacity: 0.85;
+    transition: opacity 180ms ease;
+}
+
+.footer-link--icon:hover .footer-link-icon {
+    opacity: 1;
+}
+
+.footer-maps {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(6px);
+    color: rgba(0, 0, 0, 0.82);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease;
+}
+
+.footer-maps:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 0, 0, 0.24);
+    background: rgba(255, 255, 255, 0.82);
+    color: rgba(0, 0, 0, 0.96);
+}
+
+.footer-maps-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+}
+
 .footer-social {
     display: flex;
     gap: 10px;
+}
+
+.footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(0, 0, 0, 0.78);
+    transition: color 180ms ease;
+}
+
+.footer-social-link:hover {
+    color: rgba(0, 0, 0, 0.96);
 }
 
 .footer-social svg {
