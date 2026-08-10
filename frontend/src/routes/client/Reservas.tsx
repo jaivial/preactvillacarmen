@@ -27,6 +27,8 @@ type Toast = { id: number; type: ToastType; title: string; message: string }
 
 type StepId = 'date' | 'mandatoryMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'accessories' | 'summary'
 
+const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'groupMenu', 'rice', 'personal', 'adults', 'accessories', 'summary']
+
 type PrincipalesRow = { name: string; servings: number }
 
 type Country = { name: string; code: string; flag: string; dial: string; keywords: string }
@@ -325,6 +327,42 @@ export function Reservas() {
   const stepsScrollRafRef = useRef<number | null>(null)
   const pageScrollRafRef = useRef<number | null>(null)
   const prevStepRef = useRef<StepId | null>(null)
+
+  // Shareable URL state: ?step=rice&date=2026-08-10&party=4
+  const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null } | null>(null)
+  const urlSyncReadyRef = useRef(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const rawStep = params.get('step')
+    const stepParam = rawStep && (STEP_IDS as string[]).includes(rawStep) ? (rawStep as StepId) : null
+    const rawParty = Number(params.get('party'))
+    const partyParam = Number.isFinite(rawParty) && rawParty >= 2 ? rawParty : null
+    initialUrlStateRef.current = { step: stepParam, date: params.get('date'), party: partyParam }
+    return () => {
+      initialUrlStateRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!urlSyncReadyRef.current) {
+      urlSyncReadyRef.current = true
+      return
+    }
+    const params = new URLSearchParams(window.location.search)
+    const setOrDelete = (key: string, value: string | null) => {
+      if (value) params.set(key, value)
+      else params.delete(key)
+    }
+    setOrDelete('step', step === 'date' ? null : step)
+    setOrDelete('date', selectedDate)
+    setOrDelete('party', partySize ? String(partySize) : null)
+    const qs = params.toString()
+    const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname
+    window.history.replaceState(window.history.state, '', next)
+  }, [step, selectedDate, partySize])
 
   // Group menus.
   const [groupMenus, setGroupMenus] = useState<GroupMenuDisplay[] | null>(null)
@@ -888,6 +926,19 @@ export function Reservas() {
       pushToast('error', text('Error', 'Error'), lang === 'en' ? 'Availability could not be loaded.' : e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad.')
     }
   }
+
+  useEffect(() => {
+    const init = initialUrlStateRef.current
+    if (!init) return
+    const restore = async () => {
+      if (init.date && init.party) {
+        await loadDateContext(init.date)
+        setPartySize(init.party)
+      }
+      if (init.step) setStep(init.step)
+    }
+    void restore()
+  }, [])
 
   const onPickDate = (iso: string, inMonth: boolean) => {
     if (iso === todayISO) {
