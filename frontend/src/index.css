@@ -3327,6 +3327,10 @@ svg {
     padding: 0;
 }
 
+.resvCard[data-testid="reservas-booking-card"] {
+    padding-bottom: 1rem;
+}
+
 .resvCardHead {
     margin-bottom: 14px;
     padding: 1rem;
@@ -3877,9 +3881,26 @@ svg {
 
 .resvRiceGrid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     margin-top: 12px;
+}
+
+.resvRiceGrid .resvField {
+    min-width: 0;
+}
+
+[data-testid="reservas-rice-grid"] {
+    gap: 0;
+}
+
+[data-testid="reservas-rice-type-select"],
+[data-testid="reservas-rice-servings-select"] {
+    padding-inline: 0.5rem;
+}
+
+[data-testid="reservas-rice-type-select-trigger"] {
+    max-width: 100%;
 }
 
 .resvForm {
@@ -4009,7 +4030,7 @@ svg {
 .resvSummary {
     margin-top: 12px;
     border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 12px 2rem 0;
+    padding: 12px 1rem 0;
 }
 
 .resvSummaryRow {
@@ -4936,7 +4957,7 @@ svg {
     }
 
     .resvRiceGrid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
 }
 
