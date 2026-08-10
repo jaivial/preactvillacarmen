@@ -693,6 +693,8 @@ export function Reservas() {
   const availableHours = useMemo(() => {
     if (!hourData || !partySize) return []
     const allowed = new Set(activeShiftHours)
+    // Backward-compatible default: when the flag is absent, keep the per-hour cap.
+    const splitEnabled = hourData.hourSplitEnabled !== false
     const out: { hour: string; status: 'available' | 'limited' }[] = []
     const hours = Array.isArray(hourData.activeHours) ? hourData.activeHours : []
     for (const h of hours) {
@@ -700,7 +702,8 @@ export function Reservas() {
       const slot = hourData.hourData?.[h]
       if (!slot) continue
       if (slot.isClosed || slot.status === 'closed') continue
-      if (typeof slot.capacity === 'number' && slot.capacity < partySize) continue
+      // Only enforce the per-hour capacity cap when by-hour split is enabled.
+      if (splitEnabled && typeof slot.capacity === 'number' && slot.capacity < partySize) continue
       out.push({ hour: h, status: slot.status === 'limited' ? 'limited' : 'available' })
     }
     return out

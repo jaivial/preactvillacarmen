@@ -227,6 +227,10 @@ export type HourDataResponse = {
   dailyLimit?: number
   totalPeople?: number
   date?: string
+  /** When false, there is no per-hour capacity cap: clients may book any active hour
+   *  as long as the daily limit still has room. Defaults to true (backward compat). */
+  hourSplitEnabled?: boolean
+  percentages?: Record<string, number>
 }
 
 export type SalonCondesaResponse = {
