@@ -352,13 +352,21 @@ export function Reservas() {
       return
     }
     const params = new URLSearchParams(window.location.search)
+    const curStep = params.get('step') || null
+    const curDate = params.get('date') || null
+    const curParty = params.get('party') || null
+    const nextStep = step === 'date' ? null : step
+    const nextDate = selectedDate || null
+    const nextParty = partySize ? String(partySize) : null
+    // Skip write if state already matches URL (avoids clobbering other params).
+    if (curStep === nextStep && curDate === nextDate && curParty === nextParty) return
     const setOrDelete = (key: string, value: string | null) => {
       if (value) params.set(key, value)
       else params.delete(key)
     }
-    setOrDelete('step', step === 'date' ? null : step)
-    setOrDelete('date', selectedDate)
-    setOrDelete('party', partySize ? String(partySize) : null)
+    setOrDelete('step', nextStep)
+    setOrDelete('date', nextDate)
+    setOrDelete('party', nextParty)
     const qs = params.toString()
     const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname
     window.history.replaceState(window.history.state, '', next)
@@ -850,7 +858,7 @@ export function Reservas() {
     return false
   }
 
-  const loadDateContext = async (iso: string) => {
+  const loadDateContext = async (iso: string, opts?: { skipStepReset?: boolean }) => {
     setSelectedDate(iso)
     setDateDisplay(reservationDateDisplay(iso, lang))
     setPartySize(null)
@@ -865,7 +873,7 @@ export function Reservas() {
     setActiveFloors([])
     setSelectedFloorNumber(null)
     setSelectedShift(null)
-    setStep('date')
+    if (!opts?.skipStepReset) setStep('date')
 
     const loadTwoTopAvailability = async () => {
       try {
@@ -932,7 +940,7 @@ export function Reservas() {
     if (!init) return
     const restore = async () => {
       if (init.date && init.party) {
-        await loadDateContext(init.date)
+        await loadDateContext(init.date, { skipStepReset: !!init.step })
         setPartySize(init.party)
       }
       if (init.step) setStep(init.step)
