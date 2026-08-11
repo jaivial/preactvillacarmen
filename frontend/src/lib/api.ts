@@ -91,10 +91,10 @@ export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T
       return value
     })
     .catch((err) => {
-      // If revalidation fails, clear the in-flight promise so next call retries
+      // Background revalidation failed — clear in-flight so next call retries
       const entry = apiCache.get(path)
       if (entry) entry.promise = null
-      throw err
+      // Swallow: caller already got stale data
     })
 
   if (cached) {
