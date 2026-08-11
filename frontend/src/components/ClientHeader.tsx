@@ -8,6 +8,7 @@ import { bebidasPageActiveAtom, cafePageActiveAtom } from '../lib/config'
 import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import { fetchMenuSidebar } from '../lib/menuApi'
+import { prefetchRoute } from '../lib/prefetch'
 import type { SidebarMenu } from '../lib/types'
 import type { MenuSidebarData } from '../lib/menuApi'
 
@@ -215,6 +216,8 @@ export function ClientHeader() {
                   href={item.href}
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
                   onClick={() => setMobileOpen(false)}
+                  onMouseEnter={() => prefetchRoute(item.href)}
+                  onFocus={() => prefetchRoute(item.href)}
                 >
                   {item.label || t(item.labelKey || '')}
                 </Link>
@@ -270,6 +273,8 @@ export function ClientHeader() {
                   href={item.href}
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
                   onClick={() => setMobileOpen(false)}
+                  onMouseEnter={() => prefetchRoute(item.href)}
+                  onFocus={() => prefetchRoute(item.href)}
                 >
                   {item.label || t(item.labelKey || '')}
                 </Link>
@@ -282,6 +287,8 @@ export function ClientHeader() {
               href="/eventos"
               className={isEventosPage ? 'navBurgerLink active' : 'navBurgerLink'}
               onClick={() => setMobileOpen(false)}
+              onMouseEnter={() => prefetchRoute('/eventos')}
+              onFocus={() => prefetchRoute('/eventos')}
             >
               {t('nav.weddingsEvents')}
             </Link>
@@ -357,7 +364,7 @@ export function ClientHeader() {
                 <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
                   {t('nav.menus')}
                 </a>
-                <Link href="/reservas" className="link link--center reservaBttn">
+                <Link href="/reservas" className="link link--center reservaBttn" onMouseEnter={() => prefetchRoute('/reservas')}>
                   {t('nav.reserve')}
                 </Link>
               </div>
