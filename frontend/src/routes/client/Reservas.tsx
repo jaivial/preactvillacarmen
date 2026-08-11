@@ -331,6 +331,10 @@ export function Reservas() {
   // Shareable URL state: ?step=rice&date=2026-08-10&party=4
   const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null } | null>(null)
   const urlSyncReadyRef = useRef(false)
+  // ponytail: suppress URL writes while the mount-time restore is in flight;
+  // loadDateContext resets partySize to null mid-restore, which would otherwise
+  // transiently delete the party param before it is reapplied.
+  const restoringRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -351,6 +355,7 @@ export function Reservas() {
       urlSyncReadyRef.current = true
       return
     }
+    if (restoringRef.current) return
     const params = new URLSearchParams(window.location.search)
     const curStep = params.get('step') || null
     const curDate = params.get('date') || null
@@ -939,11 +944,16 @@ export function Reservas() {
     const init = initialUrlStateRef.current
     if (!init) return
     const restore = async () => {
-      if (init.date && init.party) {
-        await loadDateContext(init.date, { skipStepReset: !!init.step })
-        setPartySize(init.party)
+      restoringRef.current = true
+      try {
+        if (init.date && init.party) {
+          await loadDateContext(init.date, { skipStepReset: !!init.step })
+          setPartySize(init.party)
+        }
+        if (init.step) setStep(init.step)
+      } finally {
+        restoringRef.current = false
       }
-      if (init.step) setStep(init.step)
     }
     void restore()
   }, [])
