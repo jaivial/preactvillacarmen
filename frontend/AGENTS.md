@@ -72,3 +72,44 @@ Scope: todo lo que cuelga de `preactvillacarmen/frontend/`.
 - Mantener el peso visual ligero: evitar efectos pesados que degraden FPS o LCP.
 - En `data-theme=\"light\"`, revisar contraste WCAG AA (texto normal >= 4.5:1) antes de cerrar tarea.
 - Si un patrón de card/panel se repite en 2+ vistas, extraer componente reutilizable en `src/components/` y evitar duplicar CSS.
+
+---
+
+## Workflow por tarea (obligatorio)
+
+Toda tarea nueva sigue este flujo completo, sin omitir pasos:
+
+1. **Plan en worktree nuevo**:
+   ```bash
+   git worktree add /home/jaime/wt/preactvillacarmen-<tarea> -b <tipo>/<tarea> main
+   cd /home/jaime/wt/preactvillacarmen-<tarea>
+   ```
+2. **Editar + test**: implementar cambios, correr build/typecheck del repo (`bun run build`, `bun run typecheck` o `bun run check`).
+3. **Commit + push** de todos los cambios al branch nuevo:
+   ```bash
+   git add -A && git commit -m "<conventional commit msg>"
+   git push -u origin <tipo>/<tarea>
+   ```
+4. **Abrir PR** contra `main` del repo base.
+5. **Loop de review** con el skill `pr-review`:
+   - Corregir todo blocker importante o medio encontrado.
+   - Re-correr `pr-review` tras cada fix.
+   - Repetir hasta que no queden blockers importantes ni medios.
+6. **Merge** del PR.
+7. **Refetch + pull** en el repo base:
+   ```bash
+   git fetch --all --prune
+   git checkout main && git pull --ff-only
+   ```
+8. **Limpiar worktree y branches** del PR ya mergeado:
+   ```bash
+   git worktree remove /home/jaime/wt/preactvillacarmen-<tarea>
+   git branch -D <tipo>/<tarea>
+   git push origin --delete <tipo>/<tarea>
+   ```
+
+Reglas del workflow:
+- Una tarea = un worktree = un branch = un PR.
+- Nunca editar directo sobre `main`.
+- Si una tarea afecta varios repos (`backend`, `preactvillacarmen`, `backoffice`), abrir un PR por repo con los cambios relacionados; coordinar merges.
+- El loop `pr-review` → fix → `pr-review` es obligatorio antes del merge.
