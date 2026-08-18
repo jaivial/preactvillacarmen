@@ -1993,19 +1993,32 @@ svg {
 }
 
 .dishCardAction {
+    /* Wrapper kept for layout flexibility; the button itself is absolutely
+       positioned at the bottom-right of the .dishCard. */
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
     display: flex;
+    align-items: flex-end;
     justify-content: flex-end;
-    margin-top: 12px;
 }
 
-.dishCard--withImage .dishCardAction {
-    margin-top: 0;
-    padding: 0 12px 12px;
+/* Give the dish body room so long descriptions don't slide under the button */
+.dishCard--pickable .dishCardBody {
+    padding-bottom: calc(44px + 12px);
+}
+
+.dishCard--pickable.dishCard--withImage .dishCardInfo {
+    padding-bottom: calc(44px + 12px);
 }
 
 .dishAddBtn {
     appearance: none;
-    position: relative;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    pointer-events: auto;
     transform: none;
     width: 44px;
     height: 44px;
