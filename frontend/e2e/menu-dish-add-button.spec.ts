@@ -125,21 +125,30 @@ for (const viewport of viewports) {
       const placements = await cards.evaluateAll((dishCards) =>
         dishCards.map((card) => {
           const action = card.querySelector<HTMLButtonElement>('.dishAddBtn')
-          const content = card.querySelector<HTMLElement>('.dishCardMain, .dishCardBody')
-          if (!action || !content) throw new Error('Dish card controls are missing')
+          if (!action) throw new Error('Dish card add button is missing')
+
+          // Check overlap against each text-bearing descendant instead of the
+          // body container — the body container's bounding box extends behind
+          // the absolutely-positioned button by design; only text content must
+          // stay clear.
+          const textNodes = card.querySelectorAll<HTMLElement>(
+            '.dishDescription, .dishDescriptionExtra, .dishSupplementInfo, .dishAllergenRow',
+          )
+          const actionRect = action.getBoundingClientRect()
+          const overlapsAnyText = Array.from(textNodes).some((node) => {
+            const r = node.getBoundingClientRect()
+            return (
+              actionRect.left < r.right &&
+              actionRect.right > r.left &&
+              actionRect.top < r.bottom &&
+              actionRect.bottom > r.top
+            )
+          })
 
           const cardRect = card.getBoundingClientRect()
-          const actionRect = action.getBoundingClientRect()
-          const contentRect = content.getBoundingClientRect()
-          const overlapsContent =
-            actionRect.left < contentRect.right &&
-            actionRect.right > contentRect.left &&
-            actionRect.top < contentRect.bottom &&
-            actionRect.bottom > contentRect.top
-
           return {
             position: getComputedStyle(action).position,
-            overlapsContent,
+            overlapsAnyText,
             rightGap: cardRect.right - actionRect.right,
             bottomGap: cardRect.bottom - actionRect.bottom,
           }
@@ -147,11 +156,16 @@ for (const viewport of viewports) {
       )
 
       for (const placement of placements) {
-        expect(placement.position).toBe('relative')
-        expect(placement.overlapsContent).toBe(false)
-        expect(placement.rightGap).toBeGreaterThanOrEqual(0)
+        expect(placement.position).toBe('absolute')
+        expect(placement.overlapsAnyText).toBe(false)
+        // Absolute bottom-right: the button's right/bottom edges sit flush with
+        // the card's content-box edge (i.e. `right: 0; bottom: 0` of the .dishCard's
+        // padding box). With the .dishCard's 1rem of internal padding, the visual
+        // inset from the card chrome is at most 16px; allow up to 17 to account
+        // for sub-pixel rounding.
+        expect(placement.rightGap).toBeGreaterThanOrEqual(-1)
         expect(placement.rightGap).toBeLessThanOrEqual(17)
-        expect(placement.bottomGap).toBeGreaterThanOrEqual(0)
+        expect(placement.bottomGap).toBeGreaterThanOrEqual(-1)
         expect(placement.bottomGap).toBeLessThanOrEqual(17)
       }
 
