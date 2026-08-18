@@ -2011,6 +2011,13 @@ svg {
     width: calc(100% - 44px - 0.5rem);
 }
 
+/* Reserve enough horizontal space on the secondary description so the
+   text wrapping doesn't extend under the absolutely-positioned add
+   button. */
+.dishCard--pickable .dishDescriptionExtra {
+    width: calc(100% - 44px);
+}
+
 .dishCard--pickable.dishCard--withImage .dishCardInfo {
     padding-bottom: calc(44px + 0.5rem);
 }
