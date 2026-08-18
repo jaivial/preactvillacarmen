@@ -1996,8 +1996,8 @@ svg {
     /* Wrapper kept for layout flexibility; the button itself is absolutely
        positioned at the bottom-right of the .dishCard. */
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: 0.5rem;
+    bottom: 0.5rem;
     pointer-events: none;
     display: flex;
     align-items: flex-end;
@@ -2005,20 +2005,21 @@ svg {
 }
 
 /* Reserve enough horizontal space on the allergen row so the icons don't
-   slide under the absolutely-positioned add button at the bottom-right. */
+   slide under the absolutely-positioned add button at the bottom-right.
+   The 0.5rem matches the button's right offset. */
 .dishCard--pickable .dishAllergenRow {
-    width: calc(100% - 44px);
+    width: calc(100% - 44px - 0.5rem);
 }
 
 .dishCard--pickable.dishCard--withImage .dishCardInfo {
-    padding-bottom: calc(44px + 12px);
+    padding-bottom: calc(44px + 0.5rem);
 }
 
 .dishAddBtn {
     appearance: none;
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: 0.5rem;
+    bottom: 0.5rem;
     pointer-events: auto;
     transform: none;
     width: 44px;
