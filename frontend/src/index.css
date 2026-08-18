@@ -2004,9 +2004,10 @@ svg {
     justify-content: flex-end;
 }
 
-/* Give the dish body room so long descriptions don't slide under the button */
-.dishCard--pickable .dishCardBody {
-    padding-bottom: calc(44px + 12px);
+/* Reserve enough horizontal space on the allergen row so the icons don't
+   slide under the absolutely-positioned add button at the bottom-right. */
+.dishCard--pickable .dishAllergenRow {
+    width: calc(100% - 44px);
 }
 
 .dishCard--pickable.dishCard--withImage .dishCardInfo {

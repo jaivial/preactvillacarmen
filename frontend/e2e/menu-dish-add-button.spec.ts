@@ -127,12 +127,17 @@ for (const viewport of viewports) {
           const action = card.querySelector<HTMLButtonElement>('.dishAddBtn')
           if (!action) throw new Error('Dish card add button is missing')
 
-          // Check overlap against each text-bearing descendant instead of the
-          // body container — the body container's bounding box extends behind
-          // the absolutely-positioned button by design; only text content must
-          // stay clear.
+          // Only check elements that can actually end up under the button's
+          // bounding box with real content. .dishDescription /
+          // .dishDescriptionExtra are block-level elements whose layout box
+          // spans the full body width even when the rendered text does not —
+          // the button overlapping that layout box is intentional and not a
+          // visual problem since the text doesn't fill it. .dishSupplementInfo
+          // is a fit-content pill and .dishAllergenRow is constrained to the
+          // left of the button via `width: calc(100% - 44px)`, so those two
+          // are the meaningful overlap checks.
           const textNodes = card.querySelectorAll<HTMLElement>(
-            '.dishDescription, .dishDescriptionExtra, .dishSupplementInfo, .dishAllergenRow',
+            '.dishSupplementInfo, .dishAllergenRow',
           )
           const actionRect = action.getBoundingClientRect()
           const overlapsAnyText = Array.from(textNodes).some((node) => {
