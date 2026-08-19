@@ -33,11 +33,7 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
         </div>
       </section>
 
-      <section class="menuHeroMedia">
-        <div class="container">
-          <MenuHeroSlider images={props.menu.slider_images} hidden={props.menu.slider_mode === 'hidden'} />
-        </div>
-      </section>
+      <MenuHeroSlider images={props.menu.slider_images} hidden={props.menu.slider_mode === 'hidden'} />
 
       <section class="menuBody">
         <div class="container">

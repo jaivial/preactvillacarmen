@@ -1403,7 +1403,7 @@ export function Reservas() {
                 ) : null}
 
                 <div class="resvField" data-testid="reservas-party-size-field">
-                  <div class="resvLabel" data-testid="reservas-party-size-label">{t('reservations.people.label')}</div>
+                  <div class="resvLabel resvLabel--step1" data-testid="reservas-party-size-label">{t('reservations.people.label')}</div>
                   <PopoverSelect
                     testId="reservas-party-size-select"
                     ariaLabel={text('Número de personas', 'Number of guests')}
