@@ -85,26 +85,26 @@ export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T
   }
 
   // Stale cache — return stale immediately, revalidate in background
-  const promise = doFetchJson<T>(path, init)
-    .then((value) => {
-      apiCache.set(path, { value, timestamp: Date.now(), promise: null })
-      return value
-    })
-    .catch((err) => {
-      // Background revalidation failed — clear in-flight so next call retries
-      const entry = apiCache.get(path)
-      if (entry) entry.promise = null
-      // Swallow: caller already got stale data
-    })
-
   if (cached) {
+    const promise = doFetchJson<T>(path, init)
+      .then((value) => {
+        apiCache.set(path, { value, timestamp: Date.now(), promise: null })
+        return value
+      })
+      .catch(() => {
+        // Background revalidation failed — clear in-flight so next call retries
+        const entry = apiCache.get(path)
+        if (entry) entry.promise = null
+        // Swallow: caller already got stale data
+      })
     // Stale-while-revalidate: return old data, update in background
     apiCache.set(path, { ...cached, promise })
     return cached.value
   }
 
-  const value = await promise
-  apiCache.set(path, { value, timestamp: now, promise: null })
+  // Cold cache — await the fetch
+  const value = await doFetchJson<T>(path, init)
+  apiCache.set(path, { value, timestamp: Date.now(), promise: null })
   return value
 }
 

@@ -111,29 +111,40 @@ function proxyToTarget(
   proxyReq.end()
 }
 
+function apiProxyMiddleware(targets: string[]) {
+  return async (
+    req: IncomingMessage & { originalUrl?: string },
+    res: ServerResponse,
+    next: (err?: unknown) => void
+  ) => {
+    const path = req.originalUrl ?? req.url
+    if (!path?.startsWith('/api')) {
+      next()
+      return
+    }
+
+    try {
+      const body = req.method === 'GET' || req.method === 'HEAD' ? Buffer.alloc(0) : await readRequestBody(req)
+      proxyToTarget(req, res, body, targets, 0)
+    } catch {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ success: false, message: 'No se pudo leer la petición API de desarrollo.' }))
+      }
+    }
+  }
+}
+
 function devApiProxyPlugin(targets: string[]): Plugin {
   return {
     name: 'dev-api-proxy',
+    configurePreviewServer(server) {
+      server.middlewares.use(apiProxyMiddleware(targets))
+    },
     configureServer(server) {
       server.config.logger.info(`[api-proxy] targets: ${targets.join(' -> ')}`)
 
-      server.middlewares.use(async (req, res, next) => {
-        const path = req.originalUrl ?? req.url
-        if (!path?.startsWith('/api')) {
-          next()
-          return
-        }
-
-        try {
-          const body = req.method === 'GET' || req.method === 'HEAD' ? Buffer.alloc(0) : await readRequestBody(req)
-          proxyToTarget(req, res, body, targets, 0)
-        } catch {
-          if (!res.writableEnded) {
-            res.writeHead(500, { 'Content-Type': 'application/json' })
-            res.end(JSON.stringify({ success: false, message: 'No se pudo leer la petición API de desarrollo.' }))
-          }
-        }
-      })
+      server.middlewares.use(apiProxyMiddleware(targets))
 
       // WebSocket tunneling for /api/* (e.g. the public Forky assistant chat).
       // Registered in the post hook: server.httpServer is not yet available

@@ -893,12 +893,6 @@ export function Home() {
         borderRadius="1rem"
       />
 
-      <StickyShowcase />
-
-      <BentoShowcase />
-
-      <EventsSection />
-
       <section class="vc-menus" id="menus">
         <div class="container">
           <div class="section-head">
@@ -936,6 +930,12 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <StickyShowcase />
+
+      <BentoShowcase />
+
+      <EventsSection />
 
       <section class="vc-cta">
         <div class="container vc-cta-inner">

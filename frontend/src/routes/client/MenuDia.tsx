@@ -34,11 +34,7 @@ export function MenuDia() {
         </div>
       </section>
 
-      <section class="menuHeroMedia">
-        <div class="container">
-          <MenuHeroSlider />
-        </div>
-      </section>
+      <MenuHeroSlider />
 
       <section class="menuBody">
         <div class="container">

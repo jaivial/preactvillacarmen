@@ -563,38 +563,42 @@ export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = 
     }
   }
 
-  return (
-    <div class="menuHeroSlider" aria-label={t('menu.slider.aria')}>
-      <div class="menuHeroSliderStage" aria-hidden="true">
-        {props.hidden || paths.length === 0 ? null : (
-          <>
-        {prev !== null && !bad[prev] ? (
-          <img
-            key={`prev-${paths[prev]}`}
-            src={mediaSrc(paths[prev])}
-            alt=""
-            class="menuHeroShot is-prev"
-            loading="eager"
-            decoding="async"
-            onError={() => onError(prev)}
-          />
-        ) : null}
+  // Nothing to show: drop the whole section rather than leaving the styled
+  // 16/9 stage behind as an empty grey box.
+  if (props.hidden || paths.length === 0 || paths.every((_, idx) => bad[idx])) return null
 
-        {!bad[active] ? (
-          <img
-            key={`active-${paths[active]}`}
-            src={mediaSrc(paths[active])}
-            alt=""
-            class={reduced ? 'menuHeroShot is-active is-reduced' : 'menuHeroShot is-active'}
-            loading="eager"
-            decoding="async"
-            onError={() => onError(active)}
-          />
-        ) : null}
-          </>
-        )}
+  return (
+    <section class="menuHeroMedia">
+      <div class="container">
+        <div class="menuHeroSlider" aria-label={t('menu.slider.aria')}>
+          <div class="menuHeroSliderStage" aria-hidden="true">
+            {prev !== null && !bad[prev] ? (
+              <img
+                key={`prev-${paths[prev]}`}
+                src={mediaSrc(paths[prev])}
+                alt=""
+                class="menuHeroShot is-prev"
+                loading="eager"
+                decoding="async"
+                onError={() => onError(prev)}
+              />
+            ) : null}
+
+            {!bad[active] ? (
+              <img
+                key={`active-${paths[active]}`}
+                src={mediaSrc(paths[active])}
+                alt=""
+                class={reduced ? 'menuHeroShot is-active is-reduced' : 'menuHeroShot is-active'}
+                loading="eager"
+                decoding="async"
+                onError={() => onError(active)}
+              />
+            ) : null}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
 
