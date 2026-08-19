@@ -317,6 +317,7 @@ export function Reservas() {
   const [dayContext, setDayContext] = useState<ReservationDayContextResponse | null>(null)
   const [activeFloors, setActiveFloors] = useState<ReservationDayContextFloor[]>([])
   const [selectedFloorNumber, setSelectedFloorNumber] = useState<number | null>(null)
+  const [selectedSalonId, setSelectedSalonId] = useState<number | null>(null)
   const [selectedShift, setSelectedShift] = useState<'morning' | 'night' | null>(null)
 
   const [partySize, setPartySize] = useState<number | null>(null)
@@ -677,6 +678,10 @@ export function Reservas() {
     return out
   }, [partySize, lang])
 
+  const locationBooking = dayContext?.locationBooking ?? null
+  const allowFloorBooking = locationBooking?.allowFloorReservation === true
+  const allowSalonBooking = locationBooking?.allowSalonReservation === true
+
   const floorOptions = useMemo<PopoverSelectOption[]>(
     () =>
       activeFloors.map((floor) => ({
@@ -692,6 +697,20 @@ export function Reservas() {
     return activeFloors.find((floor) => floor.floorNumber === selectedFloorNumber) || null
   }, [activeFloors, selectedFloorNumber])
 
+  const salonOptions = useMemo(() => {
+    if (!allowSalonBooking || !locationBooking) return []
+    if (allowFloorBooking) {
+      const byFloor = locationBooking.floors.find((f) => f.floorNumber === selectedFloorNumber)
+      return byFloor?.salons ?? []
+    }
+    return locationBooking.floors.flatMap((f) => f.salons)
+  }, [allowSalonBooking, allowFloorBooking, locationBooking, selectedFloorNumber])
+
+  const selectedSalon = useMemo(() => {
+    if (selectedSalonId == null) return null
+    return salonOptions.find((salon) => salon.id === selectedSalonId) || null
+  }, [salonOptions, selectedSalonId])
+
   const showUpperFloorWarning = useMemo(() => {
     if (activeFloors.length === 0) return false
     const hasGroundOpen = activeFloors.some((floor) => floor.isGround)
@@ -706,7 +725,15 @@ export function Reservas() {
   // until a party size is picked, and on days with two services the hours
   // wait until the shift has been chosen.
   const showShiftField = Boolean(partySize) && (hasShiftChoice || hasSingleShift)
-  const showHoursField = Boolean(partySize) && (!showShiftField || Boolean(selectedShift))
+  const shiftDone = !hasShiftChoice || Boolean(selectedShift)
+  const floorRequired = allowFloorBooking && activeFloors.length > 1
+  const floorDone = !floorRequired || selectedFloorNumber != null
+  const salonRequired =
+    allowSalonBooking && salonOptions.length > 0 && (!allowFloorBooking || selectedFloorNumber != null)
+  const salonDone = !salonRequired || selectedSalonId != null
+  const showFloorField = floorRequired && Boolean(partySize) && shiftDone
+  const showSalonField = salonRequired && Boolean(partySize) && shiftDone
+  const showHoursField = Boolean(partySize) && shiftDone && floorDone && salonDone
 
   const shiftOptions = useMemo<PopoverSelectOption[]>(() => {
     const all: PopoverSelectOption[] = [
@@ -872,6 +899,7 @@ export function Reservas() {
     setDayContext(null)
     setActiveFloors([])
     setSelectedFloorNumber(null)
+    setSelectedSalonId(null)
     setSelectedShift(null)
     if (!opts?.skipStepReset) setStep('date')
 
@@ -924,6 +952,12 @@ export function Reservas() {
 
       if (nextActiveFloors.length === 1) {
         setSelectedFloorNumber(nextActiveFloors[0].floorNumber)
+      }
+      const salonsForSingleFloor = context?.locationBooking?.floors.find(
+        (f) => f.floorNumber === nextActiveFloors[0]?.floorNumber
+      )?.salons
+      if (salonsForSingleFloor?.length === 1) {
+        setSelectedSalonId(salonsForSingleFloor[0].id)
       }
       if (context?.openingMode === 'morning') {
         setSelectedShift('morning')
@@ -990,7 +1024,11 @@ export function Reservas() {
       pushToast('warning', text('Salones cerrados', 'Dining rooms closed'), text('No hay salones activos para esta fecha. Contacta con el restaurante.', 'No dining rooms are open on this date. Contact the restaurant.'))
       return
     }
-    if (activeFloors.length > 1 && selectedFloorNumber == null) {
+    if (floorRequired && selectedFloorNumber == null) {
+      pushToast('warning', text('Planta requerida', 'Floor required'), text('Selecciona una planta para continuar.', 'Select a floor to continue.'))
+      return
+    }
+    if (salonRequired && selectedSalonId == null) {
       pushToast('warning', text('Salón requerido', 'Dining room required'), text('Selecciona un salón para continuar.', 'Select a dining room to continue.'))
       return
     }
@@ -1200,7 +1238,11 @@ export function Reservas() {
       pushToast('warning', text('Salones cerrados', 'Dining rooms closed'), text('No hay salones activos para esta fecha. Contacta con el restaurante.', 'No dining rooms are open on this date. Contact the restaurant.'))
       return
     }
-    if (activeFloors.length > 1 && selectedFloorNumber == null) {
+    if (floorRequired && selectedFloorNumber == null) {
+      pushToast('warning', text('Planta requerida', 'Floor required'), text('Selecciona una planta para completar la reserva.', 'Select a floor to complete the reservation.'))
+      return
+    }
+    if (salonRequired && selectedSalonId == null) {
       pushToast('warning', text('Salón requerido', 'Dining room required'), text('Selecciona un salón para completar la reserva.', 'Select a dining room to complete the reservation.'))
       return
     }
@@ -1226,6 +1268,9 @@ export function Reservas() {
     fd.set('reservation_time', reservationTime)
     if (selectedFloorNumber != null) {
       fd.set('preferred_floor_number', String(selectedFloorNumber))
+    }
+    if (selectedSalonId != null) {
+      fd.set('preferred_salon_id', String(selectedSalonId))
     }
     fd.set('customer_name', fullName.trim())
     fd.set('contact_email', email.trim())
@@ -1432,23 +1477,6 @@ export function Reservas() {
                   />
                 </div>
 
-                {activeFloors.length > 1 ? (
-                  <div class="resvField" data-testid="reservas-floor-field">
-                    <div class="resvLabel resvLabel--step1" data-testid="reservas-floor-label">{text('Salón', 'Dining room')}</div>
-                    <PopoverSelect
-                      testId="reservas-floor-select"
-                      ariaLabel={text('Salón', 'Dining room')}
-                      value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
-                      placeholder={text('Selecciona un salón', 'Select a dining room')}
-                      options={floorOptions}
-                      onChange={(v) => {
-                        const n = Number(v)
-                        setSelectedFloorNumber(Number.isFinite(n) ? n : null)
-                      }}
-                    />
-                  </div>
-                ) : null}
-
                 {showShiftField ? (
                   <motion.div
                     class="resvField"
@@ -1472,6 +1500,53 @@ export function Reservas() {
                       }}
                     />
                   </motion.div>
+                ) : null}
+
+                {showFloorField ? (
+                  <div class="resvField" data-testid="reservas-floor-field">
+                    <div class="resvLabel resvLabel--step1" data-testid="reservas-floor-label">{text('Planta', 'Floor')}</div>
+                    <PopoverSelect
+                      testId="reservas-floor-select"
+                      ariaLabel={text('Planta', 'Floor')}
+                      value={selectedFloorNumber != null ? String(selectedFloorNumber) : null}
+                      placeholder={text('Selecciona una planta', 'Select a floor')}
+                      options={floorOptions}
+                      onChange={(v) => {
+                        const n = Number(v)
+                        setSelectedFloorNumber(Number.isFinite(n) ? n : null)
+                        setSelectedSalonId(null)
+                        setReservationTime(null)
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                {showSalonField ? (
+                  <div class="resvField" data-testid="reservas-salon-field">
+                    <div class="resvLabel resvLabel--step1" data-testid="reservas-salon-label">{text('Salón', 'Dining room')}</div>
+                    <PopoverSelect
+                      testId="reservas-salon-select"
+                      ariaLabel={text('Salón', 'Dining room')}
+                      value={selectedSalonId != null ? String(selectedSalonId) : null}
+                      placeholder={text('Selecciona un salón', 'Select a dining room')}
+                      options={salonOptions.map((salon) => ({
+                        value: String(salon.id),
+                        label: salon.name,
+                        keywords: salon.name.toLowerCase(),
+                      }))}
+                      onChange={(v) => {
+                        const n = Number(v)
+                        setSelectedSalonId(Number.isFinite(n) ? n : null)
+                        setReservationTime(null)
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                {allowSalonBooking && !showSalonField && allowFloorBooking && selectedFloorNumber != null && salonOptions.length === 0 ? (
+                  <div class="resvNotice warn" data-testid="reservas-salon-empty-warning">
+                    {text('La planta seleccionada no tiene salones activos; tu mesa se asignará en la planta elegida.', 'The selected floor has no active dining rooms; your table will be assigned on the chosen floor.')}
+                  </div>
                 ) : null}
 
                 {showHoursField ? (
@@ -2223,9 +2298,15 @@ export function Reservas() {
               <span class="resvSummaryValue" data-testid="reservas-summary-value-guests">{ps || '-'}</span>
             </div>
             <div class="resvSummaryRow" data-testid="reservas-summary-row-floor">
-              <span data-testid="reservas-summary-label-floor">{text('Salón', 'Dining room')}</span>
+              <span data-testid="reservas-summary-label-floor">{text('Planta', 'Floor')}</span>
               <span class="resvSummaryValue" data-testid="reservas-summary-value-floor">{selectedFloor ? (lang === 'en' ? (selectedFloor.isGround ? 'Ground floor' : `Floor ${selectedFloor.floorNumber}`) : selectedFloor.name) : '-'}</span>
             </div>
+            {selectedSalon ? (
+              <div class="resvSummaryRow" data-testid="reservas-summary-row-salon">
+                <span data-testid="reservas-summary-label-salon">{text('Salón', 'Dining room')}</span>
+                <span class="resvSummaryValue" data-testid="reservas-summary-value-salon">{selectedSalon.name}</span>
+              </div>
+            ) : null}
             <div class="resvSummaryRow" data-testid="reservas-summary-row-name">
               <span data-testid="reservas-summary-label-name">{text('Nombre', 'Name')}</span>
               <span class="resvSummaryValue" data-testid="reservas-summary-value-name">{fullName.trim() || '-'}</span>
