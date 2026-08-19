@@ -246,6 +246,25 @@ export type ReservationDayContextFloor = {
   active: boolean
 }
 
+export type ReservationDayContextSalon = {
+  id: number
+  name: string
+}
+
+export type ReservationDayContextLocationFloor = {
+  id: number
+  floorNumber: number
+  name: string
+  isGround: boolean
+  salons: ReservationDayContextSalon[]
+}
+
+export type ReservationDayContextLocationBooking = {
+  allowFloorReservation: boolean
+  allowSalonReservation: boolean
+  floors: ReservationDayContextLocationFloor[]
+}
+
 export type ReservationDayContextResponse = {
   success: true
   date: string
@@ -254,6 +273,7 @@ export type ReservationDayContextResponse = {
   nightHours: string[]
   floors: ReservationDayContextFloor[]
   activeFloors: ReservationDayContextFloor[]
+  locationBooking?: ReservationDayContextLocationBooking
 }
 
 export type ValidGroupMenusForPartySizeResponse = {
