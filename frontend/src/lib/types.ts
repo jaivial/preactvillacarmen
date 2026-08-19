@@ -244,11 +244,17 @@ export type ReservationDayContextFloor = {
   name: string
   isGround: boolean
   active: boolean
+  maxAforo?: number
+  occupancy?: number
+  remaining?: number
 }
 
 export type ReservationDayContextSalon = {
   id: number
   name: string
+  capacityLimit?: number
+  occupancy?: number
+  remaining?: number
 }
 
 export type ReservationDayContextLocationFloor = {
