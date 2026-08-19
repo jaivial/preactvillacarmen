@@ -1434,7 +1434,7 @@ export function Reservas() {
 
                 {activeFloors.length > 1 ? (
                   <div class="resvField" data-testid="reservas-floor-field">
-                    <div class="resvLabel" data-testid="reservas-floor-label">{text('Salón', 'Dining room')}</div>
+                    <div class="resvLabel resvLabel--step1" data-testid="reservas-floor-label">{text('Salón', 'Dining room')}</div>
                     <PopoverSelect
                       testId="reservas-floor-select"
                       ariaLabel={text('Salón', 'Dining room')}
@@ -1457,7 +1457,7 @@ export function Reservas() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeOut' }}
                   >
-                    <div class="resvLabel" data-testid="reservas-shift-label">{text('Turno', 'Service')}</div>
+                    <div class="resvLabel resvLabel--step1" data-testid="reservas-shift-label">{text('Turno', 'Service')}</div>
                     <PopoverSelect
                       testId="reservas-shift-select"
                       ariaLabel={text('Turno', 'Service')}
