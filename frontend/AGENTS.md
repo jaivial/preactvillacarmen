@@ -84,7 +84,7 @@ Toda tarea nueva sigue este flujo completo, sin omitir pasos:
    git worktree add /home/jaime/wt/preactvillacarmen-<tarea> -b <tipo>/<tarea> main
    cd /home/jaime/wt/preactvillacarmen-<tarea>
    ```
-2. **Editar + test**: implementar cambios, correr build/typecheck del repo (`bun run build`, `bun run typecheck` o `bun run check`).
+2. **Editar + verificar**: implementar cambios y validar con build/typecheck del repo (`bun run build`, `bun run typecheck` o `bun run check`). **Sin TDD ni tests**: no escribir ni ejecutar tests salvo peticion expresa del usuario.
 3. **Commit + push** de todos los cambios al branch nuevo:
    ```bash
    git add -A && git commit -m "<conventional commit msg>"
