@@ -969,6 +969,41 @@ export function Reservas() {
     }
   }
 
+  // Re-fetch the day context with aforo gating whenever the party size or the
+  // selected date changes, so only floors/salons with room for the group are
+  // offered. The base load is ungated (party size is not known yet).
+  useEffect(() => {
+    if (!selectedDate || !partySize) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const context = await apiGetJson<ReservationDayContextResponse>(
+          `/api/reservations/day-context?date=${encodeURIComponent(selectedDate)}&party_size=${encodeURIComponent(String(partySize))}`
+        )
+        if (cancelled || !context) return
+        setDayContext(context)
+        const nextActiveFloors = context.activeFloors
+          ? context.activeFloors
+          : (context.floors || []).filter((floor) => floor.active)
+        setActiveFloors(nextActiveFloors)
+        if (selectedFloorNumber != null && !nextActiveFloors.some((f) => f.floorNumber === selectedFloorNumber)) {
+          setSelectedFloorNumber(nextActiveFloors.length === 1 ? nextActiveFloors[0].floorNumber : null)
+          setSelectedSalonId(null)
+        }
+        const salons =
+          context.locationBooking?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
+        if (selectedSalonId != null && !salons.some((sl) => sl.id === selectedSalonId)) {
+          setSelectedSalonId(salons.length === 1 ? salons[0].id : null)
+        }
+      } catch {
+        // Non-fatal: keep the ungated context already shown.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [selectedDate, partySize, lang])
+
   useEffect(() => {
     const init = initialUrlStateRef.current
     if (!init) return
