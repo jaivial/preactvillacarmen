@@ -1579,7 +1579,7 @@ export function Reservas() {
                 ) : null}
 
                 {allowSalonBooking && !showSalonField && allowFloorBooking && selectedFloorNumber != null && salonOptions.length === 0 ? (
-                  <div class="resvNotice warn" data-testid="reservas-salon-empty-warning">
+                  <div class="resvNotice warn" data-testid="reservas-salon-empty-warning" style="margin-inline: 1rem; margin-top: 0.5rem;">
                     {text('La planta seleccionada no tiene salones activos; tu mesa se asignará en la planta elegida.', 'The selected floor has no active dining rooms; your table will be assigned on the chosen floor.')}
                   </div>
                 ) : null}
