@@ -137,7 +137,7 @@ export function ClientHeader() {
       { href: '/', labelKey: 'nav.home' },
       { href: '/vinos', labelKey: 'nav.wines' },
       { href: '/reservas', labelKey: 'nav.reservations' },
-      { href: '/regala', labelKey: 'nav.gift' },
+      // /regala ocultado del menú (nav.gift) — página sigue accesible por URL.
       { href: '/contacto', labelKey: 'nav.contact' },
     ]
     if (cafePageActive) base.push({ href: '/cafes', labelKey: 'nav.coffees' })
