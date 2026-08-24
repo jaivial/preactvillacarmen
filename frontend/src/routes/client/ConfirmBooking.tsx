@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import { apiFetch } from '../../lib/api'
+import { bookingLocationFields } from '../../lib/bookingLocation'
 
 interface BookingData {
   id: number
@@ -8,6 +9,8 @@ interface BookingData {
   partySize: number
   customerName: string
   arrozDisplay?: string
+  floorDisplay?: string
+  salonDisplay?: string
   status?: string
   isSameDay: boolean
   isConfirmed: boolean
@@ -106,6 +109,7 @@ export function ConfirmBooking() {
                 <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
                 <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
                 <div data-slot="field-party"><span class="bookingActionLabel">Personas</span><span class="bookingActionValue">{booking.partySize}</span></div>
+                {bookingLocationFields(booking).map((field) => <div key={field.slot} data-slot={field.slot}><span class="bookingActionLabel">{field.label}</span><span class="bookingActionValue">{field.value}</span></div>)}
                 {booking.arrozDisplay && <div data-slot="field-rice"><span class="bookingActionLabel">Arroz</span><span class="bookingActionValue">{booking.arrozDisplay}</span></div>}
               </div>
             </div>
@@ -131,6 +135,7 @@ export function ConfirmBooking() {
               <div data-slot="field-date"><span class="bookingActionLabel">Fecha</span><span class="bookingActionValue">{booking.reservationDate}</span></div>
               <div data-slot="field-time"><span class="bookingActionLabel">Hora</span><span class="bookingActionValue">{booking.reservationTime}</span></div>
               <div data-slot="field-party"><span class="bookingActionLabel">Personas</span><span class="bookingActionValue">{booking.partySize}</span></div>
+              {bookingLocationFields(booking).map((field) => <div key={field.slot} data-slot={field.slot}><span class="bookingActionLabel">{field.label}</span><span class="bookingActionValue">{field.value}</span></div>)}
               {booking.arrozDisplay && <div data-slot="field-rice"><span class="bookingActionLabel">Arroz</span><span class="bookingActionValue">{booking.arrozDisplay}</span></div>}
             </div>
           </div>
