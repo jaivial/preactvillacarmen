@@ -2725,7 +2725,7 @@ svg {
 }
 
 .wineFacts {
-    margin-top: auto;
+    margin-top: 1rem;
     padding-top: 12px;
     display: inline-flex;
     align-items: baseline;
