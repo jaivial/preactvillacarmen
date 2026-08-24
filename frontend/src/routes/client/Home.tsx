@@ -368,7 +368,7 @@ function BentoShowcase() {
       'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp',
       'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/saloncondesa1.webp',
       'https://villacarmenmedia.b-cdn.net/images/comida/9%3A16/croquetas9_16.webp',
-      'images/comida/16:9/arroz16:9_1.png',
+      'https://villacarmenmedia.b-cdn.net/images/salones/9%3A16/ChatGPT%20Image%2020%20ago%202026%2C%2019_38_16.png',
       'https://villacarmenmedia.b-cdn.net/images/fachada/16%3A9/fachada16-9_1.webp',
       'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
     ],
