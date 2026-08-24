@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import { apiFetch } from '../../lib/api'
+import { bookingLocationFields } from '../../lib/bookingLocation'
 
 interface BookingData {
   id: number
@@ -16,6 +17,7 @@ interface BookingData {
   babyStrollers: number
   highChairs: number
   floorDisplay?: string
+  salonDisplay?: string
   tableNumber?: string
   isSameDay: boolean
   isConfirmed: boolean
@@ -31,7 +33,7 @@ function BookingDetails({ booking }: { booking: BookingData }) {
         <div data-slot="field-party"><span class="bookingActionLabel">Comensales</span><span class="bookingActionValue">{booking.partySize}</span></div>
         <div data-slot="field-adults"><span class="bookingActionLabel">Adultos</span><span class="bookingActionValue">{booking.adults}</span></div>
         <div data-slot="field-children"><span class="bookingActionLabel">Niños</span><span class="bookingActionValue">{booking.children}</span></div>
-        {booking.floorDisplay ? <div data-slot="field-floor"><span class="bookingActionLabel">Salón</span><span class="bookingActionValue">{booking.floorDisplay}</span></div> : null}
+        {bookingLocationFields(booking).map((field) => <div key={field.slot} data-slot={field.slot}><span class="bookingActionLabel">{field.label}</span><span class="bookingActionValue">{field.value}</span></div>)}
         {booking.tableNumber ? <div data-slot="field-table"><span class="bookingActionLabel">Mesa</span><span class="bookingActionValue">{booking.tableNumber}</span></div> : null}
         {booking.menuDisplay ? <div data-slot="field-menu"><span class="bookingActionLabel">Menú</span><span class="bookingActionValue">{booking.menuDisplay}</span></div> : null}
         {booking.arrozDisplay ? <div data-slot="field-rice"><span class="bookingActionLabel">Arroz</span><span class="bookingActionValue">{booking.arrozDisplay}</span></div> : null}
