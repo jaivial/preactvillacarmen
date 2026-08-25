@@ -3376,7 +3376,7 @@ svg {
     width: 100%;
     max-width: 440px;
     margin: 0 auto;
-    padding: 0 0 1.5rem;
+    padding: 1rem;
 }
 
 .resvCalendarHead {
