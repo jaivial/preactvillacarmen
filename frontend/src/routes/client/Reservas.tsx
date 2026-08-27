@@ -425,7 +425,12 @@ export function Reservas() {
     partySize &&
     reservationTime &&
     activeFloors.length > 0 &&
-    (activeFloors.length === 1 || selectedFloorNumber != null) &&
+    // When the floor toggle is off the selector is hidden; don't block the
+    // step on the user picking one. When the toggle is on, require the floor
+    // the same way as before (single active floor or an explicit pick).
+    (dayContext?.locationBooking?.allowFloorReservation === false
+      ? true
+      : activeFloors.length === 1 || selectedFloorNumber != null) &&
     (dayContext?.openingMode !== 'both' || selectedShift)
   )
   const riceStepReady = wantsRice === false || Boolean(wantsRice && riceType && riceServings && riceServings >= 2 && (!partySize || riceServings <= partySize))
@@ -1002,10 +1007,18 @@ export function Reservas() {
           )
           setSelectedSalonId(null)
         }
-        const salons =
-          lbR?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
+        // When the floor toggle is off the selector is hidden, so we cannot
+        // key the salon lookup off selectedFloorNumber (always null). Pull the
+        // candidate salons from the first floor that has any, regardless of
+        // floor number. When the floor toggle is on, keep the previous
+        // behavior keyed on the chosen floor.
+        const salons = lbR?.allowSalonReservation
+          ? lbR?.allowFloorReservation
+            ? lbR?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
+            : lbR?.floors.find((f) => f.salons.length > 0)?.salons ?? []
+          : []
         if (selectedSalonId != null && !salons.some((sl) => sl.id === selectedSalonId)) {
-          // Same guard for the salon: only auto-pick when the salon toggle is on.
+          // Only auto-pick when the salon toggle is on.
           setSelectedSalonId(lbR?.allowSalonReservation && salons.length === 1 ? salons[0].id : null)
         }
       } catch {
