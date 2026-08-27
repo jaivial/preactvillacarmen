@@ -950,13 +950,18 @@ export function Reservas() {
         : []
       setActiveFloors(nextActiveFloors)
 
-      if (nextActiveFloors.length === 1) {
+      // Auto-select the floor / salon only when the corresponding toggle is on.
+      // When both flags are off the selectors are hidden, so any auto-selected
+      // value would silently flow into the booking payload (preferred_floor_number,
+      // preferred_salon_id) and propagate to WhatsApp, email, and the DB row.
+      const lb = context?.locationBooking
+      if (nextActiveFloors.length === 1 && lb?.allowFloorReservation) {
         setSelectedFloorNumber(nextActiveFloors[0].floorNumber)
       }
-      const salonsForSingleFloor = context?.locationBooking?.floors.find(
+      const salonsForSingleFloor = lb?.floors.find(
         (f) => f.floorNumber === nextActiveFloors[0]?.floorNumber
       )?.salons
-      if (salonsForSingleFloor?.length === 1) {
+      if (salonsForSingleFloor?.length === 1 && lb?.allowSalonReservation) {
         setSelectedSalonId(salonsForSingleFloor[0].id)
       }
       if (context?.openingMode === 'morning') {
@@ -986,14 +991,22 @@ export function Reservas() {
           ? context.activeFloors
           : (context.floors || []).filter((floor) => floor.active)
         setActiveFloors(nextActiveFloors)
+        const lbR = context.locationBooking
         if (selectedFloorNumber != null && !nextActiveFloors.some((f) => f.floorNumber === selectedFloorNumber)) {
-          setSelectedFloorNumber(nextActiveFloors.length === 1 ? nextActiveFloors[0].floorNumber : null)
+          // Only re-pick an active floor when the floor toggle is on; otherwise
+          // clear so the field stays out of the payload.
+          setSelectedFloorNumber(
+            lbR?.allowFloorReservation && nextActiveFloors.length === 1
+              ? nextActiveFloors[0].floorNumber
+              : null
+          )
           setSelectedSalonId(null)
         }
         const salons =
-          context.locationBooking?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
+          lbR?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
         if (selectedSalonId != null && !salons.some((sl) => sl.id === selectedSalonId)) {
-          setSelectedSalonId(salons.length === 1 ? salons[0].id : null)
+          // Same guard for the salon: only auto-pick when the salon toggle is on.
+          setSelectedSalonId(lbR?.allowSalonReservation && salons.length === 1 ? salons[0].id : null)
         }
       } catch {
         // Non-fatal: keep the ungated context already shown.
@@ -1301,10 +1314,13 @@ export function Reservas() {
     fd.set('reservation_date', selectedDate)
     fd.set('party_size', String(partySize))
     fd.set('reservation_time', reservationTime)
-    if (selectedFloorNumber != null) {
+    // Only emit the location fields when the corresponding toggle is on. The
+    // selectors may be hidden but state could still hold a stale value, so this
+    // is the last line of defense before the backend sees the payload.
+    if (allowFloorBooking && selectedFloorNumber != null) {
       fd.set('preferred_floor_number', String(selectedFloorNumber))
     }
-    if (selectedSalonId != null) {
+    if (allowSalonBooking && selectedSalonId != null) {
       fd.set('preferred_salon_id', String(selectedSalonId))
     }
     fd.set('customer_name', fullName.trim())
