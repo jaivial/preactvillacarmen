@@ -950,14 +950,21 @@ export function Reservas() {
         : []
       setActiveFloors(nextActiveFloors)
 
-      if (nextActiveFloors.length === 1) {
+      const allowFloorReservation = context?.locationBooking?.allowFloorReservation === true
+      const allowSalonReservation = context?.locationBooking?.allowSalonReservation === true
+
+      if (allowFloorReservation && nextActiveFloors.length === 1) {
         setSelectedFloorNumber(nextActiveFloors[0].floorNumber)
+      } else if (!allowFloorReservation) {
+        setSelectedFloorNumber(null)
       }
       const salonsForSingleFloor = context?.locationBooking?.floors.find(
         (f) => f.floorNumber === nextActiveFloors[0]?.floorNumber
       )?.salons
-      if (salonsForSingleFloor?.length === 1) {
+      if (allowSalonReservation && salonsForSingleFloor?.length === 1) {
         setSelectedSalonId(salonsForSingleFloor[0].id)
+      } else if (!allowSalonReservation) {
+        setSelectedSalonId(null)
       }
       if (context?.openingMode === 'morning') {
         setSelectedShift('morning')
@@ -986,13 +993,20 @@ export function Reservas() {
           ? context.activeFloors
           : (context.floors || []).filter((floor) => floor.active)
         setActiveFloors(nextActiveFloors)
-        if (selectedFloorNumber != null && !nextActiveFloors.some((f) => f.floorNumber === selectedFloorNumber)) {
+        const allowFloorReservation = context.locationBooking?.allowFloorReservation === true
+        const allowSalonReservation = context.locationBooking?.allowSalonReservation === true
+
+        if (!allowFloorReservation) {
+          setSelectedFloorNumber(null)
+        } else if (selectedFloorNumber != null && !nextActiveFloors.some((f) => f.floorNumber === selectedFloorNumber)) {
           setSelectedFloorNumber(nextActiveFloors.length === 1 ? nextActiveFloors[0].floorNumber : null)
           setSelectedSalonId(null)
         }
         const salons =
           context.locationBooking?.floors.find((f) => f.floorNumber === selectedFloorNumber)?.salons ?? []
-        if (selectedSalonId != null && !salons.some((sl) => sl.id === selectedSalonId)) {
+        if (!allowSalonReservation) {
+          setSelectedSalonId(null)
+        } else if (selectedSalonId != null && !salons.some((sl) => sl.id === selectedSalonId)) {
           setSelectedSalonId(salons.length === 1 ? salons[0].id : null)
         }
       } catch {
@@ -1301,10 +1315,10 @@ export function Reservas() {
     fd.set('reservation_date', selectedDate)
     fd.set('party_size', String(partySize))
     fd.set('reservation_time', reservationTime)
-    if (selectedFloorNumber != null) {
+    if (allowFloorBooking && selectedFloorNumber != null) {
       fd.set('preferred_floor_number', String(selectedFloorNumber))
     }
-    if (selectedSalonId != null) {
+    if (allowSalonBooking && selectedSalonId != null) {
       fd.set('preferred_salon_id', String(selectedSalonId))
     }
     fd.set('customer_name', fullName.trim())
