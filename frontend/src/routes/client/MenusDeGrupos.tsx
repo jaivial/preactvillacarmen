@@ -241,6 +241,8 @@ export function MenusDeGrupos() {
   // the current menu list without re-binding the listener
   const menusRef = useRef(menus)
   menusRef.current = menus
+  const failedRef = useRef(failed)
+  failedRef.current = failed
 
   // hydrate active tab from ?menu=<id>; default/unknown falls back to the
   // first menu and its id is written into the URL
@@ -272,6 +274,13 @@ export function MenusDeGrupos() {
       const idx = ms.findIndex((m) => m.id === fromUrl)
       const resolved = idx >= 0 ? idx : 0
       setActive(resolved)
+      if (ms[resolved] && failedRef.current[ms[resolved].id]) {
+        setFailed((prev) => {
+          const next = { ...prev }
+          delete next[ms[resolved].id]
+          return next
+        })
+      }
       if (raw !== String(ms[resolved].id)) {
         const url = new URL(window.location.href)
         url.searchParams.set('menu', String(ms[resolved].id))
@@ -284,29 +293,29 @@ export function MenusDeGrupos() {
   }, [])
 
   const selectTab = (idx: number) => {
-    setActive(idx)
     const menu = menus?.[idx]
-    if (menu) {
-      // allow a fresh detail fetch if a previous attempt failed for this menu
-      if (failed[menu.id]) {
-        setFailed((prev) => {
-          const next = { ...prev }
-          delete next[menu.id]
-          return next
-        })
-      }
-      const url = new URL(window.location.href)
-      url.searchParams.set('menu', String(menu.id))
-      window.history.pushState({}, '', url)
-      checkpoint('menusdegrupos_tab_selected', { menu_id: menu.id, index: idx })
-      checkpoint('menusdegrupos_url_synced', { menu_id: menu.id, mode: 'push' })
+    if (!menu || idx === active) return
+    setActive(idx)
+    // allow a fresh detail fetch if a previous attempt failed for this menu
+    if (failed[menu.id]) {
+      setFailed((prev) => {
+        const next = { ...prev }
+        delete next[menu.id]
+        return next
+      })
     }
+    const url = new URL(window.location.href)
+    url.searchParams.set('menu', String(menu.id))
+    window.history.pushState({}, '', url)
+    checkpoint('menusdegrupos_tab_selected', { menu_id: menu.id, index: idx })
+    checkpoint('menusdegrupos_url_synced', { menu_id: menu.id, mode: 'push' })
   }
 
   const shouldShowTabs = Boolean(menus && menus.length >= 2)
   const activeMenu = menus && menus.length > 0 ? menus[active] || menus[0] : null
 
-  // fetch the full payload for the selected menu (tab click or URL hydrate)
+  // fetch the full payload for the selected menu (tab click or URL hydrate);
+  // depends on `failed` so clearing a failure (tab re-select) triggers a retry
   useEffect(() => {
     if (!activeMenu) return
     if (details[activeMenu.id] || failed[activeMenu.id]) return
@@ -335,7 +344,7 @@ export function MenusDeGrupos() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMenu?.id])
+  }, [activeMenu?.id, failed])
 
   const current = useMemo(() => {
     if (!activeMenu) return null
