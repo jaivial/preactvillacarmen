@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { useI18n, localizedArray } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Dish } from '../../lib/types'
@@ -178,18 +178,31 @@ function renderBeverageText(beverage: NormalizedBeverage, t: (key: string) => st
   return <p class="menuDishText">{t('groupMenus.beverage.notIncluded')}</p>
 }
 
+function checkpoint(name: string, detail?: Record<string, unknown>) {
+  if (detail) {
+    console.log(`[checkpoint] ${name}`, JSON.stringify(detail))
+  } else {
+    console.log(`[checkpoint] ${name}`)
+  }
+}
+
 export function MenusDeGrupos() {
   const { t, lang } = useI18n()
   const [publicMenus, setPublicMenus] = useState<GroupMenuApi[] | null | undefined>(undefined)
   const [active, setActive] = useState(0)
 
   useEffect(() => {
+    checkpoint('menusdegrupos_frontend_loaded')
     let cancelled = false
-    apiGetJson<GroupMenusApiResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay')
+    checkpoint('menusdegrupos_menus_list_fetch_started')
+    apiGetJson<GroupMenusApiResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay', { noStore: true })
       .then((data) => {
-        if (!cancelled) setPublicMenus(data.success ? data.menus : null)
+        if (cancelled) return
+        checkpoint('menusdegrupos_menus_list_received', { success: data.success, count: data.success ? data.menus.length : 0 })
+        setPublicMenus(data.success ? data.menus : null)
       })
-      .catch(() => {
+      .catch((err) => {
+        checkpoint('menusdegrupos_menus_list_fetch_failed', { error: String(err) })
         if (!cancelled) setPublicMenus(null)
       })
     return () => {
@@ -204,8 +217,60 @@ export function MenusDeGrupos() {
   }, [publicMenus, t])
 
   useEffect(() => {
-    setActive(0)
-  }, [menus?.length])
+    if (menus && menus.length > 0) {
+      checkpoint('menusdegrupos_menus_filtered', { count: menus.length, ids: menus.map((m) => m.id) })
+    }
+  }, [menus])
+
+  // keep a ref so the popstate handler can resolve the query param against
+  // the current menu list without re-binding the listener
+  const menusRef = useRef(menus)
+  menusRef.current = menus
+
+  // hydrate active tab from ?menu=<id>; default/unknown falls back to the
+  // first menu and its id is written into the URL
+  useEffect(() => {
+    if (!menus || menus.length === 0) return
+    const raw = new URLSearchParams(window.location.search).get('menu')
+    const fromUrl = raw === null ? NaN : Number(raw)
+    const idx = menus.findIndex((m) => m.id === fromUrl)
+    const resolved = idx >= 0 ? idx : 0
+    setActive(resolved)
+    if (raw !== String(menus[resolved].id)) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('menu', String(menus[resolved].id))
+      window.history.replaceState({}, '', url)
+    }
+    checkpoint('menusdegrupos_url_synced', { menu_id: menus[resolved].id, mode: 'hydrate' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menus])
+
+  // browser back/forward: re-sync the active tab from the URL query
+  useEffect(() => {
+    const onPop = () => {
+      const ms = menusRef.current
+      if (!ms || ms.length === 0) return
+      const raw = new URLSearchParams(window.location.search).get('menu')
+      const fromUrl = raw === null ? NaN : Number(raw)
+      const idx = ms.findIndex((m) => m.id === fromUrl)
+      setActive(idx >= 0 ? idx : 0)
+      checkpoint('menusdegrupos_url_synced', { menu_id: idx >= 0 ? fromUrl : ms[0].id, mode: 'popstate' })
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  const selectTab = (idx: number) => {
+    setActive(idx)
+    const menu = menus?.[idx]
+    if (menu) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('menu', String(menu.id))
+      window.history.pushState({}, '', url)
+      checkpoint('menusdegrupos_tab_selected', { menu_id: menu.id, index: idx })
+      checkpoint('menusdegrupos_url_synced', { menu_id: menu.id, mode: 'push' })
+    }
+  }
 
   const shouldShowTabs = Boolean(menus && menus.length >= 2)
   const current = useMemo(() => {
@@ -220,35 +285,40 @@ export function MenusDeGrupos() {
     return ''
   }, [current, t])
 
+  useEffect(() => {
+    if (current) checkpoint('menusdegrupos_menu_rendered', { menu_id: current.id })
+  }, [current])
+
   return (
-    <div class="page menuPage">
-      <section class="page-hero">
+    <div class="page menuPage" data-testid="menusdegrupos-page">
+      <section class="page-hero" data-testid="menusdegrupos-hero">
         <div class="container">
-          <h1 class="page-title">{t('nav.groupMenus')}</h1>
-          <p class="page-subtitle">{t('menus.card.groups.subtitle')}</p>
+          <h1 class="page-title" data-testid="menusdegrupos-title">{t('nav.groupMenus')}</h1>
+          <p class="page-subtitle" data-testid="menusdegrupos-subtitle">{t('menus.card.groups.subtitle')}</p>
         </div>
       </section>
 
       <section class="menuBody">
         <div class="container">
           {publicMenus === undefined ? (
-            <div class="menuState">{t('menus.preview.loading')}</div>
+            <div class="menuState" data-testid="menusdegrupos-state-loading">{t('menus.preview.loading')}</div>
           ) : publicMenus === null ? (
-            <div class="menuState">{t('menu.error')}</div>
+            <div class="menuState" data-testid="menusdegrupos-state-error">{t('menu.error')}</div>
           ) : !menus || menus.length === 0 ? (
-            <div class="menuState">{t('groupMenus.empty')}</div>
+            <div class="menuState" data-testid="menusdegrupos-state-empty">{t('groupMenus.empty')}</div>
           ) : (
             <>
               {shouldShowTabs ? (
-                <div class="groupTabs" role="tablist" aria-label={t('nav.groupMenus')}>
+                <div class="groupTabs" role="tablist" aria-label={t('nav.groupMenus')} data-testid="menusdegrupos-tabs">
                   {menus.map((menu, idx) => (
                     <button
                       key={menu.id}
                       type="button"
                       class={idx === active ? 'groupTab active' : 'groupTab'}
-                      onClick={() => setActive(idx)}
+                      onClick={() => selectTab(idx)}
                       role="tab"
                       aria-selected={idx === active}
+                      data-testid={`menusdegrupos-tab-${menu.id}`}
                     >
                       {lang === 'en' && menu.menuTitleEnglish ? menu.menuTitleEnglish : menu.menuTitle}
                     </button>
@@ -257,13 +327,17 @@ export function MenusDeGrupos() {
               ) : null}
 
               {current ? (
-                <article class="menuSectionCard groupPanel groupPanel--plain" role={shouldShowTabs ? 'tabpanel' : undefined}>
+                <article
+                  class="menuSectionCard groupPanel groupPanel--plain"
+                  role={shouldShowTabs ? 'tabpanel' : undefined}
+                  data-testid="menusdegrupos-panel"
+                >
                   <div class="menugrupos-decor">
                     <img class="menugrupos-flower-top-left" src="/media/menugrupos/pngegg.png" alt="" loading="lazy" />
                     <img class="menugrupos-flower-bottom-right" src="/media/menugrupos/pngegg2.png" alt="" loading="lazy" />
                     <img class="menugrupos-vine" src="/media/menugrupos/enredadera.png" alt="" loading="lazy" />
                   </div>
-                  <h2 class="menuSectionTitle">{lang === 'en' && current.menuTitleEnglish ? current.menuTitleEnglish : current.menuTitle}</h2>
+                  <h2 class="menuSectionTitle" data-testid="menusdegrupos-panel-title">{lang === 'en' && current.menuTitleEnglish ? current.menuTitleEnglish : current.menuTitle}</h2>
 
                   {current.subtitles.length > 0 ? (
                     <div class="groupSubtitles">
