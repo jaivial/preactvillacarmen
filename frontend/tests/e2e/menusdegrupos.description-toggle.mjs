@@ -16,6 +16,7 @@ import {
   mysqlExec,
   restaurantId,
   assert,
+  sqlQuote,
   withBrowserContext,
   baseUrl,
   waitForConsoleCheckpoint,
@@ -38,22 +39,38 @@ try {
          AND COALESCE(NULLIF(TRIM(m.menu_type), ''), 'closed_conventional') IN ('closed_group','a_la_carte_group')
        WHERE d.restaurant_id = ${Number(restaurantId())} AND d.active = 1
          AND COALESCE(d.description_enabled, 1) = 1
-         AND COALESCE(NULLIF(TRIM(d.description_snapshot), ''), '') <> ''
+         AND COALESCE(NULLIF(TRIM(d.title_snapshot), ''), '') <> ''
        ORDER BY d.menu_id ASC, d.position ASC, d.id ASC
        LIMIT 1`,
     )
-    assert(rows.length === 1, `fixture needs one v2 dish with a non-empty description_snapshot, got ${rows.length}`)
+    assert(rows.length === 1, `fixture needs one active v2 dish with a non-empty title, got ${rows.length}`)
     dish = rows[0]
     dish.menu_id = Number(dish.menu_id)
     dish.dish_id = Number(dish.dish_id)
     console.log(`[${correlationId}] fixture dish_id=${dish.dish_id} menu_id=${dish.menu_id}`)
   })
 
+  const seededDescription = `Nota de cata e2e ${Date.now()}`
+
+  await run('seed_distinct_description', async () => {
+    mysqlExec(
+      `UPDATE group_menu_section_dishes_v2
+       SET description_snapshot = ${sqlQuote(seededDescription)}
+       WHERE id = ${dish.dish_id}`,
+    )
+    const check = mysqlRows(
+      `SELECT description_snapshot FROM group_menu_section_dishes_v2 WHERE id = ${dish.dish_id}`,
+    )
+    assert(check[0]?.description_snapshot === seededDescription, 'seeded description must be persisted')
+  })
+
   let restored = false
   const restore = () => {
     if (!dish || restored) return
     mysqlExec(
-      `UPDATE group_menu_section_dishes_v2 SET description_enabled = 1 WHERE id = ${dish.dish_id}`,
+      `UPDATE group_menu_section_dishes_v2
+       SET description_enabled = 1, description_snapshot = ${sqlQuote(dish.description_snapshot || dish.title_snapshot)}
+       WHERE id = ${dish.dish_id}`,
     )
     restored = true
   }
@@ -113,8 +130,8 @@ try {
       await dishLocator.waitFor({ timeout: 15_000 })
       const panelText = await page.locator('[data-testid="menusdegrupos-panel"]').innerText()
       assert(
-        !panelText.includes(dish.description_snapshot),
-        `panel must NOT contain the disabled description "${dish.description_snapshot}"`,
+        !panelText.includes(seededDescription),
+        `panel must NOT contain the disabled description "${seededDescription}"`,
       )
     })
   })
