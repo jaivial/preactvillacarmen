@@ -79,7 +79,7 @@ try {
       `${baseUrl()}/api/menuDeGruposBackend/getMenuForDisplay?id=${dish.menu_id}`,
       { headers: { 'x-correlation-id': correlationId } },
     )
-    assert(resp.ok(), `getMenuForDisplay must return 2xx, got ${resp.status()}`)
+    assert(resp.ok, `getMenuForDisplay must return 2xx, got ${resp.status}`)
     const body = await resp.json()
     assert(body.success === true, `getMenuForDisplay must succeed for menu ${dish.menu_id}`)
     const menu = body.menu

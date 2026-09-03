@@ -202,6 +202,7 @@ export function MenusDeGrupos() {
   const { t, lang } = useI18n()
   const [publicMenus, setPublicMenus] = useState<SlimMenu[] | null | undefined>(undefined)
   const [details, setDetails] = useState<Record<number, GroupMenuApi>>({})
+  const [failed, setFailed] = useState<Record<number, true>>({})
   const [active, setActive] = useState(0)
 
   useEffect(() => {
@@ -293,7 +294,7 @@ export function MenusDeGrupos() {
   // fetch the full payload for the selected menu (tab click or URL hydrate)
   useEffect(() => {
     if (!activeMenu) return
-    if (details[activeMenu.id]) return
+    if (details[activeMenu.id] || failed[activeMenu.id]) return
     let cancelled = false
     checkpoint('menusdegrupos_menu_detail_fetch_started', { menu_id: activeMenu.id })
     apiGetJson<GroupMenuDetailResponse>(
@@ -304,7 +305,7 @@ export function MenusDeGrupos() {
         if (cancelled) return
         if (!data.success || !data.menu) {
           checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: activeMenu.id, error: 'not_found' })
-          setPublicMenus(null)
+          setFailed((prev) => ({ ...prev, [activeMenu.id]: true }))
           return
         }
         checkpoint('menusdegrupos_menu_detail_received', { menu_id: data.menu.id })
@@ -313,7 +314,7 @@ export function MenusDeGrupos() {
       .catch((err) => {
         if (cancelled) return
         checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: activeMenu.id, error: String(err) })
-        setPublicMenus(null)
+        setFailed((prev) => ({ ...prev, [activeMenu.id]: true }))
       })
     return () => {
       cancelled = true
@@ -436,6 +437,8 @@ export function MenusDeGrupos() {
                     ) : null}
                   </div>
                 </article>
+              ) : activeMenu && failed[activeMenu.id] ? (
+                <div class="menuState" data-testid="menusdegrupos-state-error">{t('menu.error')}</div>
               ) : (
                 <div class="menuState" data-testid="menusdegrupos-state-loading">{t('menus.preview.loading')}</div>
               )}

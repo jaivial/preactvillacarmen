@@ -44,7 +44,7 @@ try {
     response = await fetch(`${baseUrl()}/api/menuDeGruposBackend/getActiveMenusForDisplay`, {
       headers: { 'x-correlation-id': correlationId },
     })
-    assert(response.ok(), `getActiveMenusForDisplay must return 2xx, got ${response.status()}`)
+    assert(response.ok, `getActiveMenusForDisplay must return 2xx, got ${response.status}`)
     body = await response.json()
     assert(body.success === true, 'response must have success=true')
     assert(Array.isArray(body.menus), 'response must have menus array')
