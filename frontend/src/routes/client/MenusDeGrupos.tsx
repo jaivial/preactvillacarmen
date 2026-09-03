@@ -98,7 +98,9 @@ function asDishes(v: unknown): Dish[] {
       if (!nombre) return null
       const suplemento = asNumberOrNull(item.suplemento)
       const alergenos = asStringArray(item.alergenos)
+      const id = typeof item.id === 'number' ? item.id : Number(item.id)
       return {
+        id: Number.isFinite(id) && id > 0 ? id : undefined,
         descripcion: nombre,
         description: String(item.descripcion ?? '').trim() || null,
         alergenos,
