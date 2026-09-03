@@ -1,6 +1,7 @@
 export type MenuVisibility = Record<string, boolean>
 
 export type Dish = {
+  id?: number
   descripcion: string
   alergenos: string[]
   description?: string | null

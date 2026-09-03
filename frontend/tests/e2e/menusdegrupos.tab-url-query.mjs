@@ -79,8 +79,13 @@ try {
       assert(noReload, 'tab click must not trigger a full page reload')
       const activeSel = '[data-testid="menusdegrupos-tabs"] [role="tab"][aria-selected="true"]'
       assert((await page.getAttribute(activeSel, 'data-testid')) === `menusdegrupos-tab-${secondId}`, 'clicked tab must become active')
-      const title = (await page.textContent('[data-testid="menusdegrupos-panel-title"]'))?.trim()
-      assert(title === String(groupRows[1].menu_title).trim(), `panel title must switch to "${groupRows[1].menu_title}", got "${title}"`)
+      const expectedTitle = String(groupRows[1].menu_title).trim()
+      await page.waitForFunction(
+        (expected) => document.querySelector('[data-testid="menusdegrupos-panel-title"]')?.textContent?.trim() === expected,
+        expectedTitle,
+        { timeout: 15_000 },
+      )
+      assert(consoleCheckpoints.includes('menusdegrupos_menu_detail_received'), 'frontend checkpoint "menusdegrupos_menu_detail_received" missing')
       assert(consoleCheckpoints.includes('menusdegrupos_tab_selected'), 'frontend checkpoint "menusdegrupos_tab_selected" missing')
     })
 
@@ -94,8 +99,12 @@ try {
         { timeout: 10_000 },
       )
       assert((await page.getAttribute(activeSel, 'data-testid')) === `menusdegrupos-tab-${secondId}`, `deep link ?menu=${secondId} must hydrate tab 2 as active`)
-      const title = (await page.textContent('[data-testid="menusdegrupos-panel-title"]'))?.trim()
-      assert(title === String(groupRows[1].menu_title).trim(), `deep link panel title must be "${groupRows[1].menu_title}", got "${title}"`)
+      const deepTitle = String(groupRows[1].menu_title).trim()
+      await page.waitForFunction(
+        (expected) => document.querySelector('[data-testid="menusdegrupos-panel-title"]')?.textContent?.trim() === expected,
+        deepTitle,
+        { timeout: 15_000 },
+      )
     })
 
     await run('unknown_query_falls_back_to_first', async () => {
