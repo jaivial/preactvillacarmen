@@ -258,7 +258,7 @@ export function MenusDeGrupos() {
       if (raw !== String(ms[resolved].id)) {
         const url = new URL(window.location.href)
         url.searchParams.set('menu', String(ms[resolved].id))
-        window.history.replaceState({}, '', url)
+        window.history.replaceState(window.history.state, '', url)
       }
       checkpoint('menusdegrupos_url_synced', { menu_id: ms[resolved].id, mode: 'popstate' })
     }
