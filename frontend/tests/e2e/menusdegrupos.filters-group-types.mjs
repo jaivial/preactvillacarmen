@@ -43,7 +43,7 @@ try {
     )
     groupRows = rows.filter((r) => GROUP_TYPES_SQL.includes(`'${r.menu_type}'`))
     conventionalRows = rows.filter((r) => !GROUP_TYPES_SQL.includes(`'${r.menu_type}'`))
-    assert(groupRows.length >= 1, `fixture must contain at least 1 active group menu, got ${groupRows.length}`)
+    assert(groupRows.length >= 2, `fixture must contain at least 2 active group menus (tabs render only at >= 2), got ${groupRows.length}`)
     console.log(`[${correlationId}] fixture group_ids=${JSON.stringify(groupRows.map((r) => Number(r.id)))} excluded_ids=${JSON.stringify(conventionalRows.map((r) => Number(r.id)))}`)
   })
 

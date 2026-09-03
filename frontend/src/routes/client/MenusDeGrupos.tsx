@@ -253,8 +253,14 @@ export function MenusDeGrupos() {
       const raw = new URLSearchParams(window.location.search).get('menu')
       const fromUrl = raw === null ? NaN : Number(raw)
       const idx = ms.findIndex((m) => m.id === fromUrl)
-      setActive(idx >= 0 ? idx : 0)
-      checkpoint('menusdegrupos_url_synced', { menu_id: idx >= 0 ? fromUrl : ms[0].id, mode: 'popstate' })
+      const resolved = idx >= 0 ? idx : 0
+      setActive(resolved)
+      if (raw !== String(ms[resolved].id)) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('menu', String(ms[resolved].id))
+        window.history.replaceState(window.history.state, '', url)
+      }
+      checkpoint('menusdegrupos_url_synced', { menu_id: ms[resolved].id, mode: 'popstate' })
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
