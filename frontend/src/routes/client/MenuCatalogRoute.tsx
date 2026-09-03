@@ -17,6 +17,7 @@ type MenuCatalogRouteProps = {
 }
 
 function checkpoint(name: string, detail?: Record<string, unknown>) {
+  if (!import.meta.env.DEV) return
   if (detail) {
     console.log(`[checkpoint] ${name}`, JSON.stringify(detail))
   } else {
