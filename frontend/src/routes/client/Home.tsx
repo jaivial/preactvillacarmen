@@ -852,6 +852,12 @@ export function Home() {
       .sort((a, b) => a.sortPriority - b.sortPriority)
   }, [homeMenus, lang, t])
 
+  useEffect(() => {
+    if (!import.meta.env.DEV || homeMenus === null) return
+    const event = menuCards.length === 0 ? 'home_menus_empty' : 'home_menus_section_rendered'
+    console.log(`[checkpoint] ${event} menu_count=${menuCards.length}`)
+  }, [homeMenus, menuCards.length])
+
   return (
     <div class="home">
       <section class="brandLnd__head" data-header="keep">
@@ -893,43 +899,43 @@ export function Home() {
         borderRadius="1rem"
       />
 
-      <section class="vc-menus" id="menus">
-        <div class="container">
-          <div class="section-head">
-            <h2 class="section-title">{t('home.menus.title')}</h2>
-            <p class="section-subtitle">{t('home.menus.subtitle')}</p>
-          </div>
+      {menuCards.length > 0 ? (
+        <section class="vc-menus" id="menus">
+          <div class="container">
+            <div class="section-head">
+              <h2 class="section-title">{t('home.menus.title')}</h2>
+              <p class="section-subtitle">{t('home.menus.subtitle')}</p>
+            </div>
 
-          <div class="vc-menuCards">
-            {menuCards.map((card) => {
-              const imageFailed = failedImages.has(card.key)
-              const showMedia = card.hasMedia && !imageFailed
-              return (
-                <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
-                  <div class="vc-menuCard-media" style={{ display: showMedia ? undefined : 'none' }}>
-                    <ResponsiveImage
-                      alt={card.title}
-                      src16x9={card.image16x9}
-                      src9x16={card.image9x16}
-                      class="vc-menuCard-img"
-                      onError={() => handleImageError(card.key)}
-                    />
+            <div class="vc-menuCards">
+              {menuCards.map((card) => {
+                const imageFailed = failedImages.has(card.key)
+                const showMedia = card.hasMedia && !imageFailed
+                return (
+                  <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
+                    <div class="vc-menuCard-media" style={{ display: showMedia ? undefined : 'none' }}>
+                      <ResponsiveImage
+                        alt={card.title}
+                        src16x9={card.image16x9}
+                        src9x16={card.image9x16}
+                        class="vc-menuCard-img"
+                        onError={() => handleImageError(card.key)}
+                      />
+                    </div>
+                    <div class="vc-menuCard-top">
+                      <h3 class="vc-menuCard-title">{card.title}</h3>
+                      <p class="vc-menuCard-sub">{card.subtitle}</p>
+                    </div>
+                    <Link href={card.href} className="vc-menuCard-cta btn">
+                      {t('menus.preview.view')}
+                    </Link>
                   </div>
-                  <div class="vc-menuCard-top">
-                    <h3 class="vc-menuCard-title">{card.title}</h3>
-                    <p class="vc-menuCard-sub">{card.subtitle}</p>
-                  </div>
-                  <Link
-                    href={card.href}
-                    className="vc-menuCard-cta btn"
-                  >
-                  {t('menus.preview.view')}
-                </Link>
-              </div>
-            )})}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <StickyShowcase />
 

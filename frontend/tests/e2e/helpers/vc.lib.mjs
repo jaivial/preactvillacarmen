@@ -55,7 +55,7 @@ function mysqlRaw(sql) {
   const env = rootEnv()
   return execFileSync(
     'mysql',
-    ['-h', env.DB_HOST, '-P', env.DB_PORT, '-u', env.DB_USER, '-D', devDbName(), '--batch', '--raw', '-e', sql],
+    ['-h', process.env.VC_DB_HOST || env.DB_HOST, '-P', env.DB_PORT, '-u', env.DB_USER, '-D', devDbName(), '--batch', '--raw', '-e', sql],
     { encoding: 'utf8', env: { ...process.env, MYSQL_PWD: env.DB_PASSWORD } },
   )
 }
