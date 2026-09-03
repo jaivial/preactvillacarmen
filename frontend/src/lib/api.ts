@@ -72,8 +72,10 @@ async function doFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
-export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const noCache = init?.method && init.method !== 'GET'
+export type ApiGetInit = RequestInit & { noStore?: boolean }
+
+export async function apiGetJson<T>(path: string, init?: ApiGetInit): Promise<T> {
+  const noCache = (init?.method && init.method !== 'GET') || init?.noStore === true
   if (noCache) return doFetchJson<T>(path, init)
 
   const cached = apiCache.get(path) as CacheEntry<T> | undefined
@@ -112,8 +114,8 @@ export async function apiGetJson<T>(path: string, init?: RequestInit): Promise<T
  * Prefetch an API endpoint and warm the cache without awaiting the result.
  * Useful on link hover/focus to make navigation feel instant.
  */
-export function prefetchApi(path: string, init?: RequestInit): void {
-  const noCache = init?.method && init.method !== 'GET'
+export function prefetchApi(path: string, init?: ApiGetInit): void {
+  const noCache = (init?.method && init.method !== 'GET') || init?.noStore === true
   if (noCache) return
   if (apiCache.has(path)) return
   // Fire-and-forget — fills the cache
