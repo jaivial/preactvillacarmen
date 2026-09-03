@@ -221,7 +221,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
   if (showImage) cls += ' dishCard--withImage'
 
   return (
-    <li ref={ref} class={cls}>
+    <li ref={ref} class={cls} data-dish-id={props.dish.id}>
       {showImage ? (
         <div class="dishCardMain">
           <div class={`dishCardMedia ${hasImage && !imageErrored ? '' : 'is-fallback'}`}>

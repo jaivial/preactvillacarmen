@@ -31,9 +31,21 @@ type GroupMenuApi = {
   min_party_size: number
 }
 
+type SlimMenu = {
+  id: number
+  menu_title: string
+  menu_title_english?: string
+}
+
 type GroupMenusApiResponse = {
   success: boolean
-  menus: GroupMenuApi[]
+  count: number
+  menus: SlimMenu[]
+}
+
+type GroupMenuDetailResponse = {
+  success: boolean
+  menu?: GroupMenuApi
 }
 
 type NormalizedPrincipales = {
@@ -188,7 +200,8 @@ function checkpoint(name: string, detail?: Record<string, unknown>) {
 
 export function MenusDeGrupos() {
   const { t, lang } = useI18n()
-  const [publicMenus, setPublicMenus] = useState<GroupMenuApi[] | null | undefined>(undefined)
+  const [publicMenus, setPublicMenus] = useState<SlimMenu[] | null | undefined>(undefined)
+  const [details, setDetails] = useState<Record<number, GroupMenuApi>>({})
   const [active, setActive] = useState(0)
 
   useEffect(() => {
@@ -210,11 +223,7 @@ export function MenusDeGrupos() {
     }
   }, [])
 
-  const menus = useMemo(() => {
-    if (!publicMenus) return null
-
-    return publicMenus.map((menu) => normalizeGroupMenu(menu, t('menus.preview.mains')))
-  }, [publicMenus, t])
+  const menus = useMemo(() => publicMenus, [publicMenus])
 
   useEffect(() => {
     if (menus && menus.length > 0) {
@@ -279,10 +288,44 @@ export function MenusDeGrupos() {
   }
 
   const shouldShowTabs = Boolean(menus && menus.length >= 2)
+  const activeMenu = menus && menus.length > 0 ? menus[active] || menus[0] : null
+
+  // fetch the full payload for the selected menu (tab click or URL hydrate)
+  useEffect(() => {
+    if (!activeMenu) return
+    if (details[activeMenu.id]) return
+    let cancelled = false
+    checkpoint('menusdegrupos_menu_detail_fetch_started', { menu_id: activeMenu.id })
+    apiGetJson<GroupMenuDetailResponse>(
+      `/api/menuDeGruposBackend/getMenuForDisplay?id=${activeMenu.id}`,
+      { noStore: true },
+    )
+      .then((data) => {
+        if (cancelled) return
+        if (!data.success || !data.menu) {
+          checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: activeMenu.id, error: 'not_found' })
+          setPublicMenus(null)
+          return
+        }
+        checkpoint('menusdegrupos_menu_detail_received', { menu_id: data.menu.id })
+        setDetails((prev) => ({ ...prev, [data.menu!.id]: data.menu! }))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: activeMenu.id, error: String(err) })
+        setPublicMenus(null)
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMenu?.id])
+
   const current = useMemo(() => {
-    if (!menus || menus.length === 0) return null
-    return menus[active] || menus[0]
-  }, [active, menus])
+    if (!activeMenu) return null
+    const detail = details[activeMenu.id]
+    return detail ? normalizeGroupMenu(detail, t('menus.preview.mains')) : null
+  }, [activeMenu, details, t])
 
   const formattedPrice = useMemo(() => {
     if (!current) return ''
@@ -326,7 +369,7 @@ export function MenusDeGrupos() {
                       aria-selected={idx === active}
                       data-testid={`menusdegrupos-tab-${menu.id}`}
                     >
-                      {lang === 'en' && menu.menuTitleEnglish ? menu.menuTitleEnglish : menu.menuTitle}
+                      {lang === 'en' && menu.menu_title_english ? menu.menu_title_english : menu.menu_title}
                     </button>
                   ))}
                 </div>
@@ -393,7 +436,9 @@ export function MenusDeGrupos() {
                     ) : null}
                   </div>
                 </article>
-              ) : null}
+              ) : (
+                <div class="menuState" data-testid="menusdegrupos-state-loading">{t('menus.preview.loading')}</div>
+              )}
             </>
           )}
         </div>
