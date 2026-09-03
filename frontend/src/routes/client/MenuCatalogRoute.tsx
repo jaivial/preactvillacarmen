@@ -16,6 +16,14 @@ type MenuCatalogRouteProps = {
   }
 }
 
+function checkpoint(name: string, detail?: Record<string, unknown>) {
+  if (detail) {
+    console.log(`[checkpoint] ${name}`, JSON.stringify(detail))
+  } else {
+    console.log(`[checkpoint] ${name}`)
+  }
+}
+
 export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
   const { t } = useI18n()
   const [menu, setMenu] = useState<PublicMenu | null | undefined>(undefined)
@@ -32,11 +40,15 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
     }
     let cancelled = false
     setMenu(undefined)
+    checkpoint('menu_catalog_fetch_started', { menu_id: menuId })
     fetchMenuByID(menuId)
       .then((m) => {
-        if (!cancelled) setMenu(m)
+        if (cancelled) return
+        checkpoint('menu_catalog_menu_received', { menu_id: menuId, menu_type: m.menu_type })
+        setMenu(m)
       })
-      .catch(() => {
+      .catch((err) => {
+        checkpoint('menu_catalog_fetch_failed', { menu_id: menuId, error: String(err) })
         if (!cancelled) setMenu(null)
       })
     return () => {
@@ -46,10 +58,10 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
 
   if (menu === undefined) {
     return (
-      <div class="page menuPage">
+      <div class="page menuPage" data-testid="menu-catalog-page">
         <section class="menuBody">
           <div class="container">
-            <div class="menuState">{t('menus.preview.loading')}</div>
+            <div class="menuState" data-testid="menu-catalog-state-loading">{t('menus.preview.loading')}</div>
           </div>
         </section>
       </div>
@@ -65,6 +77,7 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
     )
   }
 
+  checkpoint('menu_catalog_menu_rendered', { menu_id: menu.id, menu_type: menu.menu_type })
   if (menu.menu_type === 'a_la_carte') {
     return <MenuCartaConvencional menu={menu} />
   }
