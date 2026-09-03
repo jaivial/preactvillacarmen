@@ -231,11 +231,12 @@ export function MenusDeGrupos() {
   // first menu and its id is written into the URL
   useEffect(() => {
     if (!menus || menus.length === 0) return
-    const fromUrl = Number(new URLSearchParams(window.location.search).get('menu'))
+    const raw = new URLSearchParams(window.location.search).get('menu')
+    const fromUrl = raw === null ? NaN : Number(raw)
     const idx = menus.findIndex((m) => m.id === fromUrl)
     const resolved = idx >= 0 ? idx : 0
     setActive(resolved)
-    if (new URLSearchParams(window.location.search).get('menu') !== String(menus[resolved].id)) {
+    if (raw !== String(menus[resolved].id)) {
       const url = new URL(window.location.href)
       url.searchParams.set('menu', String(menus[resolved].id))
       window.history.replaceState({}, '', url)
@@ -249,7 +250,8 @@ export function MenusDeGrupos() {
     const onPop = () => {
       const ms = menusRef.current
       if (!ms || ms.length === 0) return
-      const fromUrl = Number(new URLSearchParams(window.location.search).get('menu'))
+      const raw = new URLSearchParams(window.location.search).get('menu')
+      const fromUrl = raw === null ? NaN : Number(raw)
       const idx = ms.findIndex((m) => m.id === fromUrl)
       setActive(idx >= 0 ? idx : 0)
       checkpoint('menusdegrupos_url_synced', { menu_id: idx >= 0 ? fromUrl : ms[0].id, mode: 'popstate' })
