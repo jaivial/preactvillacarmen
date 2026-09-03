@@ -129,9 +129,24 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
 
 function normalizePublicMenuSettings(value: unknown): PublicMenuSettings {
   const record = toRecord(value)
+  const optionsRaw = Array.isArray(record.beverage_options) ? record.beverage_options : []
+  const beverageOptions = []
+  for (const raw of optionsRaw) {
+    const option = toRecord(raw)
+    const name = toText(option.name)
+    if (!name) continue
+    beverageOptions.push({
+      id: Math.trunc(toNumber(option.id, 0)) || undefined,
+      slug: toText(option.slug),
+      name,
+      is_custom: toBool(option.is_custom) === true,
+      selected: toBool(option.selected) !== false,
+    })
+  }
   return {
     included_coffee: toBool(record.included_coffee) === true,
     beverage: toRecord(record.beverage),
+    beverage_options: beverageOptions,
     comments: toStringArray(record.comments),
     min_party_size: Math.max(1, Math.trunc(toNumber(record.min_party_size, 1))),
     main_dishes_limit: toBool(record.main_dishes_limit) === true,
