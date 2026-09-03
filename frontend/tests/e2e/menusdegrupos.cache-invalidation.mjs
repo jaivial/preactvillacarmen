@@ -1,17 +1,18 @@
 // Scenario: menu content edited in the DB must be visible on SPA re-entry WITHOUT a
 // full page reload — the frontend api cache must never serve stale menu content for
 // these public endpoints (network-first, cache only as error fallback).
-// Covers both fetch paths: the /menusdegrupos list and /api/menus/:id (MenuCatalogRoute).
-// Both endpoints serve dishes from group_menu_section_dishes_v2, so the fixture
-// mutates title_snapshot/description_snapshot of one dish row.
+// Covers both fetch paths: the /menusdegrupos detail fetch (getMenuForDisplay, keyed
+// by ?menu=<id>) and /api/menus/:id (MenuCatalogRoute). Both endpoints serve dishes
+// from group_menu_section_dishes_v2, so the fixture mutates
+// title_snapshot/description_snapshot of one dish row.
 // Pipeline:
 //   test_started
 //   -> fixture_dish_prepared (dev DB mutation token A)
-//   -> baseline_list_shows_token (menusdegrupos_menu_rendered)
+//   -> baseline_detail_shows_token (menusdegrupos_menu_detail_received + menusdegrupos_menu_rendered)
 //   -> warm_menu_by_id_cache (menu_catalog_menu_rendered)
 //   -> navigate_away_spa (cache stays alive in JS context)
 //   -> db_mutated_to_token_b
-//   -> list_reflects_db_change
+//   -> detail_reflects_db_change
 //   -> by_id_reflects_db_change
 //   -> backend_checkpoints_verified
 //   -> fixture_restored
@@ -76,16 +77,15 @@ try {
   await withBrowserContext(correlationId, async ({ page, consoleCheckpoints }) => {
     const pageText = () => page.locator('.menuPage').innerText()
 
-    await run('baseline_list_shows_token', async () => {
-      await Promise.all([
-        page.waitForResponse((r) => r.url().includes('/api/menuDeGruposBackend/getActiveMenusForDisplay')),
-        page.goto(`${baseUrl()}/menusdegrupos`, { waitUntil: 'domcontentloaded' }),
-      ])
-      await page.waitForSelector('.menuPage .menuSectionCard', { timeout: 15_000 })
+    await run('baseline_detail_shows_token', async () => {
+      await page.goto(`${baseUrl()}/menusdegrupos?menu=${targetMenuId}`, { waitUntil: 'domcontentloaded' })
+      await page.waitForSelector(`[data-testid="menusdegrupos-tab-${targetMenuId}"][aria-selected="true"]`, { timeout: 15_000 })
+      await waitForConsoleCheckpoint(page, consoleCheckpoints, 'menusdegrupos_menu_detail_received')
+      await waitForConsoleCheckpoint(page, consoleCheckpoints, 'menusdegrupos_menu_rendered')
+      await page.waitForFunction((token) => document.querySelector('.menuPage')?.innerText.includes(token), tokenA, { timeout: 15_000 })
       const text = await pageText()
-      assert(text.includes(tokenA), `fresh /menusdegrupos load must show DB token ${tokenA}`)
+      assert(text.includes(tokenA), `fresh /menusdegrupos?menu=${targetMenuId} load must show DB token ${tokenA}`)
       assert(!text.includes(tokenB), `token ${tokenB} must not exist before mutation`)
-      assert(consoleCheckpoints.includes('menusdegrupos_menu_rendered'), 'frontend checkpoint "menusdegrupos_menu_rendered" missing')
     })
 
     await run('warm_menu_by_id_cache', async () => {
@@ -105,10 +105,10 @@ try {
       await setDishTitle(tokenB)
     })
 
-    await run('list_reflects_db_change', async () => {
-      await spaNavigate(page, '/menusdegrupos')
-      await page.waitForSelector('.menuPage .menuSectionCard', { timeout: 15_000 })
-      await page.waitForFunction((token) => document.querySelector('.menuPage')?.innerText.includes(token), tokenB, { timeout: 10_000 })
+    await run('detail_reflects_db_change', async () => {
+      await spaNavigate(page, `/menusdegrupos?menu=${targetMenuId}`)
+      await page.waitForSelector(`[data-testid="menusdegrupos-tab-${targetMenuId}"][aria-selected="true"]`, { timeout: 15_000 })
+      await page.waitForFunction((token) => document.querySelector('.menuPage')?.innerText.includes(token), tokenB, { timeout: 15_000 })
       const text = await pageText()
       assert(text.includes(tokenB), `SPA re-entry must show fresh DB content ${tokenB} (cache must not serve stale ${tokenA})`)
       assert(!text.includes(tokenA), `stale token ${tokenA} must disappear after DB change`)
@@ -126,10 +126,10 @@ try {
   await run('backend_checkpoints_verified', async () => {
     const lines = backendLogLines(correlationId)
     assertBackendCheckpoints(lines, [
-      'group_menus_list_request_received',
-      'group_menus_list_db_query_started',
-      'group_menus_list_db_query_completed',
-      'group_menus_list_response_sent',
+      'public_group_menu_request_received',
+      'public_group_menu_db_query_started',
+      'public_group_menu_db_query_completed',
+      'public_group_menu_response_sent',
       'public_menu_by_id_request_received',
       'public_menu_by_id_db_query_started',
       'public_menu_by_id_db_query_completed',
