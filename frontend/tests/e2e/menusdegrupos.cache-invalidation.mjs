@@ -58,7 +58,7 @@ try {
 
   await run('fixture_dish_prepared', async () => {
     const rows = mysqlRows(
-      `SELECT d.id, d.menu_id, d.title_snapshot, d.description_snapshot
+      `SELECT d.id, d.menu_id, COALESCE(d.title_snapshot, '') AS title_snapshot, COALESCE(d.description_snapshot, '') AS description_snapshot
        FROM group_menu_section_dishes_v2 d
        JOIN menus m ON m.id = d.menu_id
        WHERE d.restaurant_id = ${Number(restaurantId())} AND d.active = 1 AND m.active = 1

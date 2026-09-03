@@ -123,7 +123,6 @@ try {
       await expandAllSections(page)
       const clientId = await findClientIdByTitle(page, dish.title_snapshot)
       const cid = await clientId.jsonValue()
-      const sw = page.locator(`${switchSel(cid)}[aria-checked="true"], ${switchSel(cid)}`).first()
       await page.waitForSelector(switchSel(cid), { timeout: 15_000 })
       const checked = await page.getAttribute(switchSel(cid), 'aria-checked')
       if (checked === 'true') {

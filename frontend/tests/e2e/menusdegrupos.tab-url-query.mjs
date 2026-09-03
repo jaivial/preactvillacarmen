@@ -130,7 +130,7 @@ try {
       await page.waitForFunction((id) => new URLSearchParams(location.search).get('menu') === id, secondId, { timeout: 10_000 })
       const activeSel = '[data-testid="menusdegrupos-tabs"] [role="tab"][aria-selected="true"]'
       assert((await page.getAttribute(activeSel, 'data-testid')) === `menusdegrupos-tab-${secondId}`, 'browser back must restore tab 2 as active')
-      const noReload = await page.evaluate(() => window.__e2eNoFullReload === true || true)
+      const noReload = await page.evaluate(() => window.__e2eNoFullReload === true)
       assert(noReload, 'history navigation must stay in the SPA')
     })
 
