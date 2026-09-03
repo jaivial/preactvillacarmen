@@ -8,6 +8,7 @@ type GroupMenuDishValue = {
   id?: unknown
   nombre?: unknown
   descripcion?: unknown
+  descripcion_enabled?: unknown
   suplemento?: unknown
   suplemento_activo?: unknown
   active?: unknown
@@ -99,10 +100,11 @@ function asDishes(v: unknown): Dish[] {
       const suplemento = asNumberOrNull(item.suplemento)
       const alergenos = asStringArray(item.alergenos)
       const id = typeof item.id === 'number' ? item.id : Number(item.id)
+      const descripcionEnabled = item.descripcion_enabled !== false
       return {
         id: Number.isFinite(id) && id > 0 ? id : undefined,
         descripcion: nombre,
-        description: String(item.descripcion ?? '').trim() || null,
+        description: descripcionEnabled ? String(item.descripcion ?? '').trim() || null : null,
         alergenos,
         supplement_enabled: item.suplemento_activo === true || suplemento !== null,
         supplement_price: suplemento,
