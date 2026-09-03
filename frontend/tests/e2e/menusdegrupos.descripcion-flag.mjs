@@ -56,9 +56,11 @@ try {
   let restored = false
   const restore = () => {
     if (!dish || restored) return
+    const hadDescription = dish.description_snapshot !== ''
     mysqlExec(
       `UPDATE group_menu_section_dishes_v2
-       SET description_enabled = 1, description_snapshot = ${sqlQuote(dish.description_snapshot || dish.title_snapshot)}
+       SET description_enabled = 1,
+           description_snapshot = ${hadDescription ? sqlQuote(dish.description_snapshot) : 'description_snapshot'}
        WHERE id = ${dish.dish_id}`,
     )
     restored = true
@@ -66,7 +68,8 @@ try {
   process.on('exit', restore)
   process.on('uncaughtException', (err) => {
     restore()
-    throw err
+    console.error(`[${correlationId}] uncaught_exception`, err)
+    process.exitCode = 1
   })
 
   await run('seed_distinct_description', async () => {

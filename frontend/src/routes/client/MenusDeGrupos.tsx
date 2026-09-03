@@ -195,6 +195,7 @@ function renderBeverageText(beverage: NormalizedBeverage, t: (key: string) => st
 }
 
 function checkpoint(name: string, detail?: Record<string, unknown>) {
+  if (!import.meta.env.DEV) return
   if (detail) {
     console.log(`[checkpoint] ${name}`, JSON.stringify(detail))
   } else {
@@ -243,8 +244,10 @@ export function MenusDeGrupos() {
 
   // hydrate active tab from ?menu=<id>; default/unknown falls back to the
   // first menu and its id is written into the URL
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (!menus || menus.length === 0) return
+    if (!menus || menus.length === 0 || hydratedRef.current) return
+    hydratedRef.current = true
     const raw = new URLSearchParams(window.location.search).get('menu')
     const fromUrl = raw === null ? NaN : Number(raw)
     const idx = menus.findIndex((m) => m.id === fromUrl)
@@ -284,6 +287,14 @@ export function MenusDeGrupos() {
     setActive(idx)
     const menu = menus?.[idx]
     if (menu) {
+      // allow a fresh detail fetch if a previous attempt failed for this menu
+      if (failed[menu.id]) {
+        setFailed((prev) => {
+          const next = { ...prev }
+          delete next[menu.id]
+          return next
+        })
+      }
       const url = new URL(window.location.href)
       url.searchParams.set('menu', String(menu.id))
       window.history.pushState({}, '', url)
