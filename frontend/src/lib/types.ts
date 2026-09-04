@@ -95,9 +95,18 @@ export type PublicMenuSection = {
   annotations_english?: string[]
 }
 
+export type PublicBeverageOption = {
+  id?: number
+  slug: string
+  name: string
+  is_custom?: boolean
+  selected?: boolean
+}
+
 export type PublicMenuSettings = {
   included_coffee: boolean
   beverage: Record<string, unknown>
+  beverage_options: PublicBeverageOption[]
   comments: string[]
   min_party_size: number
   main_dishes_limit: boolean

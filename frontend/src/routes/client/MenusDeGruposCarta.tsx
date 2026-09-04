@@ -6,8 +6,21 @@ import { getMenuViewSections } from './menuPublicHelpers'
 
 function groupCartaBeverage(menu: PublicMenu): string {
   const beverageType = String(menu.settings.beverage.type || 'no_incluida').toLowerCase().trim()
-  if (beverageType === 'ilimitada') return 'Bebida ilimitada'
-  if (beverageType === 'opcion') return 'Opción de bebida ilimitada'
+  const options = Array.isArray(menu.settings.beverage_options) ? menu.settings.beverage_options : []
+  const includedNames = options
+    .filter((option) => option.selected !== false)
+    .map((option) => String(option.name || '').trim())
+    .filter(Boolean)
+  if (beverageType === 'ilimitada') {
+    return includedNames.length > 0
+      ? `Bebida ilimitada (${includedNames.join(', ')})`
+      : 'Bebida ilimitada'
+  }
+  if (beverageType === 'opcion' || beverageType === 'option') {
+    return includedNames.length > 0
+      ? `Opción de bebida ilimitada (${includedNames.join(', ')})`
+      : 'Opción de bebida ilimitada'
+  }
   return 'Bebida no incluida'
 }
 
