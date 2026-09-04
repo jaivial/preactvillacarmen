@@ -536,7 +536,7 @@ function BentoShowcase() {
 
   return (
     <motion.section
-      class="vc-bento"
+      class="vc-bento display=hidden"
       style={{ opacity, transform: reduced ? 'none' : `translate3d(0, ${y}px, 0)` }}
       aria-label={t('home.story.title')}
     >
@@ -779,9 +779,14 @@ function EventsSection() {
             <Link href="/eventos" className="btn">
               {t('home.events.cta.more')}
             </Link>
-            <Link href="/reservas" className="btn primary">
-              {t('nav.reserve')}
-            </Link>
+            <a
+              class="btn primary"
+              href="https://wa.me/34638857294"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Consultar informacion
+            </a>
           </div>
         </div>
       </div>
