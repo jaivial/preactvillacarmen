@@ -1,28 +1,9 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import { menuBeverageNote } from '../../lib/menuBeverageNote'
 import { GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
-
-function groupCartaBeverage(menu: PublicMenu): string {
-  const beverageType = String(menu.settings.beverage.type || 'no_incluida').toLowerCase().trim()
-  const options = Array.isArray(menu.settings.beverage_options) ? menu.settings.beverage_options : []
-  const includedNames = options
-    .filter((option) => option.selected !== false)
-    .map((option) => String(option.name || '').trim())
-    .filter(Boolean)
-  if (beverageType === 'ilimitada') {
-    return includedNames.length > 0
-      ? `Bebida ilimitada (${includedNames.join(', ')})`
-      : 'Bebida ilimitada'
-  }
-  if (beverageType === 'opcion' || beverageType === 'option') {
-    return includedNames.length > 0
-      ? `Opción de bebida ilimitada (${includedNames.join(', ')})`
-      : 'Opción de bebida ilimitada'
-  }
-  return 'Bebida no incluida'
-}
 
 export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
   const { t, lang } = useI18n()
@@ -35,7 +16,7 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
     () => localizedArray(props.menu.settings.comments, props.menu.settings.comments_english, lang),
     [lang, props.menu.settings.comments, props.menu.settings.comments_english],
   )
-  const beverage = useMemo(() => groupCartaBeverage(props.menu), [props.menu])
+  const beverage = useMemo(() => menuBeverageNote(props.menu, lang), [lang, props.menu])
 
   return (
     <div class="page menuPage">
