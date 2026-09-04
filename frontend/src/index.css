@@ -1152,6 +1152,10 @@ svg {
     contain-intrinsic-size: 1100px;
 }
 
+.vc-bento[class~="display=hidden"] {
+    display: none;
+}
+
 .vc-bentoHead {
     max-width: 70ch;
 }
