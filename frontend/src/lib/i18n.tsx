@@ -40,7 +40,7 @@ const DICT: Dictionary = {
   'reservations.confirm.elegant': { es: 'Te esperamos pronto.', en: 'We look forward to seeing you soon.' },
 
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
-  'home.hero.title': { es: 'Alquer\u00eda Villacarmen', en: 'Alqueria Villacarmen' },
+  'home.hero.title': { es: 'Alquer\u00eda Villa Carmen', en: 'Alqueria Villa Carmen' },
   'home.hero.tagline': { es: 'Tradici\u00f3n y gastronom\u00eda mediterr\u00e1nea', en: 'Mediterranean tradition and gastronomy' },
   'home.hero.scroll': { es: 'Ad\u00e9ntrate en la alquer\u00eda', en: 'Step into the alqueria' },
 
