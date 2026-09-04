@@ -1,11 +1,26 @@
-import { useEffect } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
+import { PublicAdPopover } from '../../components/PublicAdPopover'
+import { fetchPublicAds, type PublicAd } from '../../lib/publicAds'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [location] = useLocation()
+  const [activeAd, setActiveAd] = useState<PublicAd | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchPublicAds()
+      .then((ads) => {
+        if (!cancelled) setActiveAd(ads[0] || null)
+      })
+      .catch(() => {
+        if (!cancelled) setActiveAd(null)
+      })
+    return () => { cancelled = true }
+  }, [])
 
   // Scroll to top on initial load and navigation
   useEffect(() => {
@@ -28,6 +43,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
+      {activeAd ? <PublicAdPopover ad={activeAd} onClose={() => setActiveAd(null)} /> : null}
     </div>
   )
 }

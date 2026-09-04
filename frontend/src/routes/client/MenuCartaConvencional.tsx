@@ -6,8 +6,14 @@ import { getMenuViewSections } from './menuPublicHelpers'
 
 function beverageNote(menu: PublicMenu): string {
   const beverageType = String(menu.settings.beverage.type || 'no_incluida').toLowerCase().trim()
-  if (beverageType === 'ilimitada') return 'Bebida ilimitada'
-  if (beverageType === 'opcion') return 'Opción de bebida ilimitada'
+  const options = Array.isArray(menu.settings.beverage_options) ? menu.settings.beverage_options : []
+  const includedNames = options
+    .filter((option) => option.selected !== false)
+    .map((option) => String(option.name || '').trim())
+    .filter(Boolean)
+  const suffix = includedNames.length > 0 ? ` (${includedNames.join(', ')})` : ''
+  if (beverageType === 'ilimitada') return `Bebida ilimitada${suffix}`
+  if (beverageType === 'opcion' || beverageType === 'option') return `Opción de bebida ilimitada${suffix}`
   return 'Bebida no incluida'
 }
 

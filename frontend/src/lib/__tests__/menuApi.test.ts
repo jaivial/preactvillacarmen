@@ -34,6 +34,7 @@ describe('fetchMenuByID', () => {
         settings: {
           included_coffee: true,
           beverage: {},
+          beverage_options: [],
           comments: [],
           min_party_size: 1,
           main_dishes_limit: false,

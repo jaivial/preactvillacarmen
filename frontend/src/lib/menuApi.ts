@@ -22,7 +22,9 @@ export async function fetchMenuHome(): Promise<HomeMenu[]> {
 }
 
 export async function fetchMenuByID(id: number): Promise<PublicMenu> {
-  const data = await apiGetJson<MenuByIDResponse>(`/api/menus/${id}`)
+  // network-first: menu content is edited in the backoffice and must never
+  // be served stale from the in-memory cache
+  const data = await apiGetJson<MenuByIDResponse>(`/api/menus/${id}`, { noStore: true })
   return data.menu
 }
 

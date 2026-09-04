@@ -6,20 +6,26 @@ import { getMenuViewSections } from './menuPublicHelpers'
 
 function beverageText(menu: PublicMenu, t: (key: string) => string): string[] {
   const beverageType = String(menu.settings.beverage.type || 'no_incluida').toLowerCase().trim()
+  const options = Array.isArray(menu.settings.beverage_options) ? menu.settings.beverage_options : []
+  const includedNames = options
+    .filter((option) => option.selected !== false)
+    .map((option) => String(option.name || '').trim())
+    .filter(Boolean)
+  const includedPhrase = includedNames.length > 0
+    ? `${t('groupMenus.beverage.includes1')} (${includedNames.join(', ')})`
+    : t('groupMenus.beverage.includes1')
   if (beverageType === 'ilimitada') {
     return [
       `${t('groupMenus.beverage.unlimited')} +${formatEuro(Number(menu.settings.beverage.price_per_person || 8))} ${t('groupMenus.beverage.pax')}`,
       t('groupMenus.beverage.table'),
-      t('groupMenus.beverage.includes1'),
-      t('groupMenus.beverage.includes2'),
+      includedPhrase,
     ]
   }
-  if (beverageType === 'opcion') {
+  if (beverageType === 'opcion' || beverageType === 'option') {
     return [
       `${t('groupMenus.beverage.option')} +${formatEuro(Number(menu.settings.beverage.price_per_person || 8))} ${t('groupMenus.beverage.pax')}`,
       t('groupMenus.beverage.table'),
-      t('groupMenus.beverage.includes1'),
-      t('groupMenus.beverage.includes2'),
+      includedPhrase,
     ]
   }
   return [t('groupMenus.beverage.notIncluded')]
@@ -33,7 +39,14 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
     [lang, props.menu.menu_subtitle, props.menu.menu_subtitle_english],
   )
   const pageSubtitle = useMemo(() => subtitles[0] || t('menus.card.groups.subtitle'), [subtitles, t])
-  const beverageLines = useMemo(() => beverageText(props.menu, t), [props.menu, t])
+  const beverageLines = useMemo(() => {
+    const lines = beverageText(props.menu, t)
+    // Named observation point: public payload assembled into render lines.
+    if (typeof window !== 'undefined' && window.location.search.includes('vcdebug=1')) {
+      console.log(`[checkpoint] public_beverage_lines_rendered count=${lines.length} menu_id=${props.menu.id}`)
+    }
+    return lines
+  }, [props.menu, t])
   const comments = useMemo(
     () => localizedArray(props.menu.settings.comments, props.menu.settings.comments_english, lang),
     [lang, props.menu.settings.comments, props.menu.settings.comments_english],

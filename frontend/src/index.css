@@ -57,6 +57,57 @@ body.vc-modal-open {
     overflow: hidden;
 }
 
+.publicAdOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(20, 24, 21, 0.58);
+    backdrop-filter: blur(6px);
+}
+
+.publicAdModal {
+    position: relative;
+    width: min(100%, 560px);
+    max-height: min(82vh, 720px);
+    overflow: auto;
+    border-radius: 24px;
+    padding: clamp(22px, 5vw, 34px);
+    background: #fffdf8;
+    color: #24342b;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.publicAdClose {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(36, 52, 43, 0.08);
+    color: inherit;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.publicAdContent { display: grid; gap: 12px; }
+.publicAdContent h2, .publicAdContent h3, .publicAdContent p { margin: 0; }
+.publicAdContent h2 { font-family: var(--font-display); font-size: clamp(30px, 7vw, 48px); line-height: 1; }
+.publicAdContent h3 { font-size: clamp(18px, 4vw, 24px); font-weight: 600; }
+.publicAdContent p { line-height: 1.6; }
+.publicAdImage { width: 100%; max-height: 360px; object-fit: cover; border-radius: 18px; }
+.publicAdActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.publicAdAction { flex: 1 1 160px; padding: 12px 16px; border-radius: 999px; color: white; text-align: center; text-decoration: none; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+    .publicAdOverlay, .publicAdModal { scroll-behavior: auto; }
+}
+
 a {
     color: inherit;
     text-decoration: none;
@@ -2589,6 +2640,7 @@ svg {
 
 .wineList {
     margin-top: 8px;
+    padding-bottom: 5rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 14px 0;
@@ -2661,7 +2713,7 @@ svg {
 
 .winePhoto img {
     width: 100%;
-    height: 100%;
+    height: inherit;
     object-fit: contain;
     padding: 10px;
     filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.14));
