@@ -6,7 +6,7 @@ export function ClientFooter() {
     <footer class="footer">
       <div class="container footer-grid">
         <div class="footer-col">
-          <div class="footer-wordmark">Villa Carmen</div>
+          <div class="footer-wordmark">Alqueria Villa Carmen</div>
           <p class="footer-small">
             C/ Sequia de Rascanya, 2
             <br />
