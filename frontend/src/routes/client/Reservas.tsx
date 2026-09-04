@@ -425,7 +425,12 @@ export function Reservas() {
     partySize &&
     reservationTime &&
     activeFloors.length > 0 &&
-    (activeFloors.length === 1 || selectedFloorNumber != null) &&
+    // When the floor toggle is off the selector is hidden; don't block the
+    // step on the user picking one. When the toggle is on, require the floor
+    // the same way as before (single active floor or an explicit pick).
+    (dayContext?.locationBooking?.allowFloorReservation === false
+      ? true
+      : activeFloors.length === 1 || selectedFloorNumber != null) &&
     (dayContext?.openingMode !== 'both' || selectedShift)
   )
   const riceStepReady = wantsRice === false || Boolean(wantsRice && riceType && riceServings && riceServings >= 2 && (!partySize || riceServings <= partySize))
