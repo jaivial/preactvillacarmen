@@ -31,6 +31,9 @@ export function ClientHeader() {
   const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>([])
   const [cafePageActive, setCafePageActive] = useState(true)
   const [bebidasPageActive, setBebidasPageActive] = useState(true)
+  // Coordination id: postres_page_visibility_v1
+  const [postresPageActive, setPostresPageActive] = useState(false)
+  const [postresWebPlacement, setPostresWebPlacement] = useState('inside_menus')
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
 
@@ -83,6 +86,10 @@ export function ClientHeader() {
         setBebidasPageActive(data.bebidas_page_active)
         setCafeActive(data.cafe_page_active)
         setBebidasActive(data.bebidas_page_active)
+        setPostresPageActive(data.postres_page_active)
+        setPostresWebPlacement(data.postres_web_placement)
+        console.log('[checkpoint] public_nav_postres_placement',
+          `active=${data.postres_page_active}`, `placement=${data.postres_web_placement}`)
       })
       .catch(() => {
         if (cancelled) return
@@ -150,6 +157,14 @@ export function ClientHeader() {
     return base
   }, [cafePageActive, bebidasPageActive])
 
+  // The postres food-type page is surfaced from its own visibility settings
+  // rather than from a menu section, so it gets its own nav entry.
+  // Coordination id: postres_page_visibility_v1
+  const postresNavItem = useMemo<NavItem | null>(
+    () => (postresPageActive ? { href: '/postres', label: 'Postres' } : null),
+    [postresPageActive]
+  )
+
   const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
     if (sidebarMenus == null) return null
 
@@ -183,20 +198,31 @@ export function ClientHeader() {
       .filter((section) => section.web_placement !== 'independent_section')
       .map((section) => ({ href: section.href, label: section.title }))
 
+    const insidePostres = postresNavItem && postresWebPlacement !== 'independent_section'
+      ? [postresNavItem]
+      : []
+
     return [
       ...menuLinks,
       ...groupLink,
       ...insideMenusSections,
+      ...insidePostres,
     ]
-  }, [sidebarMenus, visibleSections])
+  }, [sidebarMenus, visibleSections, postresNavItem, postresWebPlacement])
 
   // Sections flagged as standalone render outside the menus accordion.
   // Coordination id: menu_section_public_placement_v1
   const independentSectionItems = useMemo<NavItem[]>(
-    () => visibleSections
-      .filter((section) => section.web_placement === 'independent_section')
-      .map((section) => ({ href: section.href, label: section.title })),
-    [visibleSections]
+    () => {
+      const sections = visibleSections
+        .filter((section) => section.web_placement === 'independent_section')
+        .map((section) => ({ href: section.href, label: section.title }))
+      if (postresNavItem && postresWebPlacement === 'independent_section') {
+        sections.push(postresNavItem)
+      }
+      return sections
+    },
+    [visibleSections, postresNavItem, postresWebPlacement]
   )
 
   const menuItems = useMemo<NavItem[]>(
