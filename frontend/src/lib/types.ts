@@ -87,11 +87,17 @@ export type PublicMenuDish = {
 export type PublicMenuSection = {
   id: number
   title: string
+  display_title?: string
+  subtitle?: string
+  tab_label?: string
   kind: string
   position: number
   annotations: string[]
   dishes: PublicMenuDish[]
   title_english?: string
+  display_title_english?: string
+  subtitle_english?: string
+  tab_label_english?: string
   annotations_english?: string[]
 }
 

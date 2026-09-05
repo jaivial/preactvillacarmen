@@ -411,13 +411,18 @@ export function MenuSection(props: {
   pickCategory?: MenuPickCategory
   showImage?: boolean
   annotations?: string[]
+  subtitle?: string
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
+  const subtitle = String(props.subtitle ?? '').trim()
 
   return (
     <section class="menuSection">
       <h2 class="menuSectionHeading">{props.title}</h2>
+      {subtitle ? (
+        <p class="menuSectionLead" data-testid="menu-section-lead">{subtitle}</p>
+      ) : null}
       {props.showImage ? (
         <DishCardGridWithImage dishes={items} pickCategory={props.pickCategory} showImage={props.showImage} />
       ) : (
@@ -633,14 +638,19 @@ export function GroupStyleDishSection(props: {
   showDishPrice?: boolean
   showAllergens?: boolean
   annotations?: string[]
+  subtitle?: string
 }) {
   const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
+  const subtitle = String(props.subtitle ?? '').trim()
 
   return (
     <section class="menuSubSection">
       <h3 class="menuSubTitle">{props.title}</h3>
+      {subtitle ? (
+        <p class="menuSectionLead" data-testid="menu-section-lead">{subtitle}</p>
+      ) : null}
       <ul class="menuDishList">
         {items.map((dish, idx) => (
           <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`}>
