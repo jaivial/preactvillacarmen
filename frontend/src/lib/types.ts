@@ -341,10 +341,22 @@ export type MenuByIDResponse = {
 }
 
 // Response shape for GET /api/menus/sidebar
+// Coordination id: menu_section_public_placement_v1
+// (backoffice section visibility -> DB group_menu_sections_v2 -> this payload -> nav)
+export type PublicVisibleSection = {
+  id: number
+  menu_id: number
+  title: string
+  kind: string
+  web_placement: string
+  href: string
+}
+
 export type MenuSidebarResponse = {
   success: true
   count: number
   menus: SidebarMenu[]
+  visible_sections?: PublicVisibleSection[]
   cafe_page_active: boolean
   bebidas_page_active: boolean
 }

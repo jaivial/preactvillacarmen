@@ -9,7 +9,7 @@ import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import { fetchMenuSidebar } from '../lib/menuApi'
 import { prefetchRoute } from '../lib/prefetch'
-import type { SidebarMenu } from '../lib/types'
+import type { PublicVisibleSection, SidebarMenu } from '../lib/types'
 import type { MenuSidebarData } from '../lib/menuApi'
 
 type NavItem = {
@@ -27,6 +27,8 @@ export function ClientHeader() {
   const navRef = useRef<HTMLElement>(null)
   const { lang, setLang, t } = useI18n()
   const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
+  // Coordination id: menu_section_public_placement_v1
+  const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>([])
   const [cafePageActive, setCafePageActive] = useState(true)
   const [bebidasPageActive, setBebidasPageActive] = useState(true)
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
@@ -75,6 +77,8 @@ export function ClientHeader() {
       .then((data: MenuSidebarData) => {
         if (cancelled) return
         setSidebarMenus(data.menus)
+        setVisibleSections(data.visible_sections)
+        console.log('[checkpoint] public_nav_sections_loaded', `count=${data.visible_sections.length}`)
         setCafePageActive(data.cafe_page_active)
         setBebidasPageActive(data.bebidas_page_active)
         setCafeActive(data.cafe_page_active)
@@ -83,6 +87,7 @@ export function ClientHeader() {
       .catch(() => {
         if (cancelled) return
         setSidebarMenus(null)
+        setVisibleSections([])
       })
     return () => {
       cancelled = true
@@ -174,25 +179,37 @@ export function ClientHeader() {
 
     const groupLink = hasGroupMenus ? [{ href: '/menusdegrupos', labelKey: 'nav.groupMenus' }] : []
 
+    const insideMenusSections = visibleSections
+      .filter((section) => section.web_placement !== 'independent_section')
+      .map((section) => ({ href: section.href, label: section.title }))
+
     return [
       ...menuLinks,
       ...groupLink,
-      { href: '/postres', labelKey: 'nav.desserts' },
+      ...insideMenusSections,
     ]
-  }, [sidebarMenus])
+  }, [sidebarMenus, visibleSections])
+
+  // Sections flagged as standalone render outside the menus accordion.
+  // Coordination id: menu_section_public_placement_v1
+  const independentSectionItems = useMemo<NavItem[]>(
+    () => visibleSections
+      .filter((section) => section.web_placement === 'independent_section')
+      .map((section) => ({ href: section.href, label: section.title })),
+    [visibleSections]
+  )
 
   const menuItems = useMemo<NavItem[]>(
     () => [
       { href: '/menufindesemana', labelKey: 'nav.weekendMenu', visibilityKey: 'menufindesemana' },
       { href: '/menudeldia', labelKey: 'nav.dailyMenu', visibilityKey: 'menudeldia' },
-      { href: '/postres', labelKey: 'nav.desserts' },
     ],
     []
   )
 
   const effectiveMenuItems = dynamicMenuItems || menuItems
 
-  const isMenuSectionActive = effectiveMenuItems.some((item) => location.startsWith(item.href))
+  const isMenuSectionActive = effectiveMenuItems.some((item) => location.startsWith(item.href.split('#')[0]))
 
   useEffect(() => {
     if (mobileOpen) setMenusOpen(isMenuSectionActive)
@@ -246,7 +263,7 @@ export function ClientHeader() {
             >
               <ul class="navBurgerSubLinks" aria-label={t('nav.menusSection')}>
                 {effectiveMenuItems.map((item) => {
-                  const isActive = location.startsWith(item.href)
+                  const isActive = location.startsWith(item.href.split('#')[0])
                   const label = item.label || t(item.labelKey || '')
                   return (
                     <li>
@@ -263,6 +280,23 @@ export function ClientHeader() {
               </ul>
             </div>
           </li>
+
+          {independentSectionItems.map((item) => {
+            const isActive = location.startsWith(item.href.split('#')[0])
+            return (
+              <li key={item.href} data-testid={`client-header-independent-section-item-${item.href}`}>
+                <Link
+                  href={item.href}
+                  className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
+                  onClick={() => setMobileOpen(false)}
+                  data-testid={`client-header-independent-section-link-${item.href}`}
+                  data-coordination-id="menu-section-public-placement-v1"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            )
+          })}
 
           {items.map((item) => {
             if (item.href === '/') return null
