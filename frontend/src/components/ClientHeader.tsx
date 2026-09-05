@@ -214,7 +214,7 @@ export function ClientHeader() {
   // Coordination id: menu_section_public_placement_v1
   const independentSectionItems = useMemo<NavItem[]>(
     () => {
-      const sections = visibleSections
+      const sections: NavItem[] = visibleSections
         .filter((section) => section.web_placement === 'independent_section')
         .map((section) => ({ href: section.href, label: section.title }))
       if (postresNavItem && postresWebPlacement === 'independent_section') {
