@@ -2600,9 +2600,9 @@ svg {
 }
 
 .stickyTab {
-    /* Grow to share a row, but never shrink below the label width. */
-    flex: 1 1 auto;
-    min-width: max-content;
+    /* Take exactly the width the label needs and never shrink: an over-long row
+       wraps onto the next row instead of squeezing labels onto two lines. */
+    flex: 0 0 auto;
     white-space: nowrap;
     border: 0;
     background: transparent;
@@ -2624,6 +2624,8 @@ svg {
 
 .stickyTabLabel {
     white-space: nowrap;
+    /* Belt and braces: the label must never be the thing that wraps. */
+    word-break: keep-all;
     position: relative;
     z-index: 1;
     display: inline-block;
