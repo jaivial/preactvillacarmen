@@ -4,6 +4,7 @@ import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { menuBeverageNote } from '../../lib/menuBeverageNote'
 import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
+import { MenuSectionTabs } from './MenuSectionTabs'
 
 export function MenuCartaConvencional(props: { menu: PublicMenu }) {
   const { t, lang } = useI18n()
@@ -36,16 +37,25 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
           ) : (
             <article class="menuSectionCard">
               <div class="menuGrid menuGrid--single">
-                {sections.map((section) => (
-                  <GroupStyleDishSection
-                    key={`${section.id}-${section.title}`}
-                    title={localized(section.title, section.title_english, lang)}
-                    dishes={section.dishes}
-                    annotations={localizedArray(section.annotations, section.annotations_english, lang)}
-                    showDishPrice={true}
-                    showAllergens={true}
-                  />
-                ))}
+                <MenuSectionTabs
+                  enabled={props.menu.show_section_tabs}
+                  ariaLabel={localized(props.menu.menu_title, props.menu.menu_title_english, lang)}
+                  bubbleId="menuSectionTabBubble"
+                  testId="menu-carta-section-tabs"
+                  panels={sections.map((section) => ({
+                    key: `${section.id}-${section.title}`,
+                    label: localized(section.title, section.title_english, lang),
+                    content: (
+                      <GroupStyleDishSection
+                        title={localized(section.title, section.title_english, lang)}
+                        dishes={section.dishes}
+                        annotations={localizedArray(section.annotations, section.annotations_english, lang)}
+                        showDishPrice={true}
+                        showAllergens={true}
+                      />
+                    ),
+                  }))}
+                />
 
                 {infoLines.length > 0 ? (
                   <section class="menuSubSection">
