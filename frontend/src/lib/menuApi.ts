@@ -1,8 +1,10 @@
 import { apiGetJson } from './api'
-import type { PublicMenu, SidebarMenu, HomeMenu, MenuByIDResponse, MenuSidebarResponse, MenuHomeResponse, ComidaItem, ComidaItemsResponse } from './types'
+import type { PublicMenu, PublicVisibleSection, SidebarMenu, HomeMenu, MenuByIDResponse, MenuSidebarResponse, MenuHomeResponse, ComidaItem, ComidaItemsResponse } from './types'
 
 export type MenuSidebarData = {
   menus: SidebarMenu[]
+  // Coordination id: menu_section_public_placement_v1
+  visible_sections: PublicVisibleSection[]
   cafe_page_active: boolean
   bebidas_page_active: boolean
 }
@@ -11,6 +13,7 @@ export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
   const data = await apiGetJson<MenuSidebarResponse>('/api/menus/sidebar')
   return {
     menus: data.menus,
+    visible_sections: data.visible_sections || [],
     cafe_page_active: Boolean(data.cafe_page_active),
     bebidas_page_active: Boolean(data.bebidas_page_active),
   }
