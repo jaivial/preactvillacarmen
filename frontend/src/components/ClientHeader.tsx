@@ -32,7 +32,7 @@ export function ClientHeader() {
   const [cafePageActive, setCafePageActive] = useState(true)
   const [bebidasPageActive, setBebidasPageActive] = useState(true)
   // Coordination id: postres_page_visibility_v1
-  const [postresPageActive, setPostresPageActive] = useState(false)
+  const [postresPageActive, setPostresPageActive] = useState(true)
   const [postresWebPlacement, setPostresWebPlacement] = useState('inside_menus')
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
@@ -161,7 +161,7 @@ export function ClientHeader() {
   // rather than from a menu section, so it gets its own nav entry.
   // Coordination id: postres_page_visibility_v1
   const postresNavItem = useMemo<NavItem | null>(
-    () => (postresPageActive ? { href: '/postres', label: 'Postres' } : null),
+    () => (postresPageActive ? { href: '/postres', labelKey: 'nav.desserts' } : null),
     [postresPageActive]
   )
 
