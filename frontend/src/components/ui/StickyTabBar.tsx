@@ -21,6 +21,8 @@ export function StickyTabBar(props: {
   ariaLabel: string
   bubbleId: string
   testId: string
+  /** When set, tabs are wired to real tab panels via `aria-controls`. */
+  controlsPrefix?: string
 }) {
   const reduceMotion = useReducedMotion()
   if (props.items.length < 2) return null
@@ -28,7 +30,7 @@ export function StickyTabBar(props: {
   return (
     <div class="stickyTabsSticky" role="tablist" aria-label={props.ariaLabel} data-testid={props.testId}>
       <div class="stickyTabs">
-        {props.items.map((item) => {
+        {props.items.map((item, index) => {
           const active = item.key === props.activeKey
           return (
             <button
@@ -38,6 +40,8 @@ export function StickyTabBar(props: {
               onClick={() => props.onSelect(item.key)}
               role="tab"
               aria-selected={active}
+              id={props.controlsPrefix ? `${props.controlsPrefix}-tab-${index}` : undefined}
+              aria-controls={props.controlsPrefix ? `${props.controlsPrefix}-panel-${index}` : undefined}
               data-testid={`${props.testId}-tab-${item.key}`}
             >
               {active ? (

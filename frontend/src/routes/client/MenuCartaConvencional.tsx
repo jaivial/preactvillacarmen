@@ -45,6 +45,7 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
                   panels={sections.map((section) => ({
                     key: `${section.id}-${section.title}`,
                     label: localized(section.title, section.title_english, lang),
+                    hidden: section.dishes.length === 0,
                     content: (
                       <GroupStyleDishSection
                         title={localized(section.title, section.title_english, lang)}

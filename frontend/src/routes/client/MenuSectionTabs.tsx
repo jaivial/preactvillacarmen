@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact'
 import { Fragment } from 'preact'
-import { useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import { StickyTabBar } from '../../components/ui'
 
 export type MenuSectionTabPanel = {
@@ -31,10 +31,11 @@ export function MenuSectionTabs(props: {
   const activeKey = visible.some((panel) => panel.key === selectedKey) ? selectedKey : visible[0]?.key || ''
   const tabbed = !!props.enabled && visible.length > 1
 
-  if (tabbed && typeof window !== 'undefined' && window.location.search.includes('vcdebug=1')) {
-    // Named observation point: menu sections rendered as tabs.
+  // Named observation point: menu sections rendered as tabs.
+  useEffect(() => {
+    if (!tabbed || typeof window === 'undefined' || !window.location.search.includes('vcdebug=1')) return
     console.log(`[checkpoint] public_menu_section_tabs_rendered count=${visible.length} active=${activeKey}`)
-  }
+  }, [tabbed, visible.length, activeKey])
 
   return (
     <Fragment>
@@ -46,10 +47,23 @@ export function MenuSectionTabs(props: {
           ariaLabel={props.ariaLabel}
           bubbleId={props.bubbleId}
           testId={props.testId}
+          controlsPrefix={props.testId}
         />
       ) : null}
-      {visible.map((panel) =>
-        tabbed && panel.key !== activeKey ? null : <Fragment key={panel.key}>{panel.content}</Fragment>,
+      {visible.map((panel, index) =>
+        tabbed && panel.key !== activeKey ? null : !tabbed ? (
+          <Fragment key={panel.key}>{panel.content}</Fragment>
+        ) : (
+          <div
+            key={panel.key}
+            role="tabpanel"
+            id={`${props.testId}-panel-${index}`}
+            aria-labelledby={`${props.testId}-tab-${index}`}
+            data-testid={`${props.testId}-panel-${panel.key}`}
+          >
+            {panel.content}
+          </div>
+        ),
       )}
     </Fragment>
   )
