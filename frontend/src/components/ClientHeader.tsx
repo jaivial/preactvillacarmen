@@ -318,7 +318,7 @@ export function ClientHeader() {
                   data-testid={`client-header-independent-section-link-${item.href}`}
                   data-coordination-id="menu-section-public-placement-v1"
                 >
-                  {item.label}
+                  {item.label || t(item.labelKey || '')}
                 </Link>
               </li>
             )
