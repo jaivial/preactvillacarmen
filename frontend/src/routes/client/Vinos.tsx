@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
+import { StickyTabBar } from '../../components/ui'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Vino, VinosResponse } from '../../lib/types'
@@ -165,36 +166,14 @@ export function Vinos() {
 
       <section class="menuBody wineBody">
         <div class="container">
-          <div class="wineTabsSticky" role="tablist" aria-label={t('nav.wines')}>
-            <div class="wineTabs">
-              {WINE_TYPES.map((wt) => {
-                const active = wt.tipo === tipo
-                return (
-                  <button
-                    key={wt.tipo}
-                    type="button"
-                    class={active ? 'wineTab is-active' : 'wineTab'}
-                    onClick={() => setTipo(wt.tipo)}
-                    role="tab"
-                    aria-selected={active}
-                  >
-                    {active ? (
-                      <motion.span
-                        class="wineTabBubble"
-                        layoutId="wineTabBubble"
-                        transition={
-                          reduceMotion
-                            ? { duration: 0 }
-                            : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }
-                        }
-                      />
-                    ) : null}
-                    <span class="wineTabLabel">{t(wt.labelKey)}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          <StickyTabBar
+            items={WINE_TYPES.map((wt) => ({ key: wt.tipo, label: t(wt.labelKey) }))}
+            activeKey={tipo}
+            onSelect={(key) => setTipo(key as WineType)}
+            ariaLabel={t('nav.wines')}
+            bubbleId="wineTabBubble"
+            testId="vinos-type-tabs"
+          />
 
           {vinos === undefined ? (
             <div class="menuState">{t('menus.preview.loading')}</div>

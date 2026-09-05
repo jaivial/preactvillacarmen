@@ -4,6 +4,7 @@ import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { menuBeverageNote } from '../../lib/menuBeverageNote'
 import { GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
+import { MenuSectionTabs } from './MenuSectionTabs'
 
 export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
   const { t, lang } = useI18n()
@@ -54,15 +55,25 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
               ) : null}
 
               <div class="menuGrid menuGrid--single">
-                {sections.map((section) => (
-                  <GroupStyleDishSection
-                    key={`${section.id}-${section.title}`}
-                    title={localized(section.title, section.title_english, lang)}
-                    dishes={section.dishes}
-                    annotations={localizedArray(section.annotations, section.annotations_english, lang)}
-                    showDishPrice={true}
-                  />
-                ))}
+                <MenuSectionTabs
+                  enabled={props.menu.show_section_tabs}
+                  ariaLabel={localized(props.menu.menu_title, props.menu.menu_title_english, lang)}
+                  bubbleId="menuSectionTabBubble"
+                  testId="menu-grupos-carta-section-tabs"
+                  panels={sections.map((section) => ({
+                    key: `${section.id}-${section.title}`,
+                    label: localized(section.title, section.title_english, lang),
+                    hidden: section.dishes.length === 0,
+                    content: (
+                      <GroupStyleDishSection
+                        title={localized(section.title, section.title_english, lang)}
+                        dishes={section.dishes}
+                        annotations={localizedArray(section.annotations, section.annotations_english, lang)}
+                        showDishPrice={true}
+                      />
+                    ),
+                  }))}
+                />
 
                 <section class="menuSubSection">
                   <h3 class="menuSubTitle">Previsión</h3>
