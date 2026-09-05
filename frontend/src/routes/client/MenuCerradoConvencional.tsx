@@ -45,7 +45,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
               panels={[
                 {
                   key: 'starters',
-                  label: t('menus.preview.starters'),
+                  label: localized(sectionData.startersTabLabel || t('menus.preview.starters'), sectionData.startersTabLabelEnglish, lang),
                   hidden: sectionData.starters.length === 0,
                   content: (
                     <MenuSection
@@ -60,7 +60,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                 },
                 {
                   key: 'mains',
-                  label: localized(sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTitleEnglish, lang),
+                  label: localized(sectionData.mainsTabLabel || sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTabLabelEnglish || sectionData.mainsTitleEnglish, lang),
                   hidden: sectionData.mains.length === 0,
                   content: (
                     <MenuSection
@@ -75,7 +75,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                 },
                 {
                   key: 'rice',
-                  label: localized(sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTitleEnglish, lang),
+                  label: localized(sectionData.riceTabLabel || sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTabLabelEnglish || sectionData.riceTitleEnglish, lang),
                   hidden: sectionData.rice.length === 0,
                   content: (
                     <>
