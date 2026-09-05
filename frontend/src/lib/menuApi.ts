@@ -7,6 +7,9 @@ export type MenuSidebarData = {
   visible_sections: PublicVisibleSection[]
   cafe_page_active: boolean
   bebidas_page_active: boolean
+  // Coordination id: postres_page_visibility_v1
+  postres_page_active: boolean
+  postres_web_placement: string
 }
 
 export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
@@ -16,6 +19,8 @@ export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
     visible_sections: data.visible_sections || [],
     cafe_page_active: Boolean(data.cafe_page_active),
     bebidas_page_active: Boolean(data.bebidas_page_active),
+    postres_page_active: Boolean(data.postres_page_active),
+    postres_web_placement: data.postres_web_placement || 'inside_menus',
   }
 }
 
