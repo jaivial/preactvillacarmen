@@ -157,6 +157,14 @@ export function ClientHeader() {
     return base
   }, [cafePageActive, bebidasPageActive])
 
+  // Desserts reach the nav through the postres food-type page below, so the
+  // menu section of the same kind is dropped here to avoid a duplicate entry.
+  // Coordination id: postres_page_visibility_v1
+  const navSections = useMemo(
+    () => visibleSections.filter((section) => section.kind !== 'postres'),
+    [visibleSections]
+  )
+
   // The postres food-type page is surfaced from its own visibility settings
   // rather than from a menu section, so it gets its own nav entry.
   // Coordination id: postres_page_visibility_v1
@@ -194,7 +202,7 @@ export function ClientHeader() {
 
     const groupLink = hasGroupMenus ? [{ href: '/menusdegrupos', labelKey: 'nav.groupMenus' }] : []
 
-    const insideMenusSections = visibleSections
+    const insideMenusSections = navSections
       .filter((section) => section.web_placement !== 'independent_section')
       .map((section) => ({ href: section.href, label: section.title }))
 
@@ -208,13 +216,13 @@ export function ClientHeader() {
       ...insideMenusSections,
       ...insidePostres,
     ]
-  }, [sidebarMenus, visibleSections, postresNavItem, postresWebPlacement])
+  }, [sidebarMenus, navSections, postresNavItem, postresWebPlacement])
 
   // Sections flagged as standalone render outside the menus accordion.
   // Coordination id: menu_section_public_placement_v1
   const independentSectionItems = useMemo<NavItem[]>(
     () => {
-      const sections: NavItem[] = visibleSections
+      const sections: NavItem[] = navSections
         .filter((section) => section.web_placement === 'independent_section')
         .map((section) => ({ href: section.href, label: section.title }))
       if (postresNavItem && postresWebPlacement === 'independent_section') {
@@ -222,7 +230,7 @@ export function ClientHeader() {
       }
       return sections
     },
-    [visibleSections, postresNavItem, postresWebPlacement]
+    [navSections, postresNavItem, postresWebPlacement]
   )
 
   const menuItems = useMemo<NavItem[]>(
