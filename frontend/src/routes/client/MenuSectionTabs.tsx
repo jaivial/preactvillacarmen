@@ -16,6 +16,11 @@ export type MenuSectionTabPanel = {
  * Each public menu page keeps building its own sections and just hands them over
  * as panels, so the tab behaviour lives in one place and the pages stay dumb.
  *
+ * Tab labels are owned by the caller: when `enabled` is true (the menu-level
+ * `show_section_tabs` flag is on), the caller is expected to pass a short
+ * `tab_label` per panel so the sticky bar stays compact. The component itself
+ * is dumb about label selection and only renders whatever the caller hands it.
+ *
  * Coordination id: menu_section_tabs_flag (DB `menus.show_section_tabs` ->
  * public REST `show_section_tabs` -> this component).
  */
