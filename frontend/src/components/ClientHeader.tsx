@@ -266,7 +266,7 @@ export function ClientHeader() {
                   const isActive = location.startsWith(item.href.split('#')[0])
                   const label = item.label || t(item.labelKey || '')
                   return (
-                    <li>
+                    <li key={item.href} data-testid={`client-header-menu-sublink-item-${item.href}`}>
                       <Link
                         href={item.href}
                         className={isActive ? 'navBurgerLink navBurgerSubLink active' : 'navBurgerLink navBurgerSubLink'}
