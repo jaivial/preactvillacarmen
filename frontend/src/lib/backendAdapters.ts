@@ -193,6 +193,7 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     settings: normalizePublicMenuSettings(record.settings),
     sections,
     show_dish_images: toBool(record.show_dish_images) === true,
+    show_section_tabs: toBool(record.show_section_tabs) === true,
     special_menu_image_url: toText(record.special_menu_image_url),
     show_menu_preview_image: toBool(record.show_menu_preview_image) === true,
     menu_preview_image_url: toText(record.menu_preview_image_url),
