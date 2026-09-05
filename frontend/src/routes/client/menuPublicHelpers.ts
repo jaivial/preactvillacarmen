@@ -5,6 +5,12 @@ export type PublicMenuViewSection = {
   kind: string
   title: string
   title_english?: string
+  display_title?: string
+  display_title_english?: string
+  subtitle?: string
+  subtitle_english?: string
+  tab_label?: string
+  tab_label_english?: string
   annotations: string[]
   annotations_english?: string[]
   dishes: Dish[]
@@ -35,10 +41,13 @@ function normalizeSectionAnnotations(section: PublicMenuSection): string[] {
     .filter(Boolean)
 }
 
-export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title'>): boolean {
+export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title' | 'display_title'>): boolean {
   const kind = String(section.kind || '').toLowerCase().trim()
   if (kind === 'arroces') return true
-  const title = String(section.title || '').toLowerCase().trim()
+  // After getMenuViewSections the section's `title` is already the public
+  // display_title, but we fall back to `display_title` for callers that hand
+  // in a raw PublicMenuSection (e.g. the home page card list).
+  const title = String(section.display_title || section.title || '').toLowerCase().trim()
   return title.includes('arroz')
 }
 
@@ -47,7 +56,11 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
   const out: PublicMenuViewSection[] = []
 
   for (const row of rows) {
-    const title = String(row.title || '').trim()
+    // Public consumers read `display_title` (the operator-controlled
+    // public heading). The backend already falls back to `title` when
+    // `display_title` is empty, but the front-end keeps the same belt-
+    // and-braces guard so an unmigrated row never disappears silently.
+    const title = String(row.display_title || row.title || '').trim()
     if (!title) continue
     const dishes = toDishList(row)
     if (dishes.length === 0) continue
@@ -55,7 +68,13 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
       id: Number.isFinite(row.id) ? row.id : 0,
       kind: String(row.kind || '').toLowerCase().trim() || 'custom',
       title,
-      title_english: String(row.title_english || '').trim() || undefined,
+      title_english: String(row.display_title_english || row.title_english || '').trim() || undefined,
+      display_title: String(row.display_title || '').trim() || undefined,
+      display_title_english: String(row.display_title_english || '').trim() || undefined,
+      subtitle: String(row.subtitle || '').trim() || undefined,
+      subtitle_english: String(row.subtitle_english || '').trim() || undefined,
+      tab_label: String(row.tab_label || '').trim() || undefined,
+      tab_label_english: String(row.tab_label_english || '').trim() || undefined,
       annotations: normalizeSectionAnnotations(row),
       annotations_english: Array.isArray(row.annotations_english)
         ? row.annotations_english.map((item) => String(item || '').trim()).filter(Boolean)
@@ -71,14 +90,26 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   starters: Dish[]
   starterAnnotations: string[]
   starterAnnotationsEnglish?: string[]
+  startersSubtitle?: string
+  startersSubtitleEnglish?: string
+  startersTabLabel?: string
+  startersTabLabelEnglish?: string
   mains: Dish[]
   mainsTitle: string
   mainsTitleEnglish?: string
+  mainsSubtitle?: string
+  mainsSubtitleEnglish?: string
+  mainsTabLabel?: string
+  mainsTabLabelEnglish?: string
   mainsAnnotations: string[]
   mainsAnnotationsEnglish?: string[]
   rice: Dish[]
   riceTitle: string
   riceTitleEnglish?: string
+  riceSubtitle?: string
+  riceSubtitleEnglish?: string
+  riceTabLabel?: string
+  riceTabLabelEnglish?: string
   riceAnnotations: string[]
   riceAnnotationsEnglish?: string[]
   others: PublicMenuViewSection[]
@@ -87,23 +118,41 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   const starters: Dish[] = []
   const starterAnnotations: string[] = []
   const starterAnnotationsEnglish: string[] = []
+  let startersSubtitle: string | undefined
+  let startersSubtitleEnglish: string | undefined
+  let startersTabLabel: string | undefined
+  let startersTabLabelEnglish: string | undefined
   const mains: Dish[] = []
   const mainsAnnotations: string[] = []
   const mainsAnnotationsEnglish: string[] = []
   const rice: Dish[] = []
   let riceTitle = ''
   let riceTitleEnglish: string | undefined
+  let riceSubtitle: string | undefined
+  let riceSubtitleEnglish: string | undefined
+  let riceTabLabel: string | undefined
+  let riceTabLabelEnglish: string | undefined
   const riceAnnotations: string[] = []
   const riceAnnotationsEnglish: string[] = []
   const others: PublicMenuViewSection[] = []
   let mainsTitle = menu.principales.titulo_principales || 'Principales'
   let mainsTitleEnglish: string | undefined
+  let mainsSubtitle: string | undefined
+  let mainsSubtitleEnglish: string | undefined
+  let mainsTabLabel: string | undefined
+  let mainsTabLabelEnglish: string | undefined
 
   for (const section of sections) {
     if (section.kind === 'entrantes') {
       starters.push(...section.dishes)
       starterAnnotations.push(...section.annotations)
       starterAnnotationsEnglish.push(...(section.annotations_english || []))
+      // Keep the operator-provided subtitle if there is only one starters
+      // section, otherwise the heading would compete with multiple leads.
+      if (section.subtitle && !startersSubtitle) startersSubtitle = section.subtitle
+      if (section.subtitle_english && !startersSubtitleEnglish) startersSubtitleEnglish = section.subtitle_english
+      if (section.tab_label && !startersTabLabel) startersTabLabel = section.tab_label
+      if (section.tab_label_english && !startersTabLabelEnglish) startersTabLabelEnglish = section.tab_label_english
       continue
     }
 
@@ -111,6 +160,10 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
       rice.push(...section.dishes)
       if (section.title) riceTitle = section.title
       if (section.title_english) riceTitleEnglish = section.title_english
+      if (section.subtitle) riceSubtitle = section.subtitle
+      if (section.subtitle_english) riceSubtitleEnglish = section.subtitle_english
+      if (section.tab_label) riceTabLabel = section.tab_label
+      if (section.tab_label_english) riceTabLabelEnglish = section.tab_label_english
       riceAnnotations.push(...section.annotations)
       riceAnnotationsEnglish.push(...(section.annotations_english || []))
       continue
@@ -122,6 +175,10 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
       mainsAnnotationsEnglish.push(...(section.annotations_english || []))
       if (section.title) mainsTitle = section.title
       if (section.title_english) mainsTitleEnglish = section.title_english
+      if (section.subtitle) mainsSubtitle = section.subtitle
+      if (section.subtitle_english) mainsSubtitleEnglish = section.subtitle_english
+      if (section.tab_label) mainsTabLabel = section.tab_label
+      if (section.tab_label_english) mainsTabLabelEnglish = section.tab_label_english
       continue
     }
 
@@ -132,14 +189,26 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
     starters,
     starterAnnotations,
     starterAnnotationsEnglish,
+    startersSubtitle,
+    startersSubtitleEnglish,
+    startersTabLabel,
+    startersTabLabelEnglish,
     mains,
     mainsTitle,
     mainsTitleEnglish,
+    mainsSubtitle,
+    mainsSubtitleEnglish,
+    mainsTabLabel,
+    mainsTabLabelEnglish,
     mainsAnnotations,
     mainsAnnotationsEnglish,
     rice,
     riceTitle,
     riceTitleEnglish,
+    riceSubtitle,
+    riceSubtitleEnglish,
+    riceTabLabel,
+    riceTabLabelEnglish,
     riceAnnotations,
     riceAnnotationsEnglish,
     others,

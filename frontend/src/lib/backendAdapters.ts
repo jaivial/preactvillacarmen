@@ -107,6 +107,7 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
   const record = value as Record<string, unknown>
   const title = toText(record.title)
   if (!title) return null
+  const displayTitle = toText(record.display_title) || title
 
   const dishesRaw = Array.isArray(record.dishes) ? record.dishes : []
   const dishes: PublicMenuDish[] = []
@@ -118,11 +119,17 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
   return {
     id: Math.max(0, Math.trunc(toNumber(record.id, 0))),
     title,
+    display_title: displayTitle,
+    subtitle: toText(record.subtitle) || undefined,
+    tab_label: toText(record.tab_label) || undefined,
     kind: toText(record.kind) || 'custom',
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
     annotations: toStringArray(record.annotations),
     dishes,
     title_english: toText(record.title_english) || undefined,
+    display_title_english: toText(record.display_title_english) || undefined,
+    subtitle_english: toText(record.subtitle_english) || undefined,
+    tab_label_english: toText(record.tab_label_english) || undefined,
     annotations_english: toStringArray(record.annotations_english),
   }
 }

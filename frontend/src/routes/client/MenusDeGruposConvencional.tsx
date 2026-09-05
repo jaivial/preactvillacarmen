@@ -99,11 +99,12 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
                 bubbleId="menuSectionTabBubble"
                 testId="menu-grupos-convencional-section-tabs"
                 panels={sections.map((section) => ({
-                  key: `${section.id}-${section.title}`,
-                  label: localized(section.title, section.title_english, lang),
+                  key: `${section.id}-${section.id}`,
+                  label: localized(section.tab_label || section.display_title || section.title, section.tab_label_english || section.display_title_english || section.title_english, lang),
                   content: (
                     <GroupStyleDishSection
-                      title={localized(section.title, section.title_english, lang)}
+                      title={localized(section.display_title || section.title, section.display_title_english || section.title_english, lang)}
+                      subtitle={localized(section.subtitle ?? '', section.subtitle_english ?? '', lang)}
                       dishes={section.dishes}
                       annotations={localizedArray(section.annotations, section.annotations_english, lang)}
                     />

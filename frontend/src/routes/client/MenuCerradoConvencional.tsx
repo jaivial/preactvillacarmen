@@ -45,11 +45,12 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
               panels={[
                 {
                   key: 'starters',
-                  label: t('menus.preview.starters'),
+                  label: localized(sectionData.startersTabLabel || t('menus.preview.starters'), sectionData.startersTabLabelEnglish, lang),
                   hidden: sectionData.starters.length === 0,
                   content: (
                     <MenuSection
                       title={t('menus.preview.starters')}
+                      subtitle={localized(sectionData.startersSubtitle ?? '', sectionData.startersSubtitleEnglish ?? '', lang)}
                       dishes={sectionData.starters}
                       annotations={localizedArray(sectionData.starterAnnotations, sectionData.starterAnnotationsEnglish, lang)}
                       pickCategory="entrantes"
@@ -59,11 +60,12 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                 },
                 {
                   key: 'mains',
-                  label: localized(sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTitleEnglish, lang),
+                  label: localized(sectionData.mainsTabLabel || sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTabLabelEnglish || sectionData.mainsTitleEnglish, lang),
                   hidden: sectionData.mains.length === 0,
                   content: (
                     <MenuSection
                       title={localized(sectionData.mainsTitle || t('menus.preview.mains'), sectionData.mainsTitleEnglish, lang)}
+                      subtitle={localized(sectionData.mainsSubtitle ?? '', sectionData.mainsSubtitleEnglish ?? '', lang)}
                       dishes={sectionData.mains}
                       annotations={localizedArray(sectionData.mainsAnnotations, sectionData.mainsAnnotationsEnglish, lang)}
                       pickCategory="principales"
@@ -73,13 +75,14 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                 },
                 {
                   key: 'rice',
-                  label: localized(sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTitleEnglish, lang),
+                  label: localized(sectionData.riceTabLabel || sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTabLabelEnglish || sectionData.riceTitleEnglish, lang),
                   hidden: sectionData.rice.length === 0,
                   content: (
                     <>
                       <p class="menuSectionLead">{t('menu.rice.lead')}</p>
                       <MenuSection
                         title={localized(sectionData.riceTitle || t('menu.section.rice'), sectionData.riceTitleEnglish, lang)}
+                        subtitle={localized(sectionData.riceSubtitle ?? '', sectionData.riceSubtitleEnglish ?? '', lang)}
                         dishes={sectionData.rice}
                         annotations={localizedArray(sectionData.riceAnnotations, sectionData.riceAnnotationsEnglish, lang)}
                         pickCategory="arroces"
@@ -95,12 +98,13 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
                   ),
                 },
                 ...sectionData.others.map((section) => ({
-                  key: `${section.id}-${section.title}`,
-                  label: localized(section.title, section.title_english, lang),
+                  key: `${section.id}-${section.id}`,
+                  label: localized(section.tab_label || section.display_title || section.title, section.tab_label_english || section.display_title_english || section.title_english, lang),
                   hidden: section.dishes.length === 0,
                   content: (
                     <MenuSection
-                      title={localized(section.title, section.title_english, lang)}
+                      title={localized(section.display_title || section.title, section.display_title_english || section.title_english, lang)}
+                      subtitle={localized(section.subtitle ?? '', section.subtitle_english ?? '', lang)}
                       dishes={section.dishes}
                       annotations={localizedArray(section.annotations, section.annotations_english, lang)}
                       showImage={props.menu.show_dish_images}
