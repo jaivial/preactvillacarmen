@@ -183,6 +183,9 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
     () => localized(dishDescriptionText(props.dish), props.dish.description_english, lang),
     [props.dish, lang],
   )
+  // Per-dish description toggle from the backoffice: only render the extra
+  // description UI when the dish allows it (missing flag = legacy default on).
+  const descriptionVisible = props.dish.description_enabled !== false && Boolean(descriptionText)
   const supplementText = useMemo(() => dishSupplementText(props.dish, t('menu.dish.supplement')), [props.dish, t])
 
   useEffect(() => {
@@ -250,7 +253,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
           <div class="dishCardInfo">
             <div class="dishCardBody">
               <div class="dishDescription">{displayDescripcion}</div>
-              {descriptionText ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
+              {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
               {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
             </div>
             <AllergenIcons alergenos={props.dish.alergenos} />
@@ -259,7 +262,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
       ) : (
         <div class="dishCardBody">
           <div class="dishDescription">{displayDescripcion}</div>
-          {descriptionText ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
+          {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
           {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
           <AllergenIcons alergenos={props.dish.alergenos} />
         </div>
