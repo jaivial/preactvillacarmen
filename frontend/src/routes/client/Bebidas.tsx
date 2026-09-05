@@ -5,6 +5,7 @@ import { apiGetJson } from '../../lib/api'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
+import { StickyTabBar } from '../../components/ui'
 
 type DynamicBebidasState = {
   loadedTypes: Set<string>
@@ -130,32 +131,14 @@ export function Bebidas() {
         <div class="container">
           {/* Tabs for beverage types */}
           {availableTypes.length > 1 && (
-            <div class="wineTabsSticky" role="tablist" aria-label={t('nav.beverages')}>
-              <div class="wineTabs">
-                {availableTypes.map((tipo) => {
-                  const active = tipo === selectedTipo
-                  return (
-                    <button
-                      key={tipo}
-                      type="button"
-                      class={active ? 'wineTab is-active' : 'wineTab'}
-                      onClick={() => setSelectedTipo(tipo)}
-                      role="tab"
-                      aria-selected={active}
-                    >
-                      {active ? (
-                        <motion.span
-                          class="wineTabBubble"
-                          layoutId="bebidaTabBubble"
-                          transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }}
-                        />
-                      ) : null}
-                      <span class="wineTabLabel">{localized(tipo, tipoLabels[tipo], lang)}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            <StickyTabBar
+              items={availableTypes.map((tipo) => ({ key: tipo, label: localized(tipo, tipoLabels[tipo], lang) }))}
+              activeKey={selectedTipo}
+              onSelect={setSelectedTipo}
+              ariaLabel={t('nav.beverages')}
+              bubbleId="bebidaTabBubble"
+              testId="bebidas-type-tabs"
+            />
           )}
 
           {state.error ? (

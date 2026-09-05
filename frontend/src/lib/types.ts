@@ -135,6 +135,8 @@ export type PublicMenu = {
   menu_preview_image_url: string
   legacy_source_table?: string
   show_dish_images: boolean
+  // Coordination id: menu_section_tabs_flag
+  show_section_tabs?: boolean
   created_at: string
   modified_at: string
   menu_title_english?: string
