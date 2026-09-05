@@ -2574,6 +2574,10 @@ svg {
     top: calc(var(--header-h) + 10px);
     z-index: 70;
     padding: 6px 0 14px;
+    /* The menu pages place this inside a `1fr` grid track, whose automatic
+       minimum size would otherwise clamp the bar and force the tab labels to
+       wrap instead of letting the bar wrap onto another row. */
+    min-width: 0;
 }
 
 .stickyTabs {
