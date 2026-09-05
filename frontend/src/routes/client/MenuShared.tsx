@@ -415,7 +415,7 @@ export function MenuSection(props: {
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
-  const subtitle = (props.subtitle ?? '').trim()
+  const subtitle = String(props.subtitle ?? '').trim()
 
   return (
     <section class="menuSection">
@@ -643,7 +643,7 @@ export function GroupStyleDishSection(props: {
   const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
-  const subtitle = (props.subtitle ?? '').trim()
+  const subtitle = String(props.subtitle ?? '').trim()
 
   return (
     <section class="menuSubSection">

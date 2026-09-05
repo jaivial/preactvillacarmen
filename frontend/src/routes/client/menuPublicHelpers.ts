@@ -44,8 +44,9 @@ function normalizeSectionAnnotations(section: PublicMenuSection): string[] {
 export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title' | 'display_title'>): boolean {
   const kind = String(section.kind || '').toLowerCase().trim()
   if (kind === 'arroces') return true
-  // Backwards compatible: detect rice sections by either the legacy title
-  // (backoffice-only now) or the new display_title (public-facing).
+  // After getMenuViewSections the section's `title` is already the public
+  // display_title, but we fall back to `display_title` for callers that hand
+  // in a raw PublicMenuSection (e.g. the home page card list).
   const title = String(section.display_title || section.title || '').toLowerCase().trim()
   return title.includes('arroz')
 }
@@ -55,10 +56,11 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
   const out: PublicMenuViewSection[] = []
 
   for (const row of rows) {
-    // Public consumers must read `display_title` (the operator-controlled
-    // public heading). `title` is backoffice-only and intentionally ignored
-    // here per the section display-title change.
-    const title = String(row.display_title || '').trim()
+    // Public consumers read `display_title` (the operator-controlled
+    // public heading). The backend already falls back to `title` when
+    // `display_title` is empty, but the front-end keeps the same belt-
+    // and-braces guard so an unmigrated row never disappears silently.
+    const title = String(row.display_title || row.title || '').trim()
     if (!title) continue
     const dishes = toDishList(row)
     if (dishes.length === 0) continue
