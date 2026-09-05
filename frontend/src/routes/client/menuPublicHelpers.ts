@@ -92,11 +92,15 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   starterAnnotationsEnglish?: string[]
   startersSubtitle?: string
   startersSubtitleEnglish?: string
+  startersTabLabel?: string
+  startersTabLabelEnglish?: string
   mains: Dish[]
   mainsTitle: string
   mainsTitleEnglish?: string
   mainsSubtitle?: string
   mainsSubtitleEnglish?: string
+  mainsTabLabel?: string
+  mainsTabLabelEnglish?: string
   mainsAnnotations: string[]
   mainsAnnotationsEnglish?: string[]
   rice: Dish[]
@@ -104,6 +108,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   riceTitleEnglish?: string
   riceSubtitle?: string
   riceSubtitleEnglish?: string
+  riceTabLabel?: string
+  riceTabLabelEnglish?: string
   riceAnnotations: string[]
   riceAnnotationsEnglish?: string[]
   others: PublicMenuViewSection[]
@@ -114,6 +120,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   const starterAnnotationsEnglish: string[] = []
   let startersSubtitle: string | undefined
   let startersSubtitleEnglish: string | undefined
+  let startersTabLabel: string | undefined
+  let startersTabLabelEnglish: string | undefined
   const mains: Dish[] = []
   const mainsAnnotations: string[] = []
   const mainsAnnotationsEnglish: string[] = []
@@ -122,6 +130,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   let riceTitleEnglish: string | undefined
   let riceSubtitle: string | undefined
   let riceSubtitleEnglish: string | undefined
+  let riceTabLabel: string | undefined
+  let riceTabLabelEnglish: string | undefined
   const riceAnnotations: string[] = []
   const riceAnnotationsEnglish: string[] = []
   const others: PublicMenuViewSection[] = []
@@ -129,6 +139,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   let mainsTitleEnglish: string | undefined
   let mainsSubtitle: string | undefined
   let mainsSubtitleEnglish: string | undefined
+  let mainsTabLabel: string | undefined
+  let mainsTabLabelEnglish: string | undefined
 
   for (const section of sections) {
     if (section.kind === 'entrantes') {
@@ -139,6 +151,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
       // section, otherwise the heading would compete with multiple leads.
       if (section.subtitle && !startersSubtitle) startersSubtitle = section.subtitle
       if (section.subtitle_english && !startersSubtitleEnglish) startersSubtitleEnglish = section.subtitle_english
+      if (section.tab_label && !startersTabLabel) startersTabLabel = section.tab_label
+      if (section.tab_label_english && !startersTabLabelEnglish) startersTabLabelEnglish = section.tab_label_english
       continue
     }
 
@@ -148,6 +162,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
       if (section.title_english) riceTitleEnglish = section.title_english
       if (section.subtitle) riceSubtitle = section.subtitle
       if (section.subtitle_english) riceSubtitleEnglish = section.subtitle_english
+      if (section.tab_label) riceTabLabel = section.tab_label
+      if (section.tab_label_english) riceTabLabelEnglish = section.tab_label_english
       riceAnnotations.push(...section.annotations)
       riceAnnotationsEnglish.push(...(section.annotations_english || []))
       continue
@@ -161,6 +177,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
       if (section.title_english) mainsTitleEnglish = section.title_english
       if (section.subtitle) mainsSubtitle = section.subtitle
       if (section.subtitle_english) mainsSubtitleEnglish = section.subtitle_english
+      if (section.tab_label) mainsTabLabel = section.tab_label
+      if (section.tab_label_english) mainsTabLabelEnglish = section.tab_label_english
       continue
     }
 
@@ -173,11 +191,15 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
     starterAnnotationsEnglish,
     startersSubtitle,
     startersSubtitleEnglish,
+    startersTabLabel,
+    startersTabLabelEnglish,
     mains,
     mainsTitle,
     mainsTitleEnglish,
     mainsSubtitle,
     mainsSubtitleEnglish,
+    mainsTabLabel,
+    mainsTabLabelEnglish,
     mainsAnnotations,
     mainsAnnotationsEnglish,
     rice,
@@ -185,6 +207,8 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
     riceTitleEnglish,
     riceSubtitle,
     riceSubtitleEnglish,
+    riceTabLabel,
+    riceTabLabelEnglish,
     riceAnnotations,
     riceAnnotationsEnglish,
     others,
