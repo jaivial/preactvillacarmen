@@ -365,6 +365,9 @@ export type MenuSidebarResponse = {
   visible_sections?: PublicVisibleSection[]
   cafe_page_active: boolean
   bebidas_page_active: boolean
+  // Coordination id: postres_page_visibility_v1
+  postres_page_active?: boolean
+  postres_web_placement?: string
 }
 
 export type ComidaItem = {
