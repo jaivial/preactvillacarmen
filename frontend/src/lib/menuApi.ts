@@ -5,11 +5,15 @@ export type MenuSidebarData = {
   menus: SidebarMenu[]
   // Coordination id: menu_section_public_placement_v1
   visible_sections: PublicVisibleSection[]
+  // Coordination id: foodtype_page_visibility_v1
   cafe_page_active: boolean
   bebidas_page_active: boolean
-  // Coordination id: postres_page_visibility_v1
   postres_page_active: boolean
+  vinos_page_active: boolean
   postres_web_placement: string
+  cafes_web_placement: string
+  vinos_web_placement: string
+  bebidas_web_placement: string
 }
 
 export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
@@ -20,7 +24,11 @@ export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
     cafe_page_active: Boolean(data.cafe_page_active),
     bebidas_page_active: Boolean(data.bebidas_page_active),
     postres_page_active: Boolean(data.postres_page_active),
+    vinos_page_active: data.vinos_page_active !== false,
     postres_web_placement: data.postres_web_placement || 'inside_menus',
+    cafes_web_placement: data.cafes_web_placement || 'inside_menus',
+    vinos_web_placement: data.vinos_web_placement || 'inside_menus',
+    bebidas_web_placement: data.bebidas_web_placement || 'inside_menus',
   }
 }
 

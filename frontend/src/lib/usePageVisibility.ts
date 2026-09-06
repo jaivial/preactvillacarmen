@@ -3,7 +3,7 @@ import { useLocation } from 'wouter-preact'
 import { apiGetJson } from './api'
 import type { MenuSidebarResponse } from './types'
 
-export function usePageVisibilityFlag(flag: 'cafe_page_active' | 'bebidas_page_active'): { visible: boolean; loading: boolean } {
+export function usePageVisibilityFlag(flag: 'cafe_page_active' | 'bebidas_page_active' | 'postres_page_active' | 'vinos_page_active'): { visible: boolean; loading: boolean } {
   const [, setLocation] = useLocation()
   const [visible, setVisible] = useState(false)
   const [loading, setLoading] = useState(true)
