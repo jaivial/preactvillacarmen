@@ -4,7 +4,7 @@ import { createPortal } from 'preact/compat'
 import { useSetAtom } from 'jotai'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
-import { bebidasPageActiveAtom, cafePageActiveAtom } from '../lib/config'
+import { bebidasPageActiveAtom, cafePageActiveAtom, postresPageActiveAtom, vinosPageActiveAtom } from '../lib/config'
 import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import { fetchMenuSidebar } from '../lib/menuApi'
@@ -18,6 +18,30 @@ type NavItem = {
   label?: string
 }
 
+/**
+ * Food-type pages whose public navigation entry is driven by the backoffice
+ * "Configuracion" tab: an active toggle plus a web placement that decides
+ * whether the entry sits inside the menus accordion or stands on its own.
+ * Coordination id: foodtype_page_visibility_v1
+ */
+type FoodPageKind = 'cafes' | 'vinos' | 'bebidas' | 'postres'
+
+type FoodPageVisibility = { active: boolean; placement: string }
+
+const FOOD_PAGE_NAV: { kind: FoodPageKind; href: string; labelKey: string }[] = [
+  { kind: 'vinos', href: '/vinos', labelKey: 'nav.wines' },
+  { kind: 'cafes', href: '/cafes', labelKey: 'nav.coffees' },
+  { kind: 'bebidas', href: '/bebidas', labelKey: 'nav.beverages' },
+  { kind: 'postres', href: '/postres', labelKey: 'nav.desserts' },
+]
+
+const DEFAULT_FOOD_PAGES: Record<FoodPageKind, FoodPageVisibility> = {
+  vinos: { active: true, placement: 'inside_menus' },
+  cafes: { active: true, placement: 'inside_menus' },
+  bebidas: { active: true, placement: 'inside_menus' },
+  postres: { active: true, placement: 'inside_menus' },
+}
+
 export function ClientHeader() {
   const [location] = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -29,13 +53,13 @@ export function ClientHeader() {
   const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
   // Coordination id: menu_section_public_placement_v1
   const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>([])
-  const [cafePageActive, setCafePageActive] = useState(true)
-  const [bebidasPageActive, setBebidasPageActive] = useState(true)
-  // Coordination id: postres_page_visibility_v1
-  const [postresPageActive, setPostresPageActive] = useState(true)
-  const [postresWebPlacement, setPostresWebPlacement] = useState('inside_menus')
+  // One visibility record per food-type page that owns a public nav entry.
+  // Coordination id: foodtype_page_visibility_v1
+  const [foodPages, setFoodPages] = useState<Record<FoodPageKind, FoodPageVisibility>>(DEFAULT_FOOD_PAGES)
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
+  const setVinosActive = useSetAtom(vinosPageActiveAtom)
+  const setPostresActive = useSetAtom(postresPageActiveAtom)
 
   const isHome = location === '/'
   const isEventosPage = location.startsWith('/eventos')
@@ -82,19 +106,30 @@ export function ClientHeader() {
         setSidebarMenus(data.menus)
         setVisibleSections(data.visible_sections)
         console.log('[checkpoint] public_nav_sections_loaded', `count=${data.visible_sections.length}`)
-        setCafePageActive(data.cafe_page_active)
-        setBebidasPageActive(data.bebidas_page_active)
+        const pages: Record<FoodPageKind, FoodPageVisibility> = {
+          vinos: { active: data.vinos_page_active, placement: data.vinos_web_placement },
+          cafes: { active: data.cafe_page_active, placement: data.cafes_web_placement },
+          bebidas: { active: data.bebidas_page_active, placement: data.bebidas_web_placement },
+          postres: { active: data.postres_page_active, placement: data.postres_web_placement },
+        }
+        setFoodPages(pages)
         setCafeActive(data.cafe_page_active)
         setBebidasActive(data.bebidas_page_active)
-        setPostresPageActive(data.postres_page_active)
-        setPostresWebPlacement(data.postres_web_placement)
-        console.log('[checkpoint] public_nav_postres_placement',
-          `active=${data.postres_page_active}`, `placement=${data.postres_web_placement}`)
+        setVinosActive(pages.vinos.active)
+        setPostresActive(pages.postres.active)
+        console.log('[checkpoint] public_nav_foodtype_placement',
+          FOOD_PAGE_NAV.map((entry) =>
+            `${entry.kind}=${pages[entry.kind].active}:${pages[entry.kind].placement}`).join(' '))
       })
       .catch(() => {
         if (cancelled) return
         setSidebarMenus(null)
         setVisibleSections([])
+        setFoodPages(DEFAULT_FOOD_PAGES)
+        setCafeActive(true)
+        setBebidasActive(true)
+        setVinosActive(true)
+        setPostresActive(true)
       })
     return () => {
       cancelled = true
@@ -145,33 +180,38 @@ export function ClientHeader() {
   const eventosHeaderUnlocked = !isEventosPage || scrolled
 
   const items = useMemo<NavItem[]>(() => {
-    const base = [
+    // Food-type pages are not listed here: each one is placed by its own
+    // web placement, either inside the menus accordion or as a standalone item.
+    return [
       { href: '/', labelKey: 'nav.home' },
-      { href: '/vinos', labelKey: 'nav.wines' },
       { href: '/reservas', labelKey: 'nav.reservations' },
       // /regala ocultado del menú (nav.gift) — página sigue accesible por URL.
       { href: '/contacto', labelKey: 'nav.contact' },
     ]
-    if (cafePageActive) base.push({ href: '/cafes', labelKey: 'nav.coffees' })
-    if (bebidasPageActive) base.push({ href: '/bebidas', labelKey: 'nav.beverages' })
-    return base
-  }, [cafePageActive, bebidasPageActive])
+  }, [])
 
-  // Desserts reach the nav through the postres food-type page below, so the
-  // menu section of the same kind is dropped here to avoid a duplicate entry.
-  // Coordination id: postres_page_visibility_v1
+  // Food-type pages reach the nav through their own visibility settings below,
+  // so menu sections of the same kind are dropped here to avoid duplicates.
+  // Coordination id: foodtype_page_visibility_v1
   const navSections = useMemo(
-    () => visibleSections.filter((section) => section.kind !== 'postres'),
+    () => visibleSections.filter((section) => !FOOD_PAGE_NAV.some((entry) => entry.kind === section.kind)),
     [visibleSections]
   )
 
-  // The postres food-type page is surfaced from its own visibility settings
-  // rather than from a menu section, so it gets its own nav entry.
-  // Coordination id: postres_page_visibility_v1
-  const postresNavItem = useMemo<NavItem | null>(
-    () => (postresPageActive ? { href: '/postres', labelKey: 'nav.desserts' } : null),
-    [postresPageActive]
-  )
+  // Active food-type pages, split by where their settings say they belong.
+  // Coordination id: foodtype_page_visibility_v1
+  const foodPageNav = useMemo(() => {
+    const inside: NavItem[] = []
+    const independent: NavItem[] = []
+    for (const entry of FOOD_PAGE_NAV) {
+      const page = foodPages[entry.kind]
+      if (!page?.active) continue
+      const item: NavItem = { href: entry.href, labelKey: entry.labelKey }
+      if (page.placement === 'independent_section') independent.push(item)
+      else inside.push(item)
+    }
+    return { inside, independent }
+  }, [foodPages])
 
   const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
     if (sidebarMenus == null) return null
@@ -206,17 +246,13 @@ export function ClientHeader() {
       .filter((section) => section.web_placement !== 'independent_section')
       .map((section) => ({ href: section.href, label: section.title }))
 
-    const insidePostres = postresNavItem && postresWebPlacement !== 'independent_section'
-      ? [postresNavItem]
-      : []
-
     return [
       ...menuLinks,
       ...groupLink,
       ...insideMenusSections,
-      ...insidePostres,
+      ...foodPageNav.inside,
     ]
-  }, [sidebarMenus, navSections, postresNavItem, postresWebPlacement])
+  }, [sidebarMenus, navSections, foodPageNav])
 
   // Sections flagged as standalone render outside the menus accordion.
   // Coordination id: menu_section_public_placement_v1
@@ -225,12 +261,9 @@ export function ClientHeader() {
       const sections: NavItem[] = navSections
         .filter((section) => section.web_placement === 'independent_section')
         .map((section) => ({ href: section.href, label: section.title }))
-      if (postresNavItem && postresWebPlacement === 'independent_section') {
-        sections.push(postresNavItem)
-      }
-      return sections
+      return [...sections, ...foodPageNav.independent]
     },
-    [navSections, postresNavItem, postresWebPlacement]
+    [navSections, foodPageNav]
   )
 
   const menuItems = useMemo<NavItem[]>(
@@ -324,7 +357,7 @@ export function ClientHeader() {
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
                   onClick={() => setMobileOpen(false)}
                   data-testid={`client-header-independent-section-link-${item.href}`}
-                  data-coordination-id="menu-section-public-placement-v1"
+                  data-coordination-id="foodtype-page-visibility-v1"
                 >
                   {item.label || t(item.labelKey || '')}
                 </Link>
