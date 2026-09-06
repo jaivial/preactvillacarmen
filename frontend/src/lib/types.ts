@@ -363,11 +363,15 @@ export type MenuSidebarResponse = {
   count: number
   menus: SidebarMenu[]
   visible_sections?: PublicVisibleSection[]
+  // Coordination id: foodtype_page_visibility_v1
   cafe_page_active: boolean
   bebidas_page_active: boolean
-  // Coordination id: postres_page_visibility_v1
   postres_page_active?: boolean
+  vinos_page_active?: boolean
   postres_web_placement?: string
+  cafes_web_placement?: string
+  vinos_web_placement?: string
+  bebidas_web_placement?: string
 }
 
 export type ComidaItem = {

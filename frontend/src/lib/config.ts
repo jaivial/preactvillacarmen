@@ -7,3 +7,6 @@ import { atom } from 'jotai'
  */
 export const bebidasPageActiveAtom = atom<boolean | null>(null)
 export const cafePageActiveAtom = atom<boolean | null>(null)
+// Coordination id: foodtype_page_visibility_v1
+export const vinosPageActiveAtom = atom<boolean | null>(null)
+export const postresPageActiveAtom = atom<boolean | null>(null)
