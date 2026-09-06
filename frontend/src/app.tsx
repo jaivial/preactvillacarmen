@@ -3,9 +3,8 @@ import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
 import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Bebidas } from './routes/client/Bebidas.tsx'
-import { BebidasPageGuard } from './routes/client/BebidasPageGuard.tsx'
 import { Cafes } from './routes/client/Cafes.tsx'
-import { CafesPageGuard } from './routes/client/CafesPageGuard.tsx'
+import { FoodPageGuard } from './routes/client/FoodPageGuard.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
 import { Home } from './routes/client/Home.tsx'
@@ -36,17 +35,25 @@ function ClientApp() {
         <Route path="/menufindesemana" component={() => <LegacyMenuRedirect target="finde" />} />
         <Route path="/menudeldia" component={() => <LegacyMenuRedirect target="dia" />} />
         <Route path="/menusdegrupos" component={MenusDeGrupos} />
-        <Route path="/postres" component={Postres} />
-        <Route path="/vinos" component={Vinos} />
+        <Route path="/postres">
+          <FoodPageGuard kind="postres">
+            <Postres />
+          </FoodPageGuard>
+        </Route>
+        <Route path="/vinos">
+          <FoodPageGuard kind="vinos">
+            <Vinos />
+          </FoodPageGuard>
+        </Route>
         <Route path="/cafes">
-          <CafesPageGuard>
+          <FoodPageGuard kind="cafes">
             <Cafes />
-          </CafesPageGuard>
+          </FoodPageGuard>
         </Route>
         <Route path="/bebidas">
-          <BebidasPageGuard>
+          <FoodPageGuard kind="bebidas">
             <Bebidas />
-          </BebidasPageGuard>
+          </FoodPageGuard>
         </Route>
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
