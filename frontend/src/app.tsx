@@ -20,6 +20,7 @@ import { ConfirmBooking } from './routes/client/ConfirmBooking.tsx'
 import { CancelBooking } from './routes/client/CancelBooking.tsx'
 import { UpdateRice } from './routes/client/UpdateRice.tsx'
 import { ProteccionDatos } from './routes/client/ProteccionDatos.tsx'
+import { Unsubscribe } from './routes/Unsubscribe.tsx'
 import { Vinos } from './routes/client/Vinos.tsx'
 
 function ClientApp() {
@@ -66,6 +67,7 @@ function ClientApp() {
         <Route path="/update-rice" component={UpdateRice} />
         <Route path="/protecciondatos" component={ProteccionDatos} />
         <Route path="/protecciondatos.html" component={ProteccionDatos} />
+        <Route path="/baja-publicidad" component={Unsubscribe} />
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
 
