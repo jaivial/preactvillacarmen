@@ -13,6 +13,11 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
     [lang, props.menu.menu_subtitle, props.menu.menu_subtitle_english, t],
   )
   const price = useMemo(() => formatMenuPrice(props.menu.price), [props.menu.price])
+  // Coordination id: menu_important_info_v1 (DB -> public API -> template)
+  const importantInfo = useMemo(
+    () => localizedArray(props.menu.settings.important_info || [], props.menu.settings.important_info_english, lang),
+    [lang, props.menu.settings.important_info, props.menu.settings.important_info_english],
+  )
 
   const hasContent = useMemo(
     () =>
@@ -116,7 +121,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
 
             {!hasContent ? <div class="menuState">{t('menu.empty')}</div> : null}
 
-            <MenuPriceCard precio={price} />
+            <MenuPriceCard precio={price} importantInfo={importantInfo} />
           </div>
 
           <AllergensLegend />
