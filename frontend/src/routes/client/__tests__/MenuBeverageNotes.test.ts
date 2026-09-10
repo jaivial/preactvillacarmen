@@ -49,6 +49,7 @@ const baseMenu = (settingsOverrides: Partial<Settings> = {}): PublicMenu => ({
     beverage: { type: 'opcion', price_per_person: 8, has_supplement: false, supplement_price: null },
     beverage_options: [],
     comments: [],
+    important_info: [],
     min_party_size: 6,
     main_dishes_limit: false,
     main_dishes_limit_number: 1,

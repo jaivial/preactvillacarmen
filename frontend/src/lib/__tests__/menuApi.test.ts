@@ -36,6 +36,7 @@ describe('fetchMenuByID', () => {
           beverage: {},
           beverage_options: [],
           comments: [],
+          important_info: [],
           min_party_size: 1,
           main_dishes_limit: false,
           main_dishes_limit_number: 1,
