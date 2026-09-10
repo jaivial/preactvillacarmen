@@ -2,7 +2,7 @@ import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { menuBeverageNote } from '../../lib/menuBeverageNote'
-import { GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
+import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
@@ -103,6 +103,8 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu }) {
               </div>
             </article>
           )}
+
+          <AllergensLegend />
         </div>
       </section>
     </div>
