@@ -1737,6 +1737,12 @@ svg {
     white-space: pre-wrap;
 }
 
+.menuDish .dishSupplementInfo {
+    display: inline-block;
+    width: auto;
+    margin-top: 6px;
+}
+
 .menuMuted {
     color: rgba(0, 0, 0, 0.62);
 }
