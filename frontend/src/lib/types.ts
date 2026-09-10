@@ -91,6 +91,12 @@ export type PublicMenuSection = {
   subtitle?: string
   tab_label?: string
   kind: string
+  // Coordination id: dessert_section_source_v1
+  // "general" -> the dishes are mirrored from the general desserts carta
+  // (edited only in the backoffice at /app/comida/postres); "custom" -> the
+  // section owns its own list. The payload already carries the resolved dishes,
+  // so this field is informational for the public UI.
+  dessert_source?: string
   position: number
   annotations: string[]
   dishes: PublicMenuDish[]
