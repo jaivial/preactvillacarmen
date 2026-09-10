@@ -1723,12 +1723,31 @@ svg {
 }
 
 .menuDishList {
+    /* Separator geometry and colour are exposed as custom properties so a
+       panel variant can retune the rule without duplicating the selector. */
+    --menu-dish-separator-max-width: 200px;
+    --menu-dish-separator-height: 0.5px;
+    --menu-dish-separator-color: rgba(20, 37, 32, 0.7);
     margin: 12px 0 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    text-align: center;
+}
+
+/* Hairline rule drawn between consecutive dishes only: keying off the
+   adjacent-sibling combinator means the list never opens or closes with a
+   dangling separator, whatever the dish count. */
+.menuDish + .menuDish::before {
+    content: "";
+    display: block;
+    width: 100%;
+    max-width: var(--menu-dish-separator-max-width);
+    height: var(--menu-dish-separator-height);
+    margin: 0 auto 12px;
+    background: var(--menu-dish-separator-color);
 }
 
 .menuDishText {
