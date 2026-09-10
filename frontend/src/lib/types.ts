@@ -114,10 +114,12 @@ export type PublicMenuSettings = {
   beverage: Record<string, unknown>
   beverage_options: PublicBeverageOption[]
   comments: string[]
+  important_info: string[]
   min_party_size: number
   main_dishes_limit: boolean
   main_dishes_limit_number: number
   comments_english?: string[]
+  important_info_english?: string[]
 }
 
 export type PublicMenu = {

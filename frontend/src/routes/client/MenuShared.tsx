@@ -470,7 +470,41 @@ export function MenuSection(props: {
   )
 }
 
-export function MenuPriceCard(props: { precio: string }) {
+export function MenuImportantBox(props: { lines?: string[] }) {
+  const { t } = useI18n()
+
+  // Legacy DIA / FINDE responses have no per-menu settings, so they keep the
+  // historical copy. Menus that carry `important_info` render exactly what the
+  // backoffice saved (empty means the box is hidden).
+  if (props.lines === undefined) {
+    return (
+      <div class="menuImportantBox" data-testid="menu-important-box-legacy">
+        <h3 class="menuImportantTitle">{t('menu.important.title')}</h3>
+        <p class="menuImportantText">{t('menu.important.minConsumption')}</p>
+        <p class="menuImportantText">{t('menu.important.noKidsMenu')}</p>
+        <p class="menuImportantText menuImportantText--takeaway">{t('menu.takeaway.note')}</p>
+      </div>
+    )
+  }
+
+  const lines = props.lines
+    .map((line) => String(line || '').trim())
+    .filter(Boolean)
+  if (lines.length === 0) return null
+
+  return (
+    <div class="menuImportantBox" data-testid="menu-important-box">
+      <h3 class="menuImportantTitle">{t('menu.important.title')}</h3>
+      {lines.map((line, idx) => (
+        <p class="menuImportantText" key={`${line}-${idx}`} data-testid={`menu-important-line-${idx}`}>
+          {line}
+        </p>
+      ))}
+    </div>
+  )
+}
+
+export function MenuPriceCard(props: { precio: string; importantInfo?: string[] }) {
   const { t } = useI18n()
 
   return (
@@ -484,12 +518,7 @@ export function MenuPriceCard(props: { precio: string }) {
 
       <div class="menuPriceValue">{props.precio ? `${props.precio} €` : '—'}</div>
 
-      <div class="menuImportantBox">
-        <h3 class="menuImportantTitle">{t('menu.important.title')}</h3>
-        <p class="menuImportantText">{t('menu.important.minConsumption')}</p>
-        <p class="menuImportantText">{t('menu.important.noKidsMenu')}</p>
-        <p class="menuImportantText menuImportantText--takeaway">{t('menu.takeaway.note')}</p>
-      </div>
+      <MenuImportantBox lines={props.importantInfo} />
     </section>
   )
 }
