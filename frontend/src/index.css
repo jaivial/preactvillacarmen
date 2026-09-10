@@ -1614,6 +1614,10 @@ svg {
     padding: 14px 0 74px;
 }
 
+.menuBody--groupPicker {
+    padding: 14px 0 0;
+}
+
 .menuState {
     padding: 22px 0;
     color: var(--muted);
