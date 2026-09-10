@@ -1772,6 +1772,13 @@ svg {
     margin-top: 6px;
 }
 
+/* The allergen row is a flex container, so it needs its own centring to follow
+   the group dish list's centred copy instead of hugging the left edge. */
+.menuDish .dishAllergenRow {
+    justify-content: center;
+    margin-top: 6px;
+}
+
 .menuMuted {
     color: rgba(0, 0, 0, 0.62);
 }
