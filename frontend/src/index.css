@@ -1725,9 +1725,9 @@ svg {
 .menuDishList {
     /* Separator geometry and colour are exposed as custom properties so a
        panel variant can retune the rule without duplicating the selector. */
-    --menu-dish-separator-max-width: 200px;
+    --menu-dish-separator-max-width: 350px;
     --menu-dish-separator-height: 0.5px;
-    --menu-dish-separator-color: rgba(20, 37, 32, 0.7);
+    --menu-dish-separator-color: rgb(169 169 169 / 48%);
     margin: 12px 0 0;
     padding: 0;
     list-style: none;
@@ -1747,7 +1747,13 @@ svg {
     max-width: var(--menu-dish-separator-max-width);
     height: var(--menu-dish-separator-height);
     margin: 0 auto 12px;
-    background: var(--menu-dish-separator-color);
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        var(--menu-dish-separator-color) 25%,
+        var(--menu-dish-separator-color) 75%,
+        transparent 100%
+    );
 }
 
 .menuDishText {
