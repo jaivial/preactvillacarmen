@@ -1730,6 +1730,11 @@ svg {
     /* Separator geometry and colour are exposed as custom properties so a
        panel variant can retune the rule without duplicating the selector. */
     --menu-dish-separator-max-width: 350px;
+    /* Keep this a whole CSS pixel. Sub-pixel heights (0.5px) only paint at
+       their true opacity when the band happens to land exactly on a device
+       pixel boundary; inside a real flow layout it rarely does, so the line
+       gets smeared across two rows at partial alpha and reads as missing on
+       high-density phones. 1px always covers a full row at every DPR. */
     --menu-dish-separator-height: 1px;
     --menu-dish-separator-color: rgb(169 169 169 / 48%);
     margin: 12px 0 0;
@@ -1758,14 +1763,6 @@ svg {
         var(--menu-dish-separator-color) 75%,
         transparent 100%
     );
-}
-
-/* Only displays with at least 2 device pixels per CSS pixel can paint a
-   half-pixel line at its true opacity, so the finer hairline is opt-in there. */
-@media (min-resolution: 2dppx) {
-    .menuDishList {
-        --menu-dish-separator-height: 0.5px;
-    }
 }
 
 .menuDishText {
