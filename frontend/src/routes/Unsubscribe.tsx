@@ -20,6 +20,9 @@ export function Unsubscribe() {
     return {
       bookingId: params.get('b') || '',
       channel: channel === 'email' || channel === 'whatsapp' ? channel : 'all',
+      // Opaque target token: recipients without a booking row (test sends,
+      // manual audiences) still carry their contact in the opt-out link.
+      target: params.get('t') || '',
     }
   })
   const [restaurantName, setRestaurantName] = useState('')
@@ -33,7 +36,9 @@ export function Unsubscribe() {
   useEffect(() => {
     void (async () => {
       try {
-        const res = await apiFetch(`/api/unsubscribe/context?b=${encodeURIComponent(query.bookingId)}`)
+        const params = `b=${encodeURIComponent(query.bookingId)}&c=${encodeURIComponent(query.channel)}`
+        const token = query.target ? `&t=${encodeURIComponent(query.target)}` : ''
+        const res = await apiFetch(`/api/unsubscribe/context?${params}${token}`)
         const data = (await res.json().catch(() => null)) as
           | { success?: boolean; restaurant_name?: string; already?: boolean; message?: string }
           | null
@@ -47,7 +52,7 @@ export function Unsubscribe() {
         setLoading(false)
       }
     })()
-  }, [query.bookingId])
+  }, [query.bookingId, query.channel, query.target])
 
   const confirm = async () => {
     setSending(true)
@@ -61,6 +66,7 @@ export function Unsubscribe() {
           booking_id: Number.isFinite(bookingId) ? bookingId : 0,
           channel: query.channel,
           reason,
+          target: query.target,
         }),
       })
       const data = (await res.json().catch(() => null)) as { success?: boolean; message?: string } | null
