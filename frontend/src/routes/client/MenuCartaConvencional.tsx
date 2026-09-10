@@ -2,7 +2,7 @@ import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { menuBeverageNote } from '../../lib/menuBeverageNote'
-import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
+import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider, MenuImportantBox } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
@@ -18,6 +18,11 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
     [lang, props.menu.settings.comments, props.menu.settings.comments_english],
   )
   const infoLines = useMemo(() => [menuBeverageNote(props.menu, lang), ...comments].filter(Boolean), [comments, lang, props.menu])
+  // Coordination id: menu_important_info_v1 (DB -> public API -> template)
+  const importantInfo = useMemo(
+    () => localizedArray(props.menu.settings.important_info || [], props.menu.settings.important_info_english, lang),
+    [lang, props.menu.settings.important_info, props.menu.settings.important_info_english],
+  )
 
   return (
     <div class="page menuPage">
@@ -69,6 +74,8 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
                     ))}
                   </section>
                 ) : null}
+
+                <MenuImportantBox lines={importantInfo} />
               </div>
             </article>
           )}
