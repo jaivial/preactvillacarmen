@@ -672,6 +672,10 @@ export function GroupStyleDishSection(props: {
   const items = props.dishes || []
   if (items.length === 0) return null
   const subtitle = String(props.subtitle ?? '').trim()
+  // Allergen icons are legally required information, so they are opt-out
+  // rather than opt-in: every menu that renders this list shows them unless a
+  // caller explicitly passes showAllergens={false}.
+  const showAllergens = props.showAllergens !== false
 
   return (
     <section class="menuSubSection">
@@ -684,7 +688,7 @@ export function GroupStyleDishSection(props: {
           <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`} data-dish-id={dish.id}>
             <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
             <DishSupplementBadge dish={dish} />
-            {props.showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
+            {showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
             {props.showDishPrice ? (
               <div class="menuDishText menuMuted">{dishPriceLabel(dish.price)}</div>
             ) : null}

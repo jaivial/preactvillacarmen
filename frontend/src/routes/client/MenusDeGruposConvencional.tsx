@@ -1,7 +1,7 @@
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
-import { formatEuro, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
+import { AllergensLegend, formatEuro, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
 import { getMenuViewSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
@@ -143,6 +143,8 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu }) {
               ) : null}
             </div>
           </article>
+
+          <AllergensLegend />
         </div>
       </section>
     </div>
