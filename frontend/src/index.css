@@ -1730,7 +1730,7 @@ svg {
     /* Separator geometry and colour are exposed as custom properties so a
        panel variant can retune the rule without duplicating the selector. */
     --menu-dish-separator-max-width: 350px;
-    --menu-dish-separator-height: 0.5px;
+    --menu-dish-separator-height: 1px;
     --menu-dish-separator-color: rgb(169 169 169 / 48%);
     margin: 12px 0 0;
     padding: 0;
@@ -1758,6 +1758,14 @@ svg {
         var(--menu-dish-separator-color) 75%,
         transparent 100%
     );
+}
+
+/* Only displays with at least 2 device pixels per CSS pixel can paint a
+   half-pixel line at its true opacity, so the finer hairline is opt-in there. */
+@media (min-resolution: 2dppx) {
+    .menuDishList {
+        --menu-dish-separator-height: 0.5px;
+    }
 }
 
 .menuDishText {
