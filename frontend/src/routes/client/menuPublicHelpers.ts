@@ -3,6 +3,8 @@ import type { Dish, PublicMenu, PublicMenuSection } from '../../lib/types'
 export type PublicMenuViewSection = {
   id: number
   kind: string
+  // Coordination id: dessert_section_source_v1
+  dessert_source?: string
   title: string
   title_english?: string
   display_title?: string
@@ -41,6 +43,17 @@ function normalizeSectionAnnotations(section: PublicMenuSection): string[] {
     .filter(Boolean)
 }
 
+/**
+ * True when the section's desserts are mirrored from the general desserts carta.
+ * The payload already carries the resolved dish list, so this only drives copy
+ * and analytics on the public site.
+ * Coordination id: dessert_section_source_v1
+ */
+export function isGeneralDessertSection(section: Pick<PublicMenuSection, 'kind' | 'dessert_source'>): boolean {
+  if (String(section.kind || '').toLowerCase().trim() !== 'postres') return false
+  return String(section.dessert_source || '').toLowerCase().trim() === 'general'
+}
+
 export function isRiceSection(section: Pick<PublicMenuSection, 'kind' | 'title' | 'display_title'>): boolean {
   const kind = String(section.kind || '').toLowerCase().trim()
   if (kind === 'arroces') return true
@@ -67,6 +80,8 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
     out.push({
       id: Number.isFinite(row.id) ? row.id : 0,
       kind: String(row.kind || '').toLowerCase().trim() || 'custom',
+      // Coordination id: dessert_section_source_v1
+      dessert_source: String(row.dessert_source || '').toLowerCase().trim() || undefined,
       title,
       title_english: String(row.display_title_english || row.title_english || '').trim() || undefined,
       display_title: String(row.display_title || '').trim() || undefined,
