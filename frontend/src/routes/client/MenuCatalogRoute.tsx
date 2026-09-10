@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { fetchMenuByID } from '../../lib/menuApi'
-import { MenuCartaConvencional } from './MenuCartaConvencional'
-import { MenuCerradoConvencional } from './MenuCerradoConvencional'
-import { MenuEspecial } from './MenuEspecial'
-import { MenusDeGruposCarta } from './MenusDeGruposCarta'
-import { MenusDeGruposConvencional } from './MenusDeGruposConvencional'
+import { MenuTemplateFor } from './menuTemplateFor'
 import { MenuUnavailable } from './MenuUnavailable'
 import type { PublicMenu } from '../../lib/types'
 
@@ -79,17 +75,5 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
   }
 
   checkpoint('menu_catalog_menu_rendered', { menu_id: menu.id, menu_type: menu.menu_type })
-  if (menu.menu_type === 'a_la_carte') {
-    return <MenuCartaConvencional menu={menu} />
-  }
-  if (menu.menu_type === 'special') {
-    return <MenuEspecial menu={menu} />
-  }
-  if (menu.menu_type === 'closed_group') {
-    return <MenusDeGruposConvencional menu={menu} />
-  }
-  if (menu.menu_type === 'a_la_carte_group') {
-    return <MenusDeGruposCarta menu={menu} />
-  }
-  return <MenuCerradoConvencional menu={menu} />
+  return <MenuTemplateFor menu={menu} />
 }
