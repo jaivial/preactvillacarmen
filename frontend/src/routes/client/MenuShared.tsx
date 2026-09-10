@@ -130,10 +130,41 @@ function dishDescriptionText(dish: Dish): string {
   return String(dish.description || '').trim()
 }
 
+// Per-dish description toggle from the backoffice: a missing flag means the
+// legacy default (on), an explicit `false` hides the text everywhere.
+function dishDescriptionVisible(dish: Dish): boolean {
+  return dish.description_enabled !== false && Boolean(dishDescriptionText(dish))
+}
+
 function dishSupplementText(dish: Dish, label: string): string {
   if (dish.supplement_enabled !== true || typeof dish.supplement_price !== 'number') return ''
   if (!Number.isFinite(dish.supplement_price) || dish.supplement_price <= 0) return ''
   return `${label} +${formatEuro(dish.supplement_price)}`
+}
+
+// Single source of truth for the public supplement badge. Every menu type
+// (closed/a la carte, conventional or group) renders the supplement through
+// this component so the pill markup, the i18n label and the "only when the
+// backoffice enabled it with a positive price" rule can never drift apart.
+// `coordinationId` mirrors the backoffice dish id so a badge on screen can be
+// traced back to the `group_menu_section_dishes_v2` row that produced it.
+export function DishSupplementBadge(props: { dish: Dish; testId?: string }) {
+  const { t } = useI18n()
+  const supplementText = useMemo(
+    () => dishSupplementText(props.dish, t('menu.dish.supplement')),
+    [props.dish, t],
+  )
+  if (!supplementText) return null
+
+  return (
+    <div
+      class="dishSupplementInfo"
+      data-testid={props.testId || 'dish-supplement'}
+      data-coordination-id={props.dish.id ? `dish-supplement-${props.dish.id}` : undefined}
+    >
+      {supplementText}
+    </div>
+  )
 }
 
 export function AllergenIcons(props: { alergenos: string[] }) {
@@ -183,10 +214,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
     () => localized(dishDescriptionText(props.dish), props.dish.description_english, lang),
     [props.dish, lang],
   )
-  // Per-dish description toggle from the backoffice: only render the extra
-  // description UI when the dish allows it (missing flag = legacy default on).
-  const descriptionVisible = props.dish.description_enabled !== false && Boolean(descriptionText)
-  const supplementText = useMemo(() => dishSupplementText(props.dish, t('menu.dish.supplement')), [props.dish, t])
+  const descriptionVisible = dishDescriptionVisible(props.dish)
 
   useEffect(() => {
     setImageErrored(false)
@@ -254,7 +282,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
             <div class="dishCardBody">
               <div class="dishDescription">{displayDescripcion}</div>
               {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
-              {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
+              <DishSupplementBadge dish={props.dish} />
             </div>
             <AllergenIcons alergenos={props.dish.alergenos} />
           </div>
@@ -263,7 +291,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
         <div class="dishCardBody">
           <div class="dishDescription">{displayDescripcion}</div>
           {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
-          {supplementText ? <div class="dishSupplementInfo" data-testid="dish-supplement">{supplementText}</div> : null}
+          <DishSupplementBadge dish={props.dish} />
           <AllergenIcons alergenos={props.dish.alergenos} />
         </div>
       )}
@@ -653,8 +681,9 @@ export function GroupStyleDishSection(props: {
       ) : null}
       <ul class="menuDishList">
         {items.map((dish, idx) => (
-          <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`}>
+          <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`} data-dish-id={dish.id}>
             <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
+            <DishSupplementBadge dish={dish} />
             {props.showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
             {props.showDishPrice ? (
               <div class="menuDishText menuMuted">{dishPriceLabel(dish.price)}</div>
