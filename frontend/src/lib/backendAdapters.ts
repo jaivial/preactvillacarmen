@@ -155,10 +155,12 @@ function normalizePublicMenuSettings(value: unknown): PublicMenuSettings {
     beverage: toRecord(record.beverage),
     beverage_options: beverageOptions,
     comments: toStringArray(record.comments),
+    important_info: toStringArray(record.important_info),
     min_party_size: Math.max(1, Math.trunc(toNumber(record.min_party_size, 1))),
     main_dishes_limit: toBool(record.main_dishes_limit) === true,
     main_dishes_limit_number: Math.max(1, Math.trunc(toNumber(record.main_dishes_limit_number, 1))),
     comments_english: toStringArray(record.comments_english),
+    important_info_english: toStringArray(record.important_info_english),
   }
 }
 
