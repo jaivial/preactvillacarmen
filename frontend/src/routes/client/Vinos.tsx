@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { StickyTabBar } from '../../components/ui'
 import { useI18n, localized } from '../../lib/i18n'
@@ -67,21 +67,35 @@ export function Vinos() {
     }
   }, [tipo, vinosByTipo])
 
-  useEffect(() => {
+  // Layout effect (not a passive effect): the observer may deliver its first
+  // callback in the same frame the cards mount. Populating the lookup refs
+  // synchronously here guarantees `ensureWine` never sees a stale/empty list
+  // for an already-intersecting card.
+  useLayoutEffect(() => {
     const list = vinos || []
     orderRef.current = list.map((v) => v.num)
     indexRef.current = new Map(orderRef.current.map((num, idx) => [num, idx]))
     vinosRef.current = list
   }, [vinos])
 
-  const ensureWine = useCallback((num: number) => {
+  const rememberFoto = useCallback((num: number, url: string | null) => {
+    // Update the ref synchronously so a second observer hit for the same card
+    // is short-circuited even before React/Preact has flushed the state update.
+    fotoUrlsRef.current = { ...fotoUrlsRef.current, [num]: url }
+    setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: url }))
+  }, [])
+
+  const ensureWine = useCallback((num: number, hasFoto: boolean) => {
     if (!Number.isFinite(num) || num <= 0) return
     if (num in fotoUrlsRef.current) return
     if (inflightRef.current.has(num)) return
 
-    const wine = vinosRef.current.find((w) => w.num === num)
-    if (!wine || !wine.has_foto) {
-      setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: null }))
+    // `has_foto` comes from the rendered card (`data-wine-has-foto`), not from
+    // the async list: an intersecting card may be observed before the list
+    // state/refs are available, and treating that window as "no photo" would
+    // pin the placeholder forever.
+    if (!hasFoto) {
+      rememberFoto(num, null)
       return
     }
 
@@ -90,15 +104,15 @@ export function Vinos() {
     apiGetJson<VinosResponse>(`/api/vinos?num=${encodeURIComponent(String(num))}&include_image=1`)
       .then((res) => {
         const url = res.vinos && res.vinos[0] && typeof res.vinos[0].foto_url === 'string' ? res.vinos[0].foto_url : null
-        setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: url }))
+        rememberFoto(num, url)
       })
       .catch(() => {
-        setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: null }))
+        rememberFoto(num, null)
       })
       .finally(() => {
         inflightRef.current.delete(num)
       })
-  }, [])
+  }, [rememberFoto])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -113,11 +127,15 @@ export function Vinos() {
           const num = Number(numRaw)
           if (!Number.isFinite(num) || num <= 0) continue
 
-          ensureWine(num)
+          const hasFoto = el.getAttribute('data-wine-has-foto') === '1'
+          ensureWine(num, hasFoto)
+
           const idx = indexRef.current.get(num)
           if (idx !== undefined) {
-            const nextNum = orderRef.current[idx + 1]
-            if (typeof nextNum === 'number') ensureWine(nextNum)
+            const nextWine = vinosRef.current[idx + 1]
+            // Prefetch the next card too, but never let a missing list turn a
+            // real photo into a cached "no photo".
+            if (nextWine) ensureWine(nextWine.num, Boolean(nextWine.has_foto))
           }
 
           obs.unobserve(entry.target)
@@ -186,7 +204,7 @@ export function Vinos() {
               {vinos.map((v, idx) => {
                 const foto = fotoUrls[v.num]
                 return (
-                  <article class="wineCardWrap" key={v.num} ref={register(v.num)} data-wine-num={v.num}>
+                  <article class="wineCardWrap" key={v.num} ref={register(v.num)} data-wine-num={v.num} data-wine-has-foto={v.has_foto ? '1' : '0'}>
                     <motion.div
                       class="wineCard"
                       initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
@@ -200,7 +218,7 @@ export function Vinos() {
                     >
                       <div class="winePhoto" aria-hidden="true">
                         {v.has_foto && foto ? (
-                          <img src={foto} alt="" loading="lazy" decoding="async" />
+                          <img src={foto} alt="" loading="eager" decoding="async" />
                         ) : (
                           <div class={v.has_foto && foto === undefined ? 'winePhotoPlaceholder is-loading' : 'winePhotoPlaceholder'} />
                         )}
