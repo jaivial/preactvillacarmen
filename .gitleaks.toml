@@ -1,0 +1,15 @@
+# Extend the built-in gitleaks rules; only documented placeholders and local
+# templates are allowed. Real secrets must never be committed.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented placeholders and example templates"
+paths = [
+  '''(?i)(^|/)\.env(\.[a-z0-9]+)?\.example$''',
+  '''(?i)(^|/)\.env\.prod\.example$''',
+]
+regexes = [
+  '''ChangeMe[A-Za-z0-9!@#_-]*''',
+  '''(?i)(example|placeholder|dummy|changeme|your[-_]?(key|token|password))''',
+]
