@@ -4065,17 +4065,11 @@ svg {
     align-items: center;
 }
 
-.resvAdultsPanel {
-    display: flex;
-    justify-content: center;
-    padding: 10px 0 0;
-}
-
-.resvAccGrid {
+.resvCounterGroup {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 14px;
-    margin-top: 8px;
+    gap: 18px;
+    padding-top: 12px;
 }
 
 .resvCounter {
@@ -5101,8 +5095,8 @@ svg {
 }
 
 @media (min-width: 920px) {
-    .resvAccGrid {
-        grid-template-columns: 1fr 1fr;
+    .resvCounterGroup {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .resvRiceGrid {

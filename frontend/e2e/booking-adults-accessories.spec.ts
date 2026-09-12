@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Locator } from '@playwright/test'
 
 // Reach the adults step by completing date → party → time → (group menu no) → rice no → personal.
-// Then exercise the adults Counter and the conditional accessories step.
+// Then exercise the adults and baby-accessory Counters, all on the same fixed step.
 
 async function titleVisible(page: Page, title: string): Promise<boolean> {
   return page
@@ -192,20 +192,20 @@ test('children derived from party size minus adults', async ({ page }) => {
   const c = counterByTitle(page, 'Adultos')
   await decTo(c, 1) // adults=1 → children = PARTY-1
   expect(await counterValue(c)).toBe(1)
+  // Accessories live on the same fixed step regardless of children.
+  await expect(counterByTitle(page, 'Tronas')).toBeVisible()
   await clickNext(page)
-  // children > 0 → accessories step appears, implying children present.
-  await expect(page.locator('.resvCardTitle', { hasText: 'Accesorios para bebés' })).toBeVisible()
+  await expect(page.locator('.resvCardTitle', { hasText: 'Resumen de tu reserva' })).toBeVisible()
 })
 
-test('accessories step appears when children > 0', async ({ page }) => {
+test('accessories counters appear on the adults step', async ({ page }) => {
   await reachAdults(page, String(PARTY))
-  const c = counterByTitle(page, 'Adultos')
-  await decTo(c, 1) // at least 1 child
-  await clickNext(page)
-  await expect(page.locator('.resvCardTitle', { hasText: 'Accesorios para bebés' })).toBeVisible()
+  await expect(counterByTitle(page, 'Adultos')).toBeVisible()
+  await expect(counterByTitle(page, 'Tronas')).toBeVisible()
+  await expect(counterByTitle(page, 'Carros de bebé')).toBeVisible()
 })
 
-test('accessories step skipped when no children', async ({ page }) => {
+test('no separate accessories step exists', async ({ page }) => {
   await reachAdults(page, String(PARTY))
   const c = counterByTitle(page, 'Adultos')
   expect(await counterValue(c)).toBe(PARTY) // adults = party, 0 children
@@ -216,9 +216,6 @@ test('accessories step skipped when no children', async ({ page }) => {
 
 test('high chairs counter range 0-3', async ({ page }) => {
   await reachAdults(page, String(PARTY))
-  await decTo(counterByTitle(page, 'Adultos'), 1)
-  await clickNext(page)
-  await expect(page.locator('.resvCardTitle', { hasText: 'Accesorios para bebés' })).toBeVisible()
   const hc = counterByTitle(page, 'Tronas')
   expect(await counterValue(hc)).toBe(0)
   await incTo(hc, 99)
@@ -228,9 +225,6 @@ test('high chairs counter range 0-3', async ({ page }) => {
 
 test('baby strollers counter range 0-5', async ({ page }) => {
   await reachAdults(page, String(PARTY))
-  await decTo(counterByTitle(page, 'Adultos'), 1)
-  await clickNext(page)
-  await expect(page.locator('.resvCardTitle', { hasText: 'Accesorios para bebés' })).toBeVisible()
   const st = counterByTitle(page, 'Carros de bebé')
   expect(await counterValue(st)).toBe(0)
   await incTo(st, 99)
@@ -241,8 +235,6 @@ test('baby strollers counter range 0-5', async ({ page }) => {
 test('completes booking with children and accessories', async ({ page }) => {
   await reachAdults(page, String(PARTY))
   await decTo(counterByTitle(page, 'Adultos'), 1) // 1 child
-  await clickNext(page)
-  await expect(page.locator('.resvCardTitle', { hasText: 'Accesorios para bebés' })).toBeVisible()
   await incTo(counterByTitle(page, 'Tronas'), 1)
   await incTo(counterByTitle(page, 'Carros de bebé'), 1)
   await clickNext(page)

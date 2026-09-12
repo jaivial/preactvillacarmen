@@ -18,16 +18,16 @@ import type {
   GroupMenuDisplay,
 } from '../../lib/types'
 import { PopoverSelect, type PopoverSelectOption } from '../../components/reservas/PopoverSelect'
-import { Counter } from '../../components/reservas/Counter'
+import { CounterGroup, type CounterField } from '../../components/reservas/CounterGroup'
 import { Checkbox } from '../../components/reservas/Checkbox'
 import { InlineCounter } from '../../components/reservas/InlineCounter'
 
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
 
-type StepId = 'date' | 'mandatoryMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'accessories' | 'summary'
+type StepId = 'date' | 'mandatoryMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
 
-const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'groupMenu', 'rice', 'personal', 'adults', 'accessories', 'summary']
+const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
 
 type PrincipalesRow = { name: string; servings: number }
 
@@ -415,11 +415,6 @@ export function Reservas() {
   const [submitting, setSubmitting] = useState(false)
   const [confirmationOpen, setConfirmationOpen] = useState(false)
 
-  const childrenCount = useMemo(() => {
-    if (!partySize || adults == null) return null
-    return clamp(partySize - adults, 0, partySize)
-  }, [partySize, adults])
-
   const dateStepReady = Boolean(
     selectedDate &&
     partySize &&
@@ -468,12 +463,9 @@ export function Reservas() {
     out.push({ id: 'personal', label: text('Datos', 'Details') })
     out.push({ id: 'adults', label: text('Adultos', 'Adults') })
 
-    const includeAccessories = childrenCount === null ? true : childrenCount > 0
-    if (includeAccessories) out.push({ id: 'accessories', label: text('Accesorios', 'Accessories') })
-
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, childrenCount, mandatoryMenuData, mandatoryMenuId, lang])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -1263,19 +1255,7 @@ export function Reservas() {
 
   const goNextFromAdults = () => {
     if (!partySize) return
-    const a = adults == null ? partySize : clamp(adults, 1, partySize)
-    setAdults(a)
-    const kids = partySize - a
-    if (kids <= 0) {
-      setHighChairs(0)
-      setBabyStrollers(0)
-      setStep('summary')
-    } else {
-      setStep('accessories')
-    }
-  }
-
-  const goNextFromAccessories = () => {
+    setAdults(adults == null ? partySize : clamp(adults, 1, partySize))
     setStep('summary')
   }
 
@@ -2255,65 +2235,26 @@ export function Reservas() {
     if (step === 'adults') {
       const ps = partySize || 2
       const a = adults == null ? ps : clamp(adults, 1, ps)
+      const fields: CounterField[] = [
+        { key: 'adults', testId: 'reservas-adults-counter', label: text('Adultos', 'Adults'), value: a, min: 1, max: ps, onChange: (n) => setAdults(n) },
+        { key: 'high-chairs', testId: 'reservas-high-chairs-counter', label: text('Tronas', 'High chairs'), value: highChairs, min: 0, max: 3, onChange: (n) => setHighChairs(n), subtitle: text('Suplemento de 2€ por trona', '€2 surcharge per high chair') },
+        { key: 'baby-strollers', testId: 'reservas-baby-strollers-counter', label: text('Carros de bebé', 'Baby strollers'), value: babyStrollers, min: 0, max: 5, onChange: (n) => setBabyStrollers(n), subtitle: text('Indique cuántos traerá', 'How many will you bring?') },
+      ]
       return (
         <div class="resvStep" data-testid="reservas-step-adults">
           <div class="resvCard" data-testid="reservas-adults-card">
             <div class="resvCardHead" data-testid="reservas-adults-card-head">
               <div class="resvCardTitle" data-testid="reservas-adults-card-title">{text('¿Cuántos adultos sois?', 'How many adults are there?')}</div>
+              <div class="resvCardSub" data-testid="reservas-adults-card-subtitle">{text('Indique también si necesitáis tronas o vais a traer carrito.', 'Also tell us if you need high chairs or will bring a stroller.')}</div>
             </div>
 
-            <div class="resvAdultsPanel" data-testid="reservas-adults-panel">
-              <Counter testId="reservas-adults-counter" ariaLabel={text('Adultos', 'Adults')} value={a} min={1} max={ps} onChange={(n) => setAdults(n)} className="resvCounter--plain" />
-            </div>
+            <CounterGroup testId="reservas-adults-counters" fields={fields} />
 
             <div class="resvActions" data-testid="reservas-adults-actions">
               <button type="button" class="btn" data-testid="reservas-adults-back" onClick={goPrev}>
                 {text('Anterior', 'Back')}
               </button>
               <button type="button" class="btn primary" data-testid="reservas-adults-next" onClick={goNextFromAdults}>
-                {text('Siguiente', 'Next')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (step === 'accessories') {
-      return (
-        <div class="resvStep" data-testid="reservas-step-accessories">
-          <div class="resvCard" data-testid="reservas-accessories-card">
-            <div class="resvCardHead" data-testid="reservas-accessories-card-head">
-              <div class="resvCardTitle" data-testid="reservas-accessories-card-title">{text('Accesorios para bebés', 'Baby accessories')}</div>
-              <div class="resvCardSub" data-testid="reservas-accessories-card-subtitle">{text('Indique si necesitáis tronas o vais a traer carrito.', 'Tell us if you need high chairs or will bring a stroller.')}</div>
-            </div>
-
-            <div class="resvAccGrid" data-testid="reservas-accessories-grid">
-              <Counter
-                testId="reservas-high-chairs-counter"
-                ariaLabel={text('Tronas', 'High chairs')}
-                value={highChairs}
-                min={0}
-                max={3}
-                onChange={(n) => setHighChairs(n)}
-                subtitle={text('Suplemento de 2€ por trona', '€2 surcharge per high chair')}
-              />
-              <Counter
-                testId="reservas-baby-strollers-counter"
-                ariaLabel={text('Carros de bebé', 'Baby strollers')}
-                value={babyStrollers}
-                min={0}
-                max={5}
-                onChange={(n) => setBabyStrollers(n)}
-                subtitle={text('Indique cuántos traerá', 'How many will you bring?')}
-              />
-            </div>
-
-            <div class="resvActions" data-testid="reservas-accessories-actions">
-              <button type="button" class="btn" data-testid="reservas-accessories-back" onClick={goPrev}>
-                {text('Anterior', 'Back')}
-              </button>
-              <button type="button" class="btn primary" data-testid="reservas-accessories-next" onClick={goNextFromAccessories}>
                 {text('Siguiente', 'Next')}
               </button>
             </div>
