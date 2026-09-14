@@ -17,7 +17,8 @@ export function Cafes() {
   const reduceMotion = useReducedMotion()
   const [state, setState] = useState<CafesState>({ loaded: false, itemsByTipo: {}, error: false })
   const [selectedTipo, setSelectedTipo] = useState<string>('')
-  const fotoUrls = useRef<Record<number, string | null>>({})
+  const [fotoUrls, setFotoUrls] = useState<Record<number, string | null>>({})
+  const fotoUrlsRef = useRef<Record<number, string | null>>({})
   const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const inflightFotoRef = useRef<Set<number>>(new Set())
@@ -68,16 +69,21 @@ export function Cafes() {
   }, [availableTypes, selectedTipo])
 
   const loadFoto = useCallback((num: number) => {
-    if (num in fotoUrls.current || inflightFotoRef.current.has(num)) return
+    if (num in fotoUrlsRef.current || inflightFotoRef.current.has(num)) return
     inflightFotoRef.current.add(num)
     apiGetJson<ComidaItemsResponse>(`/api/comida/cafes/${num}`)
       .then((res) => {
+        const next: Record<number, string | null> = {}
         for (const item of res.items || []) {
-          if (item.has_foto && item.foto_url) fotoUrls.current[item.num] = item.foto_url
-          else fotoUrls.current[item.num] = null
+          next[item.num] = item.has_foto && item.foto_url ? item.foto_url : null
         }
+        fotoUrlsRef.current = { ...fotoUrlsRef.current, ...next }
+        setFotoUrls((prev) => ({ ...prev, ...next }))
       })
-      .catch(() => { fotoUrls.current[num] = null })
+      .catch(() => {
+        fotoUrlsRef.current = { ...fotoUrlsRef.current, [num]: null }
+        setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: null }))
+      })
       .finally(() => { inflightFotoRef.current.delete(num) })
   }, [])
 
@@ -163,7 +169,7 @@ export function Cafes() {
               ) : (
                 <div class="cafeList">
                   {items.map((item, idx) => {
-                    const foto = fotoUrls.current[item.num] || null
+                    const foto = fotoUrls[item.num] || null
                     return (
                       <article
                         class="cafeCardWrap"

@@ -1,6 +1,7 @@
 import { useEffect } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
 import type { PublicAd } from '../lib/publicAds'
+import { safeUrl } from '../lib/safeUrl'
 
 export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
   useEffect(() => {
@@ -33,7 +34,7 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
         {props.ad.ctas.length ? (
           <div class="publicAdActions">
             {props.ad.ctas.map((cta) => {
-              const href = cta.navigation_mode === 'custom' ? cta.custom_url : cta.route
+              const href = safeUrl(cta.navigation_mode === 'custom' ? cta.custom_url : cta.route)
               return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
             })}
           </div>
