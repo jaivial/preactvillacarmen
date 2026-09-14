@@ -40,15 +40,16 @@ export function localISODate(date = new Date()): string {
 }
 
 /**
- * Canonical ad visibility: an ad only runs inside an explicit date range, so an
- * active ad whose range was cleared (or is incomplete) must not be shown.
+ * Canonical ad visibility: a missing start/end date means "unbounded", so an
+ * active ad with no dates (or only one of them) is always shown.
  * Mirrors publicAdVisibleOnDate in the backend (`internal/api/public_ads.go`).
  */
 export function activeAdsForDate(ads: PublicAd[], isoDate: string): PublicAd[] {
   return ads.filter((ad) => {
     if (!ad.active) return false
-    if (!ad.starts_at || !ad.ends_at) return false
-    return isoDate >= ad.starts_at && isoDate <= ad.ends_at
+    if (ad.starts_at && isoDate < ad.starts_at) return false
+    if (ad.ends_at && isoDate > ad.ends_at) return false
+    return true
   })
 }
 
