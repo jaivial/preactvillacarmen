@@ -157,6 +157,12 @@ export type PublicMenu = {
   menu_subtitle_english?: string[]
   slider_mode?: 'default' | 'custom' | 'both' | 'hidden'
   slider_images?: string[]
+  // Coordination id: menu_weekday_availability_v1
+  // Weekly availability calendar persisted per menu in the backend. The client
+  // SDK uses it to know which weekday a booking falls on and which menu is
+  // served by default that day.
+  weekdays?: Record<string, boolean>
+  weekdays_available?: string[]
 }
 
 export type PublicMenusResponse = {

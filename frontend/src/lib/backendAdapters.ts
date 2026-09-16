@@ -211,7 +211,24 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     modified_at: toText(record.modified_at),
     menu_title_english: toText(record.menu_title_english) || undefined,
     menu_subtitle_english: toStringArray(record.menu_subtitle_english),
+    weekdays: normalizePublicMenuWeekdays(record.weekdays),
+    weekdays_available: toStringArray(record.weekdays_available),
   }
+}
+
+// Coordination id: menu_weekday_availability_v1 (backend payload -> client SDK).
+function normalizePublicMenuWeekdays(value: unknown): Record<string, boolean> | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const record = value as Record<string, unknown>
+  const out: Record<string, boolean> = {}
+  let sawKey = false
+  for (const key of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
+    if (Object.prototype.hasOwnProperty.call(record, key)) {
+      out[key] = toBool(record[key]) === true
+      sawKey = true
+    }
+  }
+  return sawKey ? out : undefined
 }
 
 function normalizeDish(value: unknown): Dish | null {
