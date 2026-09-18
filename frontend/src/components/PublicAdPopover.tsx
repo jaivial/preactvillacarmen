@@ -16,6 +16,13 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     }
   }, [props])
 
+  const slotted = props.ad.ctas.filter((cta) => typeof cta.slot === 'number')
+  const trailing = props.ad.ctas.filter((cta) => typeof cta.slot !== 'number')
+  const renderCta = (cta: PublicAd['ctas'][number]) => {
+    const href = safeUrl(cta.navigation_mode === 'custom' ? cta.custom_url : cta.route)
+    return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
+  }
+
   const modal = (
     <div class="publicAdOverlay" role="presentation" onClick={(event) => {
       if (event.currentTarget === event.target) props.onClose()
@@ -23,20 +30,21 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
       <section class="publicAdModal" role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'}>
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
         <div class="publicAdContent">
-          {props.ad.content.map((item) => {
+          {props.ad.content.map((item, index) => {
             const style = { textAlign: item.align || 'left' } as const
-            if (item.type === 'image') return item.value ? <img key={item.id} class="publicAdImage" src={item.value} alt="" /> : null
-            if (item.type === 'title') return <h2 key={item.id} style={style}>{item.value}</h2>
-            if (item.type === 'subtitle') return <h3 key={item.id} style={style}>{item.value}</h3>
-            return <p key={item.id} style={style}>{item.value}</p>
+            // Coordination id: ads_button_slot_v1 - buttons placed inside the
+            // content flow render before the content index they point at.
+            const before = slotted.filter((cta) => cta.slot === index).map(renderCta)
+            if (item.type === 'image') return [...before, item.value ? <img key={item.id} class="publicAdImage" src={item.value} alt="" /> : null]
+            if (item.type === 'title') return [...before, <h2 key={item.id} style={style}>{item.value}</h2>]
+            if (item.type === 'subtitle') return [...before, <h3 key={item.id} style={style}>{item.value}</h3>]
+            return [...before, <p key={item.id} style={style}>{item.value}</p>]
           })}
+          {slotted.filter((cta) => (cta.slot as number) >= props.ad.content.length).map(renderCta)}
         </div>
-        {props.ad.ctas.length ? (
+        {trailing.length ? (
           <div class="publicAdActions">
-            {props.ad.ctas.map((cta) => {
-              const href = safeUrl(cta.navigation_mode === 'custom' ? cta.custom_url : cta.route)
-              return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
-            })}
+            {trailing.map(renderCta)}
           </div>
         ) : null}
       </section>
