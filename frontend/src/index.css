@@ -104,7 +104,7 @@ body.vc-modal-open {
 .publicAdContent p { font-size: 15px; line-height: 1.55; opacity: 0.85; }
 .publicAdImage { width: 95%; margin-inline: auto; margin-block: 1rem; max-height: 46vh; object-fit: cover; border-radius: 1rem; }
 .publicAdActions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
-.publicAdAction { flex: 1 1 100%; padding: 16px 24px; border-radius: 999px; color: white; text-align: center; text-decoration: none; font-weight: 600; }
+.publicAdAction { display: block; flex: 1 1 100%; padding: 16px 24px; border-radius: 999px; color: white; text-align: center; text-decoration: none; font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
     .publicAdOverlay, .publicAdModal { scroll-behavior: auto; }
