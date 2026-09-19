@@ -8,12 +8,18 @@ import type {
   ClosedDaysResponse,
   HourDataResponse,
   InsertBookingResponse,
+  MenuByIDResponse,
   MesasDeDosResponse,
   MandatoryMenuResponse,
   MonthAvailabilityResponse,
+  PaymentMethodKey,
   ReservationDayContextFloor,
   ReservationDayContextResponse,
   RiceTypesResponse,
+  SpecialDatePublic,
+  SpecialDateResponse,
+  SpecialDateSummary,
+  SpecialDatesResponse,
   ValidGroupMenusForPartySizeResponse,
   GroupMenuDisplay,
 } from '../../lib/types'
@@ -25,11 +31,35 @@ import { InlineCounter } from '../../components/reservas/InlineCounter'
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
 
-type StepId = 'date' | 'mandatoryMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
+type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
 
-const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
+const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
 
 type PrincipalesRow = { name: string; servings: number }
+
+type SpecialPrincipalesRow = { name: string; servings: number }
+
+type SpecialMenuSelection = {
+  special_date_menu_id: number
+  count: number
+  rows: SpecialPrincipalesRow[]
+}
+
+// Coordination id: special_booking_v1
+// Spanish label map for payment methods exposed to the user on special dates.
+const PAYMENT_METHOD_LABELS: Record<PaymentMethodKey, string> = {
+  card: 'Tarjeta',
+  bizum: 'Bizum',
+  transferencia: 'Transferencia',
+  efectivo: 'Efectivo',
+}
+
+const PAYMENT_METHOD_OPTIONS: PaymentMethodKey[] = ['card', 'bizum', 'transferencia', 'efectivo']
+
+function paymentMethodOptions(methods: PaymentMethodKey[]): { value: PaymentMethodKey; label: string }[] {
+  const allowed = methods.length > 0 ? methods : PAYMENT_METHOD_OPTIONS
+  return allowed.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }))
+}
 
 type Country = { name: string; code: string; flag: string; dial: string; keywords: string }
 
@@ -107,6 +137,12 @@ function normalizeDateSet(values: unknown): Set<string> {
 }
 
 function getPrincipalesItems(menu: GroupMenuDisplay | null): string[] {
+  if (!menu || !menu.principales || typeof menu.principales !== 'object') return []
+  const items = (menu.principales as any).items
+  return readStringArray(items)
+}
+
+function getPrincipalesItemsPublic(menu: any | null): string[] {
   if (!menu || !menu.principales || typeof menu.principales !== 'object') return []
   const items = (menu.principales as any).items
   return readStringArray(items)
@@ -298,7 +334,28 @@ export function Reservas() {
   }
 
   const today = useMemo(() => startOfDayLocal(new Date()), [])
-  const maxDate = useMemo(() => addDaysLocal(today, 40), [today])
+  // Coordination id: special_booking_v1
+  // Active special dates with prereserva bypass the 40-day window: extend the
+  // calendar's upper bound up to +6 months so they are reachable. The cap of 6
+  // months prevents unbounded growth when many special dates are scheduled.
+  const SPECIAL_MAX_DAYS = 183
+  const [specialDatesMap, setSpecialDatesMap] = useState<Record<string, SpecialDateSummary>>({})
+  const maxDate = useMemo(() => {
+    let furthest = addDaysLocal(today, 40)
+    const cap = addDaysLocal(today, SPECIAL_MAX_DAYS)
+    for (const iso of Object.keys(specialDatesMap)) {
+      const sd = specialDatesMap[iso]
+      if (!sd || !sd.is_active || !sd.prereserva_enabled) continue
+      const d = parseISODateLocal(iso)
+      if (!d) continue
+      if (d > furthest && d <= cap) furthest = d
+      else if (d > cap) {
+        furthest = cap
+        break
+      }
+    }
+    return furthest
+  }, [today, specialDatesMap])
   const todayISO = useMemo(() => isoFromLocalDate(today), [today])
   const maxISO = useMemo(() => isoFromLocalDate(maxDate), [maxDate])
 
@@ -393,6 +450,55 @@ export function Reservas() {
   const [riceType, setRiceType] = useState<string>('')
   const [riceServings, setRiceServings] = useState<number | null>(null)
 
+  // Special date menu step.
+  // Coordination id: special_booking_v1
+  const [activeSpecialDate, setActiveSpecialDate] = useState<SpecialDatePublic | null>(null)
+  const [specialMenuSelections, setSpecialMenuSelections] = useState<Record<number, SpecialMenuSelection>>({})
+  const [specialPaymentMethod, setSpecialPaymentMethod] = useState<PaymentMethodKey | null>(null)
+  // Principales options per non-custom special menu, keyed by special_date_menu_id.
+  // Loaded lazily as the user enters the specialMenu step, by fetching the
+  // backing PublicMenu when needed.
+  const [specialMenuPrincipales, setSpecialMenuPrincipales] = useState<Record<number, string[]>>({})
+
+  // Coordination id: special_booking_v1
+  // Lookup the active special-date summary for the currently selected date.
+  // Declared before the steps useMemo and peopleOptions because both depend on it.
+  const activeSpecialSummary = selectedDate ? specialDatesMap[selectedDate] : null
+  const isSpecialActiveForSelected = Boolean(activeSpecialSummary && activeSpecialSummary.is_active)
+
+  // Coordination id: special_booking_v1
+  // Lazy-load principales for each non-custom special menu by fetching the
+  // underlying PublicMenu. We only request once per special_date_menu_id.
+  useEffect(() => {
+    if (!activeSpecialDate) return
+    const missing = activeSpecialDate.menus.filter((m) => !m.is_custom && m.menu_id && !specialMenuPrincipales[m.id])
+    if (missing.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      const updates: Record<number, string[]> = {}
+      await Promise.all(
+        missing.map(async (m) => {
+          try {
+            const res = await apiGetJson<MenuByIDResponse>(
+              `/api/menus/${encodeURIComponent(String(m.menu_id))}`
+            )
+            const items = getPrincipalesItemsPublic(res.menu)
+            updates[m.id] = items
+          } catch {
+            updates[m.id] = []
+          }
+        })
+      )
+      if (cancelled) return
+      if (Object.keys(updates).length > 0) {
+        setSpecialMenuPrincipales((prev) => ({ ...prev, ...updates }))
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeSpecialDate, specialMenuPrincipales])
+
   // Personal.
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -443,6 +549,17 @@ export function Reservas() {
   const steps = useMemo(() => {
     const out: { id: StepId; label: string }[] = [{ id: 'date', label: text('Fecha y personas', 'Date and guests') }]
 
+    // Coordination id: special_booking_v1
+    // Active special dates with prereserva_enabled replace the legacy menu
+    // flow (mandatoryMenu / groupMenu / rice) with a single "specialMenu" step.
+    if (isSpecialActiveForSelected && activeSpecialSummary?.prereserva_enabled) {
+      out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
+      out.push({ id: 'personal', label: text('Datos', 'Details') })
+      out.push({ id: 'adults', label: text('Adultos', 'Adults') })
+      out.push({ id: 'summary', label: text('Resumen', 'Summary') })
+      return out
+    }
+
     // Check if mandatory menu is active for this date
     const hasMandatoryMenu = mandatoryMenuData?.status === true && !!mandatoryMenuData?.menus && mandatoryMenuData.menus.length > 0
 
@@ -465,7 +582,7 @@ export function Reservas() {
 
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -624,9 +741,22 @@ export function Reservas() {
   )
 
   const peopleOptions = useMemo<PopoverSelectOption[]>(() => {
-    const max = freeSeats == null ? 0 : Math.min(10, freeSeats)
     const out: PopoverSelectOption[] = []
     const suffix = t('reservations.people.suffix')
+    // Coordination id: special_booking_v1
+    // Special dates with max_per_table_enabled cap at min(max_per_table, freeSeats)
+    // and never expose the "10+" pseudo-option (which would normally trigger the
+    // groups-of-10 modal). Otherwise the legacy 2..10(+ groups modal) behaviour
+    // is preserved.
+    if (isSpecialActiveForSelected && activeSpecialSummary?.max_per_table_enabled && activeSpecialSummary.max_per_table) {
+      const cap = Math.min(activeSpecialSummary.max_per_table, freeSeats ?? 0)
+      for (let i = 2; i <= cap; i++) {
+        if (i === 2 && !twoTopAvailable) continue
+        out.push({ value: String(i), label: suffix, left: String(i) })
+      }
+      return out
+    }
+    const max = freeSeats == null ? 0 : Math.min(10, freeSeats)
     for (let i = 2; i <= max; i++) {
       if (i === 2 && !twoTopAvailable) continue
       out.push({ value: String(i), label: suffix, left: String(i) })
@@ -635,7 +765,7 @@ export function Reservas() {
       out.push({ value: 'more_than_10', label: suffix, left: '10+' })
     }
     return out
-  }, [freeSeats, twoTopAvailable, t])
+  }, [freeSeats, twoTopAvailable, t, isSpecialActiveForSelected, activeSpecialSummary])
 
   const groupMenuOptions = useMemo<PopoverSelectOption[]>(() => {
     if (!groupMenus || groupMenus.length === 0) return []
@@ -802,6 +932,28 @@ export function Reservas() {
         setOpenedDays(new Set())
       })
 
+    // Coordination id: special_booking_v1
+    // Fetch public special-dates summary for the same window so we can
+    // bypass the 40-day limit and the Mon/Tue closure on active prereserva
+    // special dates. The request is independent from closed-days.
+    apiGetJson<SpecialDatesResponse>(
+      `/api/reservations/special-dates?from=${encodeURIComponent(closedFromISO)}&to=${encodeURIComponent(maxISO)}`
+    )
+      .then((d) => {
+        if (cancelled) return
+        const list = Array.isArray(d.special_dates) ? d.special_dates : []
+        const map: Record<string, SpecialDateSummary> = {}
+        for (const s of list) {
+          if (!s || !s.date) continue
+          map[s.date] = s
+        }
+        setSpecialDatesMap(map)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSpecialDatesMap({})
+      })
+
     apiGetJson<RiceTypesResponse>('/api/reservations/rice-types')
       .then((d) => {
         if (cancelled) return
@@ -872,15 +1024,33 @@ export function Reservas() {
     return defaultClosed
   }
 
+  // Coordination id: special_booking_v1
+  // Active special dates with prereserva_enabled bypass ALL the gray-out rules:
+  // Mon/Tue defaults, explicit closedDays, and the 40-day window. They only
+  // appear disabled when they are in the past (same as every other date).
+  const isPrereservaSpecial = (iso: string) => {
+    const sd = specialDatesMap[iso]
+    return Boolean(sd && sd.is_active && sd.prereserva_enabled)
+  }
+
   const isDisabledDate = (iso: string, inMonth: boolean) => {
     if (!inMonth) return true
     if (iso < todayISO) return true
+    if (isPrereservaSpecial(iso)) {
+      // Past dates remain blocked; active special dates are never gray.
+      const free = monthAvailability?.[iso]?.freeBookingSeats
+      if (typeof free === 'number' && free <= 0) return true
+      return false
+    }
     if (iso > maxISO) return true
     if (isClosedByDefault(iso)) return true
     const free = monthAvailability?.[iso]?.freeBookingSeats
     if (typeof free === 'number' && free <= 0) return true
     return false
   }
+
+  // Coordination id: special_booking_v1
+  // Lookup the active special-date summary for the currently selected date.
 
   const loadDateContext = async (iso: string, opts?: { skipStepReset?: boolean }) => {
     setSelectedDate(iso)
@@ -898,6 +1068,12 @@ export function Reservas() {
     setSelectedFloorNumber(null)
     setSelectedSalonId(null)
     setSelectedShift(null)
+    // Coordination id: special_booking_v1
+    // Reset special-menu selection state on date change so a previous date's
+    // selections never leak into the next booking.
+    setActiveSpecialDate(null)
+    setSpecialMenuSelections({})
+    setSpecialPaymentMethod(null)
     if (!opts?.skipStepReset) setStep('date')
 
     const loadTwoTopAvailability = async () => {
@@ -1045,13 +1221,18 @@ export function Reservas() {
       pushToast('warning', text('Fecha no válida', 'Invalid date'), text('No se pueden seleccionar fechas pasadas.', 'Past dates cannot be selected.'))
       return
     }
-    if (iso > maxISO) {
-      pushToast('warning', text('Demasiada antelación', 'Date too far ahead'), text('Solo se pueden realizar reservas con hasta 40 días de antelación.', 'Reservations can only be made up to 40 days in advance.'))
-      return
-    }
-    if (isClosedByDefault(iso)) {
-      pushToast('warning', text('Restaurante cerrado', 'Restaurant closed'), text('El restaurante se encuentra cerrado en la fecha seleccionada.', 'The restaurant is closed on the selected date.'))
-      return
+    // Coordination id: special_booking_v1
+    // Active special dates with prereserva_enabled skip the 40-day and
+    // closed-default checks. Past dates are still blocked above.
+    if (!isPrereservaSpecial(iso)) {
+      if (iso > maxISO) {
+        pushToast('warning', text('Demasiada antelación', 'Date too far ahead'), text('Solo se pueden realizar reservas con hasta 40 días de antelación.', 'Reservations can only be made up to 40 days in advance.'))
+        return
+      }
+      if (isClosedByDefault(iso)) {
+        pushToast('warning', text('Restaurante cerrado', 'Restaurant closed'), text('El restaurante se encuentra cerrado en la fecha seleccionada.', 'The restaurant is closed on the selected date.'))
+        return
+      }
     }
 
     void loadDateContext(iso)
@@ -1088,6 +1269,38 @@ export function Reservas() {
     }
 
     try {
+      // Coordination id: special_booking_v1
+      // Active special dates with prereserva_enabled bypass the mandatory-menu
+      // and group-menu flows and go straight to the new "specialMenu" step.
+      if (isSpecialActiveForSelected && activeSpecialSummary?.prereserva_enabled) {
+        try {
+          const specialRes = await apiGetJson<SpecialDateResponse>(
+            `/api/reservations/special-date?date=${encodeURIComponent(selectedDate)}`
+          )
+          setActiveSpecialDate(specialRes.special_date || null)
+          setSpecialMenuSelections({})
+          setSpecialPaymentMethod(null)
+        } catch {
+          setActiveSpecialDate(null)
+          setSpecialMenuSelections({})
+          setSpecialPaymentMethod(null)
+        }
+        // Wipe state used by legacy menu steps so they don't leak in the summary.
+        setMandatoryMenuData(null)
+        setMandatoryMenuId(null)
+        setMandatoryPrincipalesEnabled(null)
+        setMandatoryPrincipalesRows([])
+        setGroupMenus(null)
+        setWantsGroupMenu(null)
+        setGroupMenuId(null)
+        setPrincipalesEnabled(null)
+        setPrincipalesRows([])
+        setWantsRice(false)
+        setRiceType('')
+        setRiceServings(null)
+        setStep('specialMenu')
+        return
+      }
       // First, check for mandatory menus
       const mandatoryRes = await apiGetJson<MandatoryMenuResponse>(
         `/api/reservations/mandatory-menus?date=${encodeURIComponent(selectedDate)}`
@@ -1186,6 +1399,63 @@ export function Reservas() {
       return
     }
     setStep('rice')
+  }
+
+  // Coordination id: special_booking_v1
+  // Validation for the specialMenu step. Differs from validateGroupMenuStep:
+  // the sum of menu counters must EXACTLY equal party size, and each chosen
+  // non-custom menu's principals must EXACTLY match its own counter (no
+  // <= partySize tolerance — that legacy rule belongs to groupMenu only).
+  const validateSpecialMenuStep = () => {
+    if (!activeSpecialDate) return true
+    const menus = Array.isArray(activeSpecialDate.menus) ? activeSpecialDate.menus : []
+    if (menus.length === 0) {
+      pushToast('warning', text('Sin menús', 'No menus'), text('Esta fecha especial no tiene menús disponibles.', 'This special date has no available menus.'))
+      return false
+    }
+    const selections = Object.values(specialMenuSelections).filter((s) => s && s.count > 0)
+    const sumCount = selections.reduce((acc, s) => acc + (s.count || 0), 0)
+    if (!partySize) {
+      pushToast('warning', text('Personas requeridas', 'Guests required'), text('Selecciona el número de personas.', 'Select the number of guests.'))
+      return false
+    }
+    if (selections.length === 0) {
+      pushToast('warning', text('Selección requerida', 'Selection required'), text('Elige al menos un menú y su número de comensales.', 'Choose at least one menu and the number of guests.'))
+      return false
+    }
+    if (sumCount !== partySize) {
+      pushToast('warning', text('Comensales', 'Guests'), text(`El total de comensales por menú debe sumar ${partySize}.`, `The total of menu guests must equal ${partySize}.`))
+      return false
+    }
+    // Per-menu exact-match principals validation (only for non-custom menus).
+    // If a non-custom menu has no principals loaded yet (empty array), we
+    // can't enforce the exact-match rule — defer to the server validator
+    // (BE-2). This guards wave 1 against transient empty-fetch races.
+    for (const selection of selections) {
+      const menu = menus.find((m) => m.id === selection.special_date_menu_id)
+      if (!menu) continue
+      if (menu.is_custom) continue
+      const items = specialMenuPrincipales[menu.id] || []
+      if (items.length === 0) continue
+      const cleaned = (selection.rows || [])
+        .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
+        .filter((r) => r.name && r.servings > 0)
+      const sum = cleaned.reduce((acc, r) => acc + r.servings, 0)
+      if (sum !== selection.count) {
+        pushToast('warning', text('Principales', 'Main courses'), text(`Los principales del menú deben sumar exactamente ${selection.count}.`, `Main courses for this menu must sum to exactly ${selection.count}.`))
+        return false
+      }
+    }
+    if (activeSpecialDate.requires_adelanto && !specialPaymentMethod) {
+      pushToast('warning', text('Método de pago', 'Payment method'), text('Selecciona el método de pago del adelanto.', 'Select the deposit payment method.'))
+      return false
+    }
+    return true
+  }
+
+  const goNextFromSpecialMenu = () => {
+    if (!validateSpecialMenuStep()) return
+    setStep('personal')
   }
 
   const validateRiceStep = () => {
@@ -1292,6 +1562,12 @@ export function Reservas() {
     if (groupMenus && groupMenus.length > 0) {
       if (!validateGroupMenuStep()) return
     }
+    // Coordination id: special_booking_v1
+    // Validate the specialMenu step before submission so an incomplete selection
+    // never reaches the server.
+    if (isSpecialActiveForSelected && activeSpecialDate) {
+      if (!validateSpecialMenuStep()) return
+    }
     if (!validateRiceStep()) return
 
     const fd = new FormData()
@@ -1315,22 +1591,55 @@ export function Reservas() {
     fd.set('adults', String(a))
     fd.set('children', String(kids))
 
-    const selectedMenuId = mandatoryMenuId ?? (wantsGroupMenu === true ? groupMenuId : null)
-    const wantsMenu = selectedMenuId != null
-    const selectedPrincipalesEnabled = mandatoryMenuId != null ? mandatoryPrincipalesEnabled : principalesEnabled
-    const selectedPrincipalesRows = mandatoryMenuId != null ? mandatoryPrincipalesRows : principalesRows
-    fd.set('menu_de_grupo_selected', wantsMenu ? '1' : '0')
-    fd.set('menu_de_grupo_id', wantsMenu ? String(selectedMenuId) : '')
-    fd.set('principales_enabled', wantsMenu && selectedPrincipalesEnabled === true ? '1' : '0')
-    fd.set('principales_json', wantsMenu ? JSON.stringify(selectedPrincipalesRows || []) : '[]')
-
-    if (wantsMenu) {
+    // Coordination id: special_booking_v1
+    // When the booking lands on an active special date with prereserva_enabled,
+    // we send the snapshot payload as `special_json`. The server validates it
+    // (counts == party_size, menus offered, items only for non-custom menus) and
+    // stores it verbatim into bookings.special_json.
+    if (isSpecialActiveForSelected && activeSpecialDate) {
+      const selections = Object.values(specialMenuSelections).filter((s) => s && s.count > 0)
+      const menusPayload = selections.map((s) => {
+        const menu = activeSpecialDate.menus.find((mm) => mm.id === s.special_date_menu_id)
+        const isCustom = Boolean(menu?.is_custom)
+        const items = isCustom
+          ? []
+          : (s.rows || [])
+              .map((r) => ({ dish_id: Number(r.name) }))
+              .filter((it) => Number.isFinite(it.dish_id))
+        return {
+          special_date_menu_id: s.special_date_menu_id,
+          count: s.count,
+          items,
+        }
+      })
+      const payload: { menus: { special_date_menu_id: number; count: number; items: { dish_id: number }[] }[]; payment_method?: PaymentMethodKey } = { menus: menusPayload }
+      if (activeSpecialDate.requires_adelanto && specialPaymentMethod) {
+        payload.payment_method = specialPaymentMethod
+      }
+      fd.set('special_json', JSON.stringify(payload))
       fd.set('toggleArroz', 'false')
+      fd.set('menu_de_grupo_selected', '0')
+      fd.set('menu_de_grupo_id', '')
+      fd.set('principales_enabled', '0')
+      fd.set('principales_json', '[]')
     } else {
-      fd.set('toggleArroz', wantsRice === true ? 'true' : 'false')
-      if (wantsRice === true) {
-        fd.set('arroz_type', riceType)
-        if (riceServings != null) fd.set('arroz_servings', String(riceServings))
+      const selectedMenuId = mandatoryMenuId ?? (wantsGroupMenu === true ? groupMenuId : null)
+      const wantsMenu = selectedMenuId != null
+      const selectedPrincipalesEnabled = mandatoryMenuId != null ? mandatoryPrincipalesEnabled : principalesEnabled
+      const selectedPrincipalesRows = mandatoryMenuId != null ? mandatoryPrincipalesRows : principalesRows
+      fd.set('menu_de_grupo_selected', wantsMenu ? '1' : '0')
+      fd.set('menu_de_grupo_id', wantsMenu ? String(selectedMenuId) : '')
+      fd.set('principales_enabled', wantsMenu && selectedPrincipalesEnabled === true ? '1' : '0')
+      fd.set('principales_json', wantsMenu ? JSON.stringify(selectedPrincipalesRows || []) : '[]')
+
+      if (wantsMenu) {
+        fd.set('toggleArroz', 'false')
+      } else {
+        fd.set('toggleArroz', wantsRice === true ? 'true' : 'false')
+        if (wantsRice === true) {
+          fd.set('arroz_type', riceType)
+          if (riceServings != null) fd.set('arroz_servings', String(riceServings))
+        }
       }
     }
 
@@ -2065,6 +2374,271 @@ export function Reservas() {
               </button>
               {groupMenuStepReady ? (
                 <button type="button" class="btn primary" data-testid="reservas-group-menu-next" onClick={goNextFromGroupMenu}>
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (step === 'specialMenu' && activeSpecialDate) {
+      const spMenus = activeSpecialDate.menus || []
+      const selections = Object.values(specialMenuSelections)
+      const sumCount = selections.reduce((acc, s) => acc + (s.count || 0), 0)
+      const requiresAdelanto = activeSpecialDate.requires_adelanto
+      const pmOptions = paymentMethodOptions(activeSpecialDate.adelanto_payment_methods || [])
+      const haveRequiredPayment = !requiresAdelanto || Boolean(specialPaymentMethod)
+      const specialStepReady =
+        spMenus.length > 0 &&
+        selections.length > 0 &&
+        sumCount === (partySize || 0) &&
+        selections.every((s) => {
+          const m = spMenus.find((mm) => mm.id === s.special_date_menu_id)
+          if (!m || m.is_custom) return true
+          const cleanedSum = (s.rows || []).reduce((acc, r) => acc + (Number(r.servings) || 0), 0)
+          return cleanedSum === s.count
+        }) &&
+        haveRequiredPayment
+
+      const updateSelection = (menuId: number, patch: Partial<SpecialMenuSelection>) => {
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          const next: SpecialMenuSelection = cur
+            ? { ...cur, ...patch }
+            : { special_date_menu_id: menuId, count: 0, rows: [], ...patch }
+          return { ...prev, [menuId]: next }
+        })
+      }
+
+      const toggleMenu = (menuId: number, selected: boolean) => {
+        if (selected) {
+          updateSelection(menuId, { count: 0, rows: [] })
+        } else {
+          setSpecialMenuSelections((prev) => {
+            const cp = { ...prev }
+            delete cp[menuId]
+            return cp
+          })
+        }
+      }
+
+      const updateMenuCount = (menuId: number, count: number) => {
+        const c = Math.max(0, Math.min(count, partySize || count))
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          if (!cur) return prev
+          const next = { ...cur, count: c }
+          return { ...prev, [menuId]: next }
+        })
+      }
+
+      const updateRow = (menuId: number, idx: number, patch: Partial<SpecialPrincipalesRow>) => {
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          if (!cur) return prev
+          const rows = cur.rows.map((r, i) => (i === idx ? { ...r, ...patch } : r))
+          return { ...prev, [menuId]: { ...cur, rows } }
+        })
+      }
+
+      const addRow = (menuId: number, principalesOptions: string[]) => {
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          if (!cur) return prev
+          const rows = cur.rows
+          if (rows.length >= 10) return prev
+          const placeholder = principalesOptions.find((opt) => !rows.some((r) => r.name === opt)) || ''
+          return { ...prev, [menuId]: { ...cur, rows: [...rows, { name: placeholder, servings: 0 }] } }
+        })
+      }
+
+      const removeRow = (menuId: number, idx: number) => {
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          if (!cur) return prev
+          const rows = cur.rows.filter((_, i) => i !== idx)
+          return { ...prev, [menuId]: { ...cur, rows } }
+        })
+      }
+
+      const totalAdelanto = selections.reduce((acc, s) => {
+        const m = spMenus.find((mm) => mm.id === s.special_date_menu_id)
+        if (!m || !m.adelanto_amount) return acc
+        return acc + Number(m.adelanto_amount) * (s.count || 0)
+      }, 0)
+
+      return (
+        <div class="resvStep" data-testid="reservas-step-special-menu">
+          <div class="resvCard" data-testid="reservas-special-menu-card">
+            <div class="resvCardHead" data-testid="reservas-special-menu-card-head">
+              <div class="resvCardTitle" data-testid="reservas-special-menu-card-title">{text('Menú especial', 'Special menu')}</div>
+              <div class="resvCardSub" data-testid="reservas-special-menu-card-subtitle">
+                {activeSpecialDate.title || text('Esta fecha tiene menús especiales.', 'This date has special menus.')}
+              </div>
+              {activeSpecialDate.description ? (
+                <div class="resvHint" data-testid="reservas-special-menu-description">{activeSpecialDate.description}</div>
+              ) : null}
+            </div>
+
+            <div class="resvField" data-testid="reservas-special-menu-counter-sum">
+              <div class="resvHint" data-testid="reservas-special-menu-counter-sum-hint">
+                {text('Comensales asignados', 'Assigned guests')}: {sumCount} / {partySize || 0}
+              </div>
+              {partySize && sumCount !== partySize ? (
+                <div class="resvNotice warn" data-testid="reservas-special-menu-counter-sum-error">
+                  {text(`El total debe sumar exactamente ${partySize} comensales.`, `The total must equal ${partySize} guests.`)}
+                </div>
+              ) : null}
+            </div>
+
+            <div class="resvMenuList" data-testid="reservas-special-menu-list">
+              {spMenus.map((menu) => {
+                const sel = specialMenuSelections[menu.id]
+                const isChosen = Boolean(sel && sel.count > 0)
+                const restantes = (partySize || 0) - (sumCount - (sel?.count || 0))
+                const maxRows = Math.max(1, Math.min(10, sel?.count || 0))
+                const principalesForMenu = specialMenuPrincipales[menu.id] || []
+                const menuPrincipalesOptions: PopoverSelectOption[] = principalesForMenu.map((it) => ({
+                  value: it,
+                  label: it,
+                  keywords: it.toLowerCase(),
+                }))
+
+                return (
+                  <div class="resvMenuBlock" key={menu.id} data-testid={`reservas-special-menu-item-${menu.id}`}>
+                    <label class="resvCheck" data-testid={`reservas-special-menu-pick-${menu.id}`}>
+                      <Checkbox
+                        testId={`reservas-special-menu-pick-checkbox-${menu.id}`}
+                        checked={isChosen}
+                        onCheckedChange={(checked) => toggleMenu(menu.id, Boolean(checked))}
+                        variant="accent"
+                        size="sm"
+                      />
+                      <span>
+                        <strong>{menu.label || (menu.is_custom ? menu.custom_title : text('Menú', 'Menu'))}</strong>{' '}
+                        {typeof menu.price === 'number' ? (
+                          <span data-testid={`reservas-special-menu-price-${menu.id}`}>{menu.price}€/{text('persona', 'person')}</span>
+                        ) : null}
+                      </span>
+                    </label>
+
+                    {menu.is_custom ? (
+                      <div class="resvHint" data-testid={`reservas-special-menu-custom-note-${menu.id}`}>
+                        {text('Decidiré los principales más tarde', 'I will decide the main courses later')}
+                      </div>
+                    ) : null}
+
+                    {isChosen ? (
+                      <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${menu.id}`}>
+                        <div class="resvField" data-testid={`reservas-special-menu-count-field-${menu.id}`}>
+                          <div class="resvLabel" data-testid={`reservas-special-menu-count-label-${menu.id}`}>{text('Comensales', 'Guests')}</div>
+                          <InlineCounter
+                            testId={`reservas-special-menu-count-${menu.id}`}
+                            ariaLabel={text('Comensales', 'Guests')}
+                            value={sel?.count || 0}
+                            min={0}
+                            max={Math.max(restantes, 0)}
+                            onChange={(v) => updateMenuCount(menu.id, v)}
+                          />
+                        </div>
+
+                        {!menu.is_custom ? (
+                          <div class="resvPrincipales" data-testid={`reservas-special-menu-rows-${menu.id}`}>
+                            {(sel?.rows || []).map((row, idx) => (
+                              <div class="resvPrincipalRow" key={idx} data-ui="principal-row" data-testid={`reservas-special-menu-row-${menu.id}-${idx}`}>
+                                <PopoverSelect
+                                  testId={`reservas-special-menu-select-${menu.id}-${idx}`}
+                                  ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
+                                  value={row.name ? row.name : null}
+                                  placeholder={text('Selecciona un principal', 'Select a main course')}
+                                  options={menuPrincipalesOptions}
+                                  searchable={menuPrincipalesOptions.length > 10}
+                                  searchPlaceholder={text('Buscar principal', 'Search main courses')}
+                                  onChange={(name) => updateRow(menu.id, idx, { name })}
+                                />
+                                <InlineCounter
+                                  testId={`reservas-special-menu-servings-${menu.id}-${idx}`}
+                                  ariaLabel={`${text('Raciones', 'Servings')} ${idx + 1}`}
+                                  value={row.servings || 0}
+                                  min={0}
+                                  max={sel?.count || 0}
+                                  onChange={(v) => updateRow(menu.id, idx, { servings: v })}
+                                />
+                                <button
+                                  type="button"
+                                  class="resvIconBtn"
+                                  data-testid={`reservas-special-menu-remove-${menu.id}-${idx}`}
+                                  aria-label={text('Eliminar', 'Remove')}
+                                  onClick={() => removeRow(menu.id, idx)}
+                                >
+                                  <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" data-testid={`reservas-special-menu-remove-icon-${menu.id}-${idx}`} />
+                                </button>
+                              </div>
+                            ))}
+
+                            <div class="resvPrincipalesActions" data-testid={`reservas-special-menu-rows-actions-${menu.id}`}>
+                              <button
+                                type="button"
+                                class="btn"
+                                data-testid={`reservas-special-menu-add-${menu.id}`}
+                                disabled={(sel?.rows.length || 0) >= maxRows}
+                                onClick={() => addRow(menu.id, principalesForMenu)}
+                              >
+                                {text('Añadir principal', 'Add main course')}
+                              </button>
+                              <div class="resvHint" data-testid={`reservas-special-menu-rows-hint-${menu.id}`}>
+                                {text('Total raciones:', 'Total servings:')}{' '}
+                                {(sel?.rows || []).reduce((acc, r) => acc + (Number(r.servings) || 0), 0)} / {sel?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {requiresAdelanto && menu.adelanto_amount ? (
+                          <div class="resvHint" data-testid={`reservas-special-menu-adelanto-${menu.id}`}>
+                            {text('Adelanto', 'Deposit')}: {Number(menu.adelanto_amount).toFixed(2)}€ × {sel?.count || 0} = {(Number(menu.adelanto_amount) * (sel?.count || 0)).toFixed(2)}€
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+
+            {requiresAdelanto ? (
+              <div class="resvField" data-testid="reservas-special-menu-payment-field">
+                <div class="resvLabel" data-testid="reservas-special-menu-payment-label">{text('Método de pago del adelanto', 'Deposit payment method')}</div>
+                <div class="resvChips" data-testid="reservas-special-menu-payment-chips">
+                  {pmOptions.map((opt) => (
+                    <button
+                      type="button"
+                      key={opt.value}
+                      class={specialPaymentMethod === opt.value ? 'resvChoice selected' : 'resvChoice'}
+                      data-testid={`reservas-special-menu-payment-chip-${opt.value}`}
+                      onClick={() => setSpecialPaymentMethod(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {requiresAdelanto ? (
+              <div class="resvNotice" data-testid="reservas-special-menu-adelanto-total">
+                {text('Adelanto total a pagar', 'Total deposit to pay')}: {totalAdelanto.toFixed(2)}€
+              </div>
+            ) : null}
+
+            <div class="resvActions" data-testid="reservas-special-menu-actions">
+              <button type="button" class="btn" data-testid="reservas-special-menu-back" onClick={goPrev}>
+                {text('Anterior', 'Back')}
+              </button>
+              {specialStepReady ? (
+                <button type="button" class="btn primary" data-testid="reservas-special-menu-next" onClick={goNextFromSpecialMenu}>
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}

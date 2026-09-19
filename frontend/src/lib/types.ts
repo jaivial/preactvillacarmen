@@ -470,6 +470,55 @@ export type MandatoryMenuResponse = {
   menus?: MandatoryMenuDisplay[]
 }
 
+// Coordination id: special_booking_v1
+// Public special-date types. Light shape for the calendar marking / availability
+// bypass (SpecialDateSummary) and full shape returned by
+// GET /reservations/special-date?date= (SpecialDatePublic).
+export type PaymentMethodKey = 'card' | 'bizum' | 'transferencia' | 'efectivo'
+
+export type SpecialDateSummary = {
+  date: string
+  is_active: boolean
+  prereserva_enabled: boolean
+  title: string
+  max_per_table_enabled: boolean
+  max_per_table?: number | null
+}
+
+export type SpecialDatesResponse = {
+  success: true
+  special_dates: SpecialDateSummary[]
+}
+
+export type SpecialDateMenuPublic = {
+  id: number
+  menu_id?: number | null
+  label: string
+  price?: number | null
+  is_custom: boolean
+  custom_title?: string | null
+  custom_image_url?: string | null
+  adelanto_amount?: number | null
+}
+
+export type SpecialDatePublic = {
+  date: string
+  title: string
+  description?: string | null
+  prereserva_enabled: boolean
+  max_per_table_enabled: boolean
+  max_per_table?: number | null
+  requires_adelanto: boolean
+  adelanto_payment_methods: PaymentMethodKey[]
+  adelanto_unified: boolean
+  menus: SpecialDateMenuPublic[]
+}
+
+export type SpecialDateResponse = {
+  success: true
+  special_date: SpecialDatePublic | null
+}
+
 export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos'
 
 export type LegalPage = {
