@@ -1428,10 +1428,15 @@ export function Reservas() {
       return false
     }
     // Per-menu exact-match principals validation (only for non-custom menus).
+    // If a non-custom menu has no principals loaded yet (empty array), we
+    // can't enforce the exact-match rule — defer to the server validator
+    // (BE-2). This guards wave 1 against transient empty-fetch races.
     for (const selection of selections) {
       const menu = menus.find((m) => m.id === selection.special_date_menu_id)
       if (!menu) continue
       if (menu.is_custom) continue
+      const items = specialMenuPrincipales[menu.id] || []
+      if (items.length === 0) continue
       const cleaned = (selection.rows || [])
         .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
         .filter((r) => r.name && r.servings > 0)
