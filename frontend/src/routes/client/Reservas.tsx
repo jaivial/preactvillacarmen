@@ -515,11 +515,24 @@ export function Reservas() {
   // Terms.
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [privacyAccepted, setPrivacyAccepted] = useState(false)
+  // Coordination id: special_booking_v1
+  // Special-dates politics acceptance. Required for the summary submit when
+  // the booking lands on an active special date.
+  const [specialTermsAccepted, setSpecialTermsAccepted] = useState(false)
 
   const [sameDayOpen, setSameDayOpen] = useState(false)
   const [moreThan10Open, setMoreThan10Open] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [confirmationOpen, setConfirmationOpen] = useState(false)
+  // Coordination id: special_booking_v1
+  // Snapshot of the latest special-date booking that was successfully submitted.
+  // Drives the confirmation-modal headline + total-adelanto line for special
+  // bookings only.
+  const [confirmationSpecial, setConfirmationSpecial] = useState<{
+    title: string
+    totalAdelanto: number
+    paymentMethod: PaymentMethodKey | null
+  } | null>(null)
 
   const dateStepReady = Boolean(
     selectedDate &&
@@ -545,6 +558,41 @@ export function Reservas() {
     (onlyDigits(countryCode) + onlyDigits(phoneNational)).length <= 15
   )
   const groupMenuStepReady = wantsGroupMenu === false || Boolean(wantsGroupMenu && groupMenuId)
+
+  // Coordination id: special_booking_v1
+  // Per-menu summary rows for the "Menú especial" block: paired with the
+  // active special date's menus so the summary can list label + count, the
+  // tree of principales per menu, and the per-menu / total adelanto.
+  const specialSummaryRows = useMemo(() => {
+    if (!activeSpecialDate) return [] as { menu: import('../../lib/types').SpecialDateMenuPublic; count: number; rows: SpecialPrincipalesRow[]; subtotal: number }[]
+    const menus = activeSpecialDate.menus || []
+    const selections = Object.values(specialMenuSelections).filter((s) => s && s.count > 0)
+    return selections.map((s) => {
+      const menu = menus.find((m) => m.id === s.special_date_menu_id)
+      const subtotal = menu && menu.adelanto_amount ? Number(menu.adelanto_amount) * s.count : 0
+      return {
+        menu: menu || { id: s.special_date_menu_id, label: '', is_custom: false },
+        count: s.count,
+        rows: s.rows || [],
+        subtotal,
+      }
+    })
+  }, [activeSpecialDate, specialMenuSelections])
+
+  // Coordination id: special_booking_v1
+  // Total adelanto for the active special booking (sum of per-menu
+  // adelanto_amount × count). Used in the summary block and the
+  // post-submit confirmation modal.
+  const specialTotalAdelanto = useMemo(
+    () => specialSummaryRows.reduce((acc, r) => acc + (r.subtotal || 0), 0),
+    [specialSummaryRows]
+  )
+
+  // Coordination id: special_booking_v1
+  // Special-terms gating: only required when the booking targets an active
+  // special date. Forced false otherwise to keep the submit button available
+  // on the legacy flow even if the user toggled it before navigating away.
+  const specialTermsRequired = isSpecialActiveForSelected && Boolean(activeSpecialSummary?.prereserva_enabled)
 
   const steps = useMemo(() => {
     const out: { id: StepId; label: string }[] = [{ id: 'date', label: text('Fecha y personas', 'Date and guests') }]
@@ -1558,6 +1606,13 @@ export function Reservas() {
       pushToast('warning', text('Términos', 'Terms'), text('Debe aceptar los términos y la protección de datos.', 'You must accept the terms and data protection policy.'))
       return
     }
+    // Coordination id: special_booking_v1
+    // Special-dates politics acceptance: required in addition to the legacy
+    // terms + privacy boxes when the booking targets an active special date.
+    if (specialTermsRequired && !specialTermsAccepted) {
+      pushToast('warning', text('Términos', 'Terms'), text('Debe aceptar la política de reservas de días especiales.', 'You must accept the special-days booking policy.'))
+      return
+    }
 
     if (groupMenus && groupMenus.length > 0) {
       if (!validateGroupMenuStep()) return
@@ -1662,6 +1717,19 @@ export function Reservas() {
       }
       if (data.whatsapp_warning) {
         pushToast('warning', text('Reserva realizada', 'Reservation completed'), lang === 'en' ? 'Reservation completed, but the WhatsApp notification could not be sent.' : data.whatsapp_warning)
+      }
+      // Coordination id: special_booking_v1
+      // Snapshot the just-submitted special-date data so the confirmation
+      // modal can surface the date title + total-adelanto line. Cleared on
+      // non-special bookings so legacy users keep the original modal copy.
+      if (isSpecialActiveForSelected && activeSpecialDate) {
+        setConfirmationSpecial({
+          title: activeSpecialDate.title || text('Fecha especial', 'Special date'),
+          totalAdelanto: specialTotalAdelanto,
+          paymentMethod: specialPaymentMethod,
+        })
+      } else {
+        setConfirmationSpecial(null)
       }
       setConfirmationOpen(true)
     } catch (e) {
@@ -2841,6 +2909,7 @@ export function Reservas() {
     const ps = partySize || 0
     const wantsMenu = wantsGroupMenu === true && selectedMenu
     const hasAccessories = highChairs > 0 || babyStrollers > 0
+    const showSpecialBlock = Boolean(activeSpecialDate) && specialSummaryRows.length > 0
     return (
       <div class="resvStep" data-testid="reservas-step-summary">
         <div class="resvCard" data-testid="reservas-summary-card">
@@ -2935,6 +3004,89 @@ export function Reservas() {
             </div>
           )}
 
+            {showSpecialBlock ? (
+              // Coordination id: special_booking_v1
+              // Menú especial breakdown for active special dates: per-menu
+              // label + count, a tree of principales inside each menu (or
+              // "Principales por decidir" for custom menus), plus the per-menu
+              // adelanto row and the total adelanto a pagar.
+              <div class="resvSummaryBlock" data-testid="reservas-summary-special-menu-block">
+                <div class="resvSummaryBlockTitle" data-testid="reservas-summary-special-menu-title">
+                  {text('Menú especial', 'Special menu')}
+                </div>
+                {activeSpecialDate?.title ? (
+                  <div class="resvSummaryRow" data-testid="reservas-summary-row-special-menu-title">
+                    <span data-testid="reservas-summary-label-special-menu-title">{text('Fecha especial', 'Special date')}</span>
+                    <span class="resvSummaryValue" data-testid="reservas-summary-value-special-menu-title">{activeSpecialDate.title}</span>
+                  </div>
+                ) : null}
+                {specialSummaryRows.map((row) => {
+                  const label = row.menu.label || (row.menu.is_custom ? row.menu.custom_title : '') || text('Menú', 'Menu')
+                  const price = typeof row.menu.price === 'number' ? row.menu.price : null
+                  const cleanedRows = row.menu.is_custom
+                    ? []
+                    : row.rows
+                        .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
+                        .filter((r) => r.name && r.servings > 0)
+                  return (
+                    <div class="resvSpecialMenuSub" key={row.menu.id} data-testid={`reservas-summary-special-menu-item-${row.menu.id}`}>
+                      <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-${row.menu.id}`}>
+                        <span data-testid={`reservas-summary-label-special-menu-${row.menu.id}`}>{label}</span>
+                        <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-${row.menu.id}`}>
+                          {row.count}{' '}
+                          {row.count === 1 ? text('persona', 'person') : text('personas', 'persons')}
+                          {price != null ? ` · ${price}€/${text('persona', 'person')}` : ''}
+                        </span>
+                      </div>
+                      {row.menu.is_custom ? (
+                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                          {text('Principales por decidir', 'Mains to be decided')}
+                        </div>
+                      ) : cleanedRows.length > 0 ? (
+                        <>
+                          <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                            {text('Principales', 'Main courses')}
+                          </div>
+                          <ul class="resvSummaryList" data-testid={`reservas-summary-special-menu-mains-list-${row.menu.id}`}>
+                            {cleanedRows.map((r, mainIndex) => (
+                              <li key={`${r.name}-${mainIndex}`} data-testid={`reservas-summary-special-menu-main-${row.menu.id}-${mainIndex}`}>
+                                {r.name} x {r.servings}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                          {text('Principales por decidir', 'Mains to be decided')}
+                        </div>
+                      )}
+                      {row.subtotal > 0 ? (
+                        <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-adelanto-${row.menu.id}`}>
+                          <span data-testid={`reservas-summary-label-special-menu-adelanto-${row.menu.id}`}>
+                            {text('Adelanto', 'Deposit')}
+                          </span>
+                          <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-adelanto-${row.menu.id}`}>
+                            {Number(row.menu.adelanto_amount).toFixed(2)}€ x {row.count} = {row.subtotal.toFixed(2)}€
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
+                {specialTotalAdelanto > 0 ? (
+                  <div class="resvSummaryRow resvSummaryRow--total" data-testid="reservas-summary-row-special-menu-total-adelanto">
+                    <span data-testid="reservas-summary-label-special-menu-total-adelanto">
+                      {text('Total adelanto a pagar', 'Total deposit to pay')}
+                    </span>
+                    <span class="resvSummaryValue" data-testid="reservas-summary-value-special-menu-total-adelanto">
+                      {specialTotalAdelanto.toFixed(2)}€
+                      {specialPaymentMethod ? ` · ${PAYMENT_METHOD_LABELS[specialPaymentMethod]}` : ''}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {hasAccessories ? (
               <div class="resvSummaryBlock" data-testid="reservas-summary-accessories-block">
                 <div class="resvSummaryBlockTitle" data-testid="reservas-summary-accessories-title">{text('Accesorios', 'Accessories')}</div>
@@ -2981,13 +3133,29 @@ export function Reservas() {
                 .
               </span>
             </label>
+            {specialTermsRequired ? (
+              // Coordination id: special_booking_v1
+              // Special-terms acceptance: only rendered for active special dates
+              // with prereserva_enabled. Submit is gated on it alongside the
+              // legacy terms + privacy boxes.
+              <label class="resvCheck" data-testid="reservas-terms-special-label">
+                <Checkbox testId="reservas-terms-special-checkbox" checked={specialTermsAccepted} onCheckedChange={setSpecialTermsAccepted} variant="accent" size="sm" />
+                <span data-testid="reservas-terms-special-text">
+                  {text('Acepto la', 'I accept the')}{' '}
+                  <a href="/reservas-especiales-politica" target="_blank" rel="noreferrer" data-testid="reservas-terms-special-politics-link">
+                    {text('política de reservas de días especiales', 'special-days booking policy')}
+                  </a>
+                  .
+                </span>
+              </label>
+            ) : null}
           </div>
 
           <div class="resvActions" data-testid="reservas-summary-actions">
             <button type="button" class="btn" data-testid="reservas-summary-back" onClick={goPrev} disabled={submitting}>
               {text('Anterior', 'Back')}
             </button>
-            {termsAccepted && privacyAccepted ? (
+            {termsAccepted && privacyAccepted && (!specialTermsRequired || specialTermsAccepted) ? (
               <button type="button" class="btn primary" data-testid="reservas-summary-submit" onClick={() => void submitBooking()} disabled={submitting}>
                 {submitting ? text('Enviando...', 'Sending...') : text('Completar reserva', 'Complete reservation')}
               </button>
@@ -3078,6 +3246,24 @@ export function Reservas() {
       >
         <div class="resvConfirm" data-testid="reservas-confirmation-content">
           <div class="resvConfirm__lead" data-testid="reservas-confirmation-lead">{t('reservations.confirm.lead')}</div>
+          {confirmationSpecial ? (
+            // Coordination id: special_booking_v1
+            // Special-booking confirmation: surface the special-date title and
+            // the total-adelanto line so the user can re-check the deposit
+            // before closing the modal.
+            <>
+              <div class="resvConfirm__special-title" data-testid="reservas-confirmation-special-title">
+                {text('Reserva para:', 'Reservation for:')} <strong>{confirmationSpecial.title}</strong>
+              </div>
+              <div class="resvConfirm__special-adelanto" data-testid="reservas-confirmation-special-adelanto">
+                {text('Adelanto a pagar:', 'Deposit to pay:')}{' '}
+                <strong>
+                  {confirmationSpecial.totalAdelanto.toFixed(2)}€
+                  {confirmationSpecial.paymentMethod ? ` · ${PAYMENT_METHOD_LABELS[confirmationSpecial.paymentMethod]}` : ''}
+                </strong>
+              </div>
+            </>
+          ) : null}
           <div class="resvConfirm__fine" data-testid="reservas-confirmation-fine">{t('reservations.confirm.fine')}</div>
           <div class="resvConfirm__elegant" data-testid="reservas-confirmation-elegant">{t('reservations.confirm.elegant')}</div>
         </div>
