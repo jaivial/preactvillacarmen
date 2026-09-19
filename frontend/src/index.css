@@ -5571,3 +5571,57 @@ svg {
   color: rgba(107, 58, 31, 0.56);
   line-height: 1.6;
 }
+
+/* Special menu image sections (coordination id: special_menu_sections_v1) */
+.specialMenuSections {
+    display: grid;
+    gap: clamp(16px, 3vw, 28px);
+    max-width: 769px;
+    margin: 24px auto 0;
+    padding: 0 4px;
+}
+
+.specialMenuSection {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-1, #fff) 96%, transparent);
+    box-shadow: 0 1px 2px color-mix(in srgb, #000 8%, transparent),
+                0 8px 24px color-mix(in srgb, #000 6%, transparent);
+}
+
+.specialMenuSectionTitle {
+    margin: 0;
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+}
+
+.specialMenuSectionImage {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 540px;
+    object-fit: contain;
+    border-radius: 10px;
+    outline: 1px solid oklch(0 0 0 / 0.1);
+    background: color-mix(in srgb, var(--surface-2, #f3f4f6) 90%, transparent);
+}
+
+.specialMenuSectionEmpty {
+    text-align: center;
+    padding: 14px;
+    color: var(--muted-1, #6b7280);
+    font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .specialMenuSection {
+        background: color-mix(in srgb, var(--surface-1, #14161a) 96%, transparent);
+    }
+    .specialMenuSectionImage {
+        outline-color: oklch(1 0 0 / 0.1);
+    }
+}

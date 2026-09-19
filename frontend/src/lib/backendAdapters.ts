@@ -6,6 +6,7 @@ import type {
   PublicMenuDish,
   PublicMenuSection,
   PublicMenuSettings,
+  PublicMenuSpecialSection,
   PublicMenuType,
 } from './types'
 
@@ -49,6 +50,33 @@ function toNumberOrNull(value: unknown): number | null {
 function toNumber(value: unknown, fallback = 0): number {
   const parsed = toNumberOrNull(value)
   return parsed === null ? fallback : parsed
+}
+
+// Coordination id: special_menu_sections_v1
+// Backend returns sections as an array of {id, title, image_url, position}.
+// We sort by position ascending so the renderer can trust display order.
+function toPublicMenuSpecialSections(value: unknown): PublicMenuSpecialSection[] {
+  if (!Array.isArray(value)) return []
+  const sections: PublicMenuSpecialSection[] = []
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') continue
+    const item = raw as Record<string, unknown>
+    const id = toNumberOrNull(item.id)
+    if (id == null) continue
+    sections.push({
+      id,
+      title: toText(item.title),
+      image_url: toText(item.image_url),
+      position: toNumber(item.position, sections.length),
+    })
+  }
+  return sections.sort((a, b) => a.position - b.position)
+}
+
+// Coordination id: special_menu_visibility_v1
+// Same dropdown as the food-type settings: only two known values.
+function normalizeWebPlacement(value: unknown): string {
+  return toText(value) === 'independent_section' ? 'independent_section' : 'inside_menus'
 }
 
 function toRecord(value: unknown): Record<string, unknown> {
@@ -204,6 +232,11 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     show_dish_images: toBool(record.show_dish_images) === true,
     show_section_tabs: toBool(record.show_section_tabs) === true,
     special_menu_image_url: toText(record.special_menu_image_url),
+    // Coordination id: special_menu_sections_v1
+    special_menu_sections: toPublicMenuSpecialSections(record.special_menu_sections),
+    // Coordination id: special_menu_visibility_v1
+    web_placement: normalizeWebPlacement(record.web_placement),
+    menu_public_active: toBool(record.menu_public_active) !== false,
     show_menu_preview_image: toBool(record.show_menu_preview_image) === true,
     menu_preview_image_url: toText(record.menu_preview_image_url),
     legacy_source_table: legacySource || undefined,

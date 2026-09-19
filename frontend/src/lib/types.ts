@@ -145,6 +145,15 @@ export type PublicMenu = {
   settings: PublicMenuSettings
   sections: PublicMenuSection[]
   special_menu_image_url: string
+  // Coordination id: special_menu_sections_v1
+  // Ordered list of image sections rendered below the hero on a special
+  // menu. Each section has an optional title and an image URL.
+  special_menu_sections: PublicMenuSpecialSection[]
+  // Coordination id: special_menu_visibility_v1
+  // Per-menu placement / visibility, parallel to the food-type settings
+  // exposed in the sidebar payload.
+  web_placement: string
+  menu_public_active: boolean
   show_menu_preview_image: boolean
   menu_preview_image_url: string
   legacy_source_table?: string
@@ -163,6 +172,15 @@ export type PublicMenu = {
   // served by default that day.
   weekdays?: Record<string, boolean>
   weekdays_available?: string[]
+}
+
+// Coordination id: special_menu_sections_v1
+// Public, read-only shape of one special-menu image section.
+export type PublicMenuSpecialSection = {
+  id: number
+  title: string
+  image_url: string
+  position: number
 }
 
 export type PublicMenusResponse = {
@@ -337,6 +355,8 @@ export type SidebarMenu = {
   menu_title: string
   menu_type: PublicMenuType
   active: boolean
+  // Coordination id: special_menu_visibility_v1
+  web_placement?: string
   legacy_source_table?: string
 }
 
