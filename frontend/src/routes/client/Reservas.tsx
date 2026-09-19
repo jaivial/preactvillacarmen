@@ -2580,15 +2580,33 @@ export function Reservas() {
           <div class="resvCard" data-testid="reservas-special-menu-card">
             <div class="resvCardHead" data-testid="reservas-special-menu-card-head">
               <div class="resvCardTitle" data-testid="reservas-special-menu-card-title">{text('Menú especial', 'Special menu')}</div>
-              <div class="resvCardSub" data-testid="reservas-special-menu-card-subtitle">
-                {activeSpecialDate.title || text('Esta fecha tiene menús especiales.', 'This date has special menus.')}
-              </div>
-              {activeSpecialDate.description ? (
-                <div class="resvHint" data-testid="reservas-special-menu-description">{activeSpecialDate.description}</div>
+              {activeSpecialDate.title || activeSpecialDate.description ? (
+                <div
+                  class="resvWarn"
+                  role="note"
+                  data-testid="reservas-special-date-warn-block"
+                >
+                  <div class="resvWarnTitle" data-testid="reservas-special-date-warn-block-title">
+                    {activeSpecialDate.title || text('Fecha especial', 'Special date')}
+                  </div>
+                  {activeSpecialDate.description ? (
+                    <div class="resvWarnHint" data-testid="reservas-special-date-warn-block-desc">
+                      {activeSpecialDate.description}
+                    </div>
+                  ) : null}
+                  <div class="resvWarnList" data-testid="reservas-special-date-warn-block-menus">
+                    {spMenus.map((m) => (
+                      <span key={m.id} class="resvWarnChip">
+                        {m.label}
+                        {typeof m.price === 'number' && m.price > 0 ? ` · ${m.price.toFixed(2)}€` : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
 
-            <div class="resvField" data-testid="reservas-special-menu-counter-sum">
+            <div class="resvField text-center" data-testid="reservas-special-menu-counter-sum">
               <div class="resvHint" data-testid="reservas-special-menu-counter-sum-hint">
                 {text('Comensales asignados', 'Assigned guests')}: {sumCount} / {partySize || 0}
               </div>
@@ -2638,16 +2656,21 @@ export function Reservas() {
 
                     {isChosen ? (
                       <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${menu.id}`}>
-                        <div class="resvField" data-testid={`reservas-special-menu-count-field-${menu.id}`}>
+                        <div
+                          class="resvField resvField--centered text-center"
+                          data-testid={`reservas-special-menu-count-field-${menu.id}`}
+                        >
                           <div class="resvLabel" data-testid={`reservas-special-menu-count-label-${menu.id}`}>{text('Comensales', 'Guests')}</div>
-                          <InlineCounter
-                            testId={`reservas-special-menu-count-${menu.id}`}
-                            ariaLabel={text('Comensales', 'Guests')}
-                            value={sel?.count || 0}
-                            min={0}
-                            max={Math.max(restantes, 0)}
-                            onChange={(v) => updateMenuCount(menu.id, v)}
-                          />
+                          <div class="resvCounterCenter">
+                            <InlineCounter
+                              testId={`reservas-special-menu-count-${menu.id}`}
+                              ariaLabel={text('Comensales', 'Guests')}
+                              value={sel?.count || 0}
+                              min={0}
+                              max={Math.max(restantes, 0)}
+                              onChange={(v) => updateMenuCount(menu.id, v)}
+                            />
+                          </div>
                         </div>
 
                         {!menu.is_custom ? (
@@ -2715,8 +2738,8 @@ export function Reservas() {
             </div>
 
             {requiresAdelanto ? (
-              <div class="resvField" data-testid="reservas-special-menu-payment-field">
-                <div class="resvLabel" data-testid="reservas-special-menu-payment-label">{text('Método de pago del adelanto', 'Deposit payment method')}</div>
+              <div class="resvField mt-3" data-testid="reservas-special-menu-payment-field">
+                <div class="resvLabel mb-3" data-testid="reservas-special-menu-payment-label">{text('Método de pago del adelanto', 'Deposit payment method')}</div>
                 <div class="resvChips" data-testid="reservas-special-menu-payment-chips">
                   {pmOptions.map((opt) => (
                     <button
@@ -2726,7 +2749,10 @@ export function Reservas() {
                       data-testid={`reservas-special-menu-payment-chip-${opt.value}`}
                       onClick={() => setSpecialPaymentMethod(opt.value)}
                     >
-                      {opt.label}
+                      {specialPaymentMethod === opt.value ? (
+                        <span class="resvChoiceCheck" aria-hidden="true">✓</span>
+                      ) : null}
+                      <span>{opt.label}</span>
                     </button>
                   ))}
                 </div>
@@ -2734,8 +2760,19 @@ export function Reservas() {
             ) : null}
 
             {requiresAdelanto ? (
-              <div class="resvNotice" data-testid="reservas-special-menu-adelanto-total">
-                {text('Adelanto total a pagar', 'Total deposit to pay')}: {totalAdelanto.toFixed(2)}€
+              <div class="resvAdelantoSummary" data-testid="reservas-special-menu-adelanto-summary">
+                <div class="resvAdelantoRow" data-testid="reservas-special-menu-adelanto-summary-row">
+                  <span class="resvHint">{text('Adelanto por menú', 'Deposit per menu')}</span>
+                  <span class="resvAdelantoVal">{totalAdelanto.toFixed(2)}€</span>
+                </div>
+                <div class="resvAdelantoRow" data-testid="reservas-special-menu-adelanto-summary-row-all">
+                  <span class="resvHint">{text('Método elegido', 'Selected method')}</span>
+                  <span class="resvAdelantoVal">{pmOptions.find((o) => o.value === specialPaymentMethod)?.label || '—'}</span>
+                </div>
+                <div class="resvAdelantoRow resvAdelantoRow--total" data-testid="reservas-special-menu-adelanto-total">
+                  <span>{text('Total a pagar', 'Total to pay')}</span>
+                  <span class="resvAdelantoTotal">{totalAdelanto.toFixed(2)}€</span>
+                </div>
               </div>
             ) : null}
 
