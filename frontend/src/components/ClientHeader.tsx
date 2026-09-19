@@ -222,8 +222,14 @@ export function ClientHeader() {
       special: 3,
     }
 
+    // Coordination id: special_menu_visibility_v1
+    // Menus whose placement says "independent_section" live in the
+    // standalone list (independentSectionItems below), so we drop them here
+    // to avoid duplicates. Every other active, non-group menu stays inside
+    // the menus accordion.
     const nonGroupMenus = sidebarMenus
       .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type))
+      .filter((menu) => menu.web_placement !== 'independent_section')
       .sort((left, right) => {
         const leftOrder = typeOrder[left.menu_type] || 99
         const rightOrder = typeOrder[right.menu_type] || 99
@@ -254,16 +260,21 @@ export function ClientHeader() {
     ]
   }, [sidebarMenus, navSections, foodPageNav])
 
-  // Sections flagged as standalone render outside the menus accordion.
-  // Coordination id: menu_section_public_placement_v1
+  // Coordination id: special_menu_visibility_v1 + menu_section_public_placement_v1
+  // Sections and menus flagged as standalone render outside the menus accordion.
   const independentSectionItems = useMemo<NavItem[]>(
     () => {
+      const standaloneMenus: NavItem[] = sidebarMenus
+        ? sidebarMenus
+            .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type) && menu.web_placement === 'independent_section')
+            .map((menu) => ({ href: buildPublicMenuHref(menu), label: menu.menu_title }))
+        : []
       const sections: NavItem[] = navSections
         .filter((section) => section.web_placement === 'independent_section')
         .map((section) => ({ href: section.href, label: section.title }))
-      return [...sections, ...foodPageNav.independent]
+      return [...standaloneMenus, ...sections, ...foodPageNav.independent]
     },
-    [navSections, foodPageNav]
+    [sidebarMenus, navSections, foodPageNav]
   )
 
   const menuItems = useMemo<NavItem[]>(

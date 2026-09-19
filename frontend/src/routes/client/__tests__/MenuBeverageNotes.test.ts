@@ -60,6 +60,9 @@ const baseMenu = (settingsOverrides: Partial<Settings> = {}): PublicMenu => ({
   show_menu_preview_image: false,
   menu_preview_image_url: '',
   special_menu_image_url: '',
+  special_menu_sections: [],
+  web_placement: 'inside_menus',
+  menu_public_active: true,
   created_at: '',
   modified_at: '',
 })

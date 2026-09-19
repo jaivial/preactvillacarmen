@@ -14,6 +14,8 @@ export type PublicAdCTA = {
   navigation_mode: 'route' | 'custom'
   route?: string
   custom_url?: string
+  /** Content index the button renders before (ads_button_slot_v1); absent = actions row. */
+  slot?: number
 }
 
 export type PublicAd = {
