@@ -459,6 +459,13 @@ export function Reservas() {
   // Loaded lazily as the user enters the specialMenu step, by fetching the
   // backing PublicMenu when needed.
   const [specialMenuPrincipales, setSpecialMenuPrincipales] = useState<Record<number, string[]>>({})
+  // Coordination id: special_booking_v1
+  // Dish ID lookup per non-custom special menu, keyed by special_date_menu_id
+  // then by dish name (title_snapshot). Built alongside the principales list
+  // by reading the PublicMenu's sections (kind === 'principales') so the
+  // submission can serialize the user's selections as real dish IDs (the
+  // backend validates items[] against group_menu_section_dishes_v2).
+  const [specialMenuDishIDs, setSpecialMenuDishIDs] = useState<Record<number, Record<string, number>>>({})
 
   // Coordination id: special_booking_v1
   // Lookup the active special-date summary for the currently selected date.
@@ -471,11 +478,14 @@ export function Reservas() {
   // underlying PublicMenu. We only request once per special_date_menu_id.
   useEffect(() => {
     if (!activeSpecialDate) return
-    const missing = activeSpecialDate.menus.filter((m) => !m.is_custom && m.menu_id && !specialMenuPrincipales[m.id])
+    const missing = activeSpecialDate.menus.filter(
+      (m) => !m.is_custom && m.menu_id && !specialMenuPrincipales[m.id]
+    )
     if (missing.length === 0) return
     let cancelled = false
     ;(async () => {
       const updates: Record<number, string[]> = {}
+      const idUpdates: Record<number, Record<string, number>> = {}
       await Promise.all(
         missing.map(async (m) => {
           try {
@@ -484,14 +494,33 @@ export function Reservas() {
             )
             const items = getPrincipalesItemsPublic(res.menu)
             updates[m.id] = items
+            // Build a name -> dish_id map from the menu's "principales" section
+            // so the submission can send real IDs (backend expects dish_id[] in
+            // special_json.items for non-custom menus).
+            const sections = Array.isArray(res.menu?.sections) ? res.menu.sections : []
+            const nameToID: Record<string, number> = {}
+            for (const sec of sections) {
+              if (!sec || sec.kind !== 'principales') continue
+              const dishes = Array.isArray(sec.dishes) ? sec.dishes : []
+              for (const d of dishes) {
+                if (d && typeof d.title === 'string' && typeof d.id === 'number' && d.title.trim()) {
+                  nameToID[d.title.trim()] = d.id
+                }
+              }
+            }
+            idUpdates[m.id] = nameToID
           } catch {
             updates[m.id] = []
+            idUpdates[m.id] = {}
           }
         })
       )
       if (cancelled) return
       if (Object.keys(updates).length > 0) {
         setSpecialMenuPrincipales((prev) => ({ ...prev, ...updates }))
+      }
+      if (Object.keys(idUpdates).length > 0) {
+        setSpecialMenuDishIDs((prev) => ({ ...prev, ...idUpdates }))
       }
     })()
     return () => {
@@ -1656,11 +1685,20 @@ export function Reservas() {
       const menusPayload = selections.map((s) => {
         const menu = activeSpecialDate.menus.find((mm) => mm.id === s.special_date_menu_id)
         const isCustom = Boolean(menu?.is_custom)
+        // Non-custom menus: each row's `name` is a dish title chosen by the
+        // user; look up its real dish_id in the section-derived map. When the
+        // map is missing (menu fetch race) we degrade gracefully and send no
+        // items — the backend accepts an empty array for non-custom menus.
+        const idMap = menu ? specialMenuDishIDs[menu.id] || {} : {}
         const items = isCustom
           ? []
           : (s.rows || [])
-              .map((r) => ({ dish_id: Number(r.name) }))
-              .filter((it) => Number.isFinite(it.dish_id))
+              .map((r) => {
+                const trimmed = r.name ? r.name.trim() : ''
+                const id = trimmed ? idMap[trimmed] : undefined
+                return typeof id === 'number' ? { dish_id: id } : null
+              })
+              .filter((it): it is { dish_id: number } => it !== null)
         return {
           special_date_menu_id: s.special_date_menu_id,
           count: s.count,
