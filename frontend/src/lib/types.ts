@@ -519,7 +519,8 @@ export type SpecialDateResponse = {
   special_date: SpecialDatePublic | null
 }
 
-export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos'
+// Coordination id: special_booking_politics_v1
+export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos' | 'special-booking-politics'
 
 export type LegalPage = {
   slug: LegalPageSlug
