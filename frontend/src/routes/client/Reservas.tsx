@@ -335,13 +335,20 @@ export function Reservas() {
 
   const today = useMemo(() => startOfDayLocal(new Date()), [])
   // Coordination id: special_booking_v1
-  // Active special dates with prereserva bypass the 40-day window: extend the
-  // calendar's upper bound up to +6 months so they are reachable. The cap of 6
-  // months prevents unbounded growth when many special dates are scheduled.
+  // The ordinary booking window. Only an active special date with prereserva
+  // may be booked past this, and ONLY that exact date — see
+  // `isPrereservaSpecial` in `isDisabledDate` / `onPickDate`. Widening this
+  // bound instead would open every ordinary day in between, which is not
+  // what the bypass is for.
+  const BOOKING_MAX_DAYS = 40
+  // Upper bound for data fetches (closed days). It stretches to the furthest
+  // special date so those days render with real data, but it deliberately
+  // does NOT govern whether a date is bookable. The cap of 6 months prevents
+  // unbounded growth when many special dates are scheduled.
   const SPECIAL_MAX_DAYS = 183
   const [specialDatesMap, setSpecialDatesMap] = useState<Record<string, SpecialDateSummary>>({})
   const maxDate = useMemo(() => {
-    let furthest = addDaysLocal(today, 40)
+    let furthest = addDaysLocal(today, BOOKING_MAX_DAYS)
     const cap = addDaysLocal(today, SPECIAL_MAX_DAYS)
     for (const iso of Object.keys(specialDatesMap)) {
       const sd = specialDatesMap[iso]
@@ -357,7 +364,15 @@ export function Reservas() {
     return furthest
   }, [today, specialDatesMap])
   const todayISO = useMemo(() => isoFromLocalDate(today), [today])
+  // Fetch bound: may reach a far special date so its day has real data.
   const maxISO = useMemo(() => isoFromLocalDate(maxDate), [maxDate])
+  // Booking bound: the plain 40-day rule, never stretched. Ordinary dates are
+  // measured against this, so a distant special date no longer opens up every
+  // day between today and itself.
+  const bookingMaxISO = useMemo(
+    () => isoFromLocalDate(addDaysLocal(today, BOOKING_MAX_DAYS)),
+    [today],
+  )
   // Coordination id: special_booking_v1
   // Discovery horizon for the special-dates lookup. It must NOT depend on
   // `maxISO`: `maxISO` only extends once a special date is already known, so
@@ -1137,7 +1152,7 @@ export function Reservas() {
       if (typeof free === 'number' && free <= 0) return true
       return false
     }
-    if (iso > maxISO) return true
+    if (iso > bookingMaxISO) return true
     if (isClosedByDefault(iso)) return true
     const free = monthAvailability?.[iso]?.freeBookingSeats
     if (typeof free === 'number' && free <= 0) return true
@@ -1320,7 +1335,7 @@ export function Reservas() {
     // Active special dates with prereserva_enabled skip the 40-day and
     // closed-default checks. Past dates are still blocked above.
     if (!isPrereservaSpecial(iso)) {
-      if (iso > maxISO) {
+      if (iso > bookingMaxISO) {
         pushToast('warning', text('Demasiada antelación', 'Date too far ahead'), text('Solo se pueden realizar reservas con hasta 40 días de antelación.', 'Reservations can only be made up to 40 days in advance.'))
         return
       }
