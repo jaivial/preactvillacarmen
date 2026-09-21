@@ -1938,12 +1938,14 @@ export function Reservas() {
                 transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
               >
                 <div class="resvCardHead" data-testid="reservas-booking-card-head">
-                  <div class="resvCardTitle" data-testid="reservas-booking-card-title">{text('Tu reserva', 'Your reservation')}</div>
+                  <div class="resvCardTitle" data-testid="reservas-booking-card-title">{specialTermsRequired ? text('Tu prereserva', 'Your pre-booking') : text('Tu reserva', 'Your reservation')}</div>
                   <div class="resvCardSub" data-testid="reservas-booking-card-subtitle">{selectedDate ? dateDisplay : text('Elige fecha, personas y hora.', 'Choose date, guests and time.')}</div>
                 </div>
 
                 {showUpperFloorWarning ? (
-                  <div class="resvNotice warn" data-testid="reservas-booking-upper-floor-warning">{text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
+                  <div class="resvNotice warn" data-testid="reservas-booking-upper-floor-warning">{specialTermsRequired
+                      ? text('La planta baja está cerrada. La prereserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')
+                      : text('La planta baja está cerrada. La reserva se asignará a primera planta sin ascensor.', 'The ground floor is closed. Your table will be on the first floor, with no lift access.')}</div>
                 ) : null}
 
                 <div class="resvField" data-testid="reservas-party-size-field">
