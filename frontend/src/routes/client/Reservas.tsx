@@ -3268,6 +3268,17 @@ export function Reservas() {
               <span data-testid="reservas-summary-label-guests">{text('Personas', 'Guests')}</span>
               <span class="resvSummaryValue" data-testid="reservas-summary-value-guests">{ps || '-'}</span>
             </div>
+            {/* Coordination id: mobility_issues_v1 — only shown when the guest
+                answered yes, so ordinary summaries are unchanged. Sits under
+                "Personas" because it qualifies the party. */}
+            {hasMobilityIssues === true ? (
+              <div class="resvSummaryRow" data-testid="reservas-summary-row-mobility">
+                <span data-testid="reservas-summary-label-mobility">{text('Problemas de movilidad', 'Mobility issues')}</span>
+                <span class="resvSummaryValue" data-testid="reservas-summary-value-mobility">
+                  {clamp(mobilityPeople || 1, 1, ps || 1)} {text('de', 'of')} {ps || 0}
+                </span>
+              </div>
+            ) : null}
             <div class="resvSummaryRow" data-testid="reservas-summary-row-floor">
               <span data-testid="reservas-summary-label-floor">{text('Planta', 'Floor')}</span>
               <span class="resvSummaryValue" data-testid="reservas-summary-value-floor">{selectedFloor ? (lang === 'en' ? (selectedFloor.isGround ? 'Ground floor' : `Floor ${selectedFloor.floorNumber}`) : selectedFloor.name) : '-'}</span>
