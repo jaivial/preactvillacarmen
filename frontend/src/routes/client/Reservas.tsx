@@ -1182,6 +1182,12 @@ export function Reservas() {
     setAdults(null)
     setHighChairs(0)
     setBabyStrollers(0)
+    // Coordination id: mobility_issues_v1 — clear the answer on date change.
+    // The next date may not even ask the question, and the count is relative
+    // to a party size that has just been reset, so a stale value would show
+    // an answer the guest never gave for this date.
+    setHasMobilityIssues(null)
+    setMobilityPeople(1)
     setReservationTime(null)
     setFreeSeats(null)
     setTwoTopAvailable(true)
