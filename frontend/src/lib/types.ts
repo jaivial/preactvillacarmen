@@ -330,6 +330,9 @@ export type ReservationDayContextResponse = {
   floors: ReservationDayContextFloor[]
   activeFloors: ReservationDayContextFloor[]
   locationBooking?: ReservationDayContextLocationBooking
+  /** Resolved mobility setting for this date (global default with the per-day
+   *  override applied; the concrete day wins). Coordination id: mobility_day_override_v1 */
+  mobility_enabled?: boolean
 }
 
 export type ValidGroupMenusForPartySizeResponse = {

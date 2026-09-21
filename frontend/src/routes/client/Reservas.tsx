@@ -35,6 +35,15 @@ type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'mobility' | 'groupMenu
 
 const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'mobility', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
 
+// Coordination id: mobility_day_override_v1 — resolved mobility setting for a
+// date (global default + per-day override, the concrete day wins). Primary is
+// the day-context payload, which exists for any day; the special-date payloads
+// only cover its loading window, so the question never flickers on.
+const resolveMobilityEnabled = (
+  dayCtx?: { mobility_enabled?: boolean } | null,
+  fallback?: { mobility_enabled?: boolean } | null
+): boolean => dayCtx?.mobility_enabled ?? fallback?.mobility_enabled ?? false
+
 type PrincipalesRow = { name: string; servings: number }
 
 type SpecialPrincipalesRow = { name: string; servings: number }
@@ -407,8 +416,8 @@ export function Reservas() {
   const [reservationTime, setReservationTime] = useState<string | null>(null)
 
   const [step, setStep] = useState<StepId>('date')
-  // Coordination id: mobility_issues_v1 — only asked when the selected
-  // special date enables the question.
+  // Coordination id: mobility_issues_v1 — only asked when the selected day's
+  // resolved setting (mobility_day_override_v1) enables the question.
   const [hasMobilityIssues, setHasMobilityIssues] = useState<boolean | null>(null)
   const [mobilityPeople, setMobilityPeople] = useState<number>(1)
   const stepsScrollerRef = useRef<HTMLDivElement | null>(null)
@@ -508,6 +517,13 @@ export function Reservas() {
   // Declared before the steps useMemo and peopleOptions because both depend on it.
   const activeSpecialSummary = selectedDate ? specialDatesMap[selectedDate] : null
   const isSpecialActiveForSelected = Boolean(activeSpecialSummary && activeSpecialSummary.is_active)
+
+  // Coordination id: mobility_day_override_v1 — resolved per-day mobility flag
+  // (day-context carries the global setting with the per-day override applied;
+  // a concrete day wins over the special-date summary). Falls back to the
+  // special-date summary only while day-context has not loaded, so the step
+  // never flickers on.
+  const mobilityEnabledForSelectedDate: boolean = resolveMobilityEnabled(dayContext, activeSpecialSummary)
 
   // Coordination id: special_booking_v1
   // Lazy-load principales for each non-custom special menu by fetching the
@@ -674,7 +690,7 @@ export function Reservas() {
       if (!activeSpecialDate || (activeSpecialDate.menus || []).length > 0) {
         out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
       }
-      if (activeSpecialSummary?.mobility_enabled) {
+      if (mobilityEnabledForSelectedDate) {
         out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
       }
       out.push({ id: 'personal', label: text('Datos', 'Details') })
@@ -700,12 +716,16 @@ export function Reservas() {
     const includeRice = !hasMandatoryMenu || !mandatoryMenuSelected
     if (includeRice) out.push({ id: 'rice', label: text('Arroz', 'Rice') })
 
+    // Coordination id: mobility_day_override_v1 — ordinary days ask too, in the
+    // same slot as the special flow (right before the personal details).
+    if (mobilityEnabledForSelectedDate) out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
+
     out.push({ id: 'personal', label: text('Datos', 'Details') })
     out.push({ id: 'adults', label: text('Adultos', 'Adults') })
 
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate, mobilityEnabledForSelectedDate])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -1273,8 +1293,10 @@ export function Reservas() {
       } else if (context?.openingMode === 'night') {
         setSelectedShift('night')
       }
+      return context
     } catch (e) {
       pushToast('error', text('Error', 'Error'), lang === 'en' ? 'Availability could not be loaded.' : e instanceof Error ? e.message : 'No se pudo cargar la disponibilidad.')
+      return null
     }
   }
 
@@ -1344,7 +1366,7 @@ export function Reservas() {
         return
       }
 
-      await loadDateContext(init.date, { skipStepReset: !!init.step })
+      const dayCtx = await loadDateContext(init.date, { skipStepReset: !!init.step })
       setPartySize(init.party)
 
       if (!init.step || init.step === 'date') return
@@ -1374,7 +1396,6 @@ export function Reservas() {
       if (isSpecialPrereserva) {
         setActiveSpecialDate(sd)
         if (sd && (sd.menus || []).length > 0) reachable.push('specialMenu')
-        if (sd?.mobility_enabled) reachable.push('mobility')
       } else {
         setActiveSpecialDate(null)
         // Legacy flow: mandatory menu -> group menu -> rice.
@@ -1405,6 +1426,12 @@ export function Reservas() {
         if (hasGroup) reachable.push('groupMenu')
         if (!hasMandatory) reachable.push('rice')
       }
+
+      // Coordination id: mobility_day_override_v1 — asked on every day whose
+      // resolved setting enables it, special or not. Resolved from the fresh
+      // payloads here because this mount-time closure predates the derived
+      // render value (mobilityEnabledForSelectedDate).
+      if (resolveMobilityEnabled(dayCtx, sd)) reachable.push('mobility')
 
       reachable.push('personal', 'adults', 'summary')
 
@@ -1538,7 +1565,7 @@ export function Reservas() {
         if ((sdLoaded.menus || []).length === 0) {
           setSpecialMenuSelections({})
           setSpecialPaymentMethod(null)
-          setStep(activeSpecialSummary?.mobility_enabled ? 'mobility' : 'personal')
+          setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
           return
         }
         setStep('specialMenu')
@@ -1638,7 +1665,7 @@ export function Reservas() {
       setWantsRice(false)
       setRiceType('')
       setRiceServings(null)
-      setStep('personal')
+      setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
       return
     }
     setStep('rice')
@@ -1698,7 +1725,7 @@ export function Reservas() {
 
   const goNextFromSpecialMenu = () => {
     if (!validateSpecialMenuStep()) return
-    setStep('personal')
+    setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
   }
 
   const validateRiceStep = () => {
@@ -1724,7 +1751,7 @@ export function Reservas() {
 
   const goNextFromRice = () => {
     if (!validateRiceStep()) return
-    setStep('personal')
+    setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
   }
 
   const validatePersonal = () => {
@@ -1850,9 +1877,9 @@ export function Reservas() {
     fd.set('adults', String(a))
     fd.set('children', String(kids))
 
-    // Coordination id: mobility_issues_v1 — only sent when the date asks the
-    // question, so ordinary bookings keep their existing payload.
-    if (isSpecialActiveForSelected && activeSpecialSummary?.mobility_enabled) {
+    // Coordination id: mobility_issues_v1 — only sent when the selected day's
+    // resolved setting (mobility_day_override_v1) asks the question.
+    if (mobilityEnabledForSelectedDate) {
       const hasMob = hasMobilityIssues === true
       fd.set('has_mobility_issues', hasMob ? '1' : '0')
       fd.set('mobility_people', hasMob ? String(clamp(mobilityPeople || 1, 1, partySize)) : '0')
@@ -2483,7 +2510,7 @@ export function Reservas() {
                       setWantsGroupMenu(false)
                       setGroupMenuId(null)
                     }
-                    setStep('personal')
+                    setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
                   }}
                 >
                   {text('Siguiente', 'Next')}
