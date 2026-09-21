@@ -31,9 +31,9 @@ import { InlineCounter } from '../../components/reservas/InlineCounter'
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
 
-type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
+type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'mobility' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
 
-const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
+const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'mobility', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
 
 type PrincipalesRow = { name: string; servings: number }
 
@@ -381,6 +381,10 @@ export function Reservas() {
   const [reservationTime, setReservationTime] = useState<string | null>(null)
 
   const [step, setStep] = useState<StepId>('date')
+  // Coordination id: mobility_issues_v1 — only asked when the selected
+  // special date enables the question.
+  const [hasMobilityIssues, setHasMobilityIssues] = useState<boolean | null>(null)
+  const [mobilityPeople, setMobilityPeople] = useState<number>(1)
   const stepsScrollerRef = useRef<HTMLDivElement | null>(null)
   const stepsScrollRafRef = useRef<number | null>(null)
   const pageScrollRafRef = useRef<number | null>(null)
@@ -631,6 +635,9 @@ export function Reservas() {
     // flow (mandatoryMenu / groupMenu / rice) with a single "specialMenu" step.
     if (isSpecialActiveForSelected && activeSpecialSummary?.prereserva_enabled) {
       out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
+      if (activeSpecialSummary?.mobility_enabled) {
+        out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
+      }
       out.push({ id: 'personal', label: text('Datos', 'Details') })
       out.push({ id: 'adults', label: text('Adultos', 'Adults') })
       out.push({ id: 'summary', label: text('Resumen', 'Summary') })
@@ -1606,6 +1613,15 @@ export function Reservas() {
     setStep('summary')
   }
 
+  // Coordination id: mobility_issues_v1 — the mobility step sits between
+  // the menu and the personal-details steps, so advance generically rather
+  // than hardcoding a destination.
+  const goNextFromMobility = () => {
+    if (hasMobilityIssues == null) return
+    const idx = steps.findIndex((x) => x.id === 'mobility')
+    if (idx >= 0 && idx + 1 < steps.length) setStep(steps[idx + 1].id)
+  }
+
   const goPrev = () => {
     const idx = steps.findIndex((s) => s.id === step)
     if (idx <= 0) return
@@ -1674,6 +1690,14 @@ export function Reservas() {
     const kids = clamp(partySize - a, 0, partySize)
     fd.set('adults', String(a))
     fd.set('children', String(kids))
+
+    // Coordination id: mobility_issues_v1 — only sent when the date asks the
+    // question, so ordinary bookings keep their existing payload.
+    if (isSpecialActiveForSelected && activeSpecialSummary?.mobility_enabled) {
+      const hasMob = hasMobilityIssues === true
+      fd.set('has_mobility_issues', hasMob ? '1' : '0')
+      fd.set('mobility_people', hasMob ? String(clamp(mobilityPeople || 1, 1, partySize)) : '0')
+    }
 
     // Coordination id: special_booking_v1
     // When the booking lands on an active special date with prereserva_enabled,
@@ -2943,6 +2967,78 @@ export function Reservas() {
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (step === 'mobility') {
+      const ps = partySize || 1
+      const chosen = hasMobilityIssues === true
+      return (
+        <div class="resvStep" data-testid="reservas-step-mobility">
+          <div class="resvCard" data-testid="reservas-mobility-card">
+            <div class="resvCardHead" data-testid="reservas-mobility-card-head">
+              <div class="resvCardTitle" data-testid="reservas-mobility-card-title">
+                {text('¿Hay personas con problemas de movilidad?', 'Is anyone in your party mobility impaired?')}
+              </div>
+              <div class="resvCardSub" data-testid="reservas-mobility-card-subtitle">
+                {text(
+                  'Nos ayuda a ubicar mejor la reserva si el restaurante tiene una primera planta sin ascensor.',
+                  'This helps us seat you better if the restaurant has a first floor with no lift.',
+                )}
+              </div>
+            </div>
+
+            <div class="resvYesNo" data-testid="reservas-mobility-choices">
+              <button
+                type="button"
+                class={hasMobilityIssues === true ? 'resvChoice selected' : 'resvChoice'}
+                data-testid="reservas-mobility-yes"
+                onClick={() => { setHasMobilityIssues(true); setMobilityPeople((n) => clamp(n || 1, 1, ps)) }}
+              >
+                {text('Sí', 'Yes')}
+              </button>
+              <button
+                type="button"
+                class={hasMobilityIssues === false ? 'resvChoice selected' : 'resvChoice'}
+                data-testid="reservas-mobility-no"
+                onClick={() => { setHasMobilityIssues(false); setMobilityPeople(0) }}
+              >
+                {text('No', 'No')}
+              </button>
+            </div>
+
+            {chosen ? (
+              <CounterGroup
+                testId="reservas-mobility-counters"
+                fields={[{
+                  key: 'mobility-people',
+                  testId: 'reservas-mobility-counter',
+                  label: text('¿Cuántas personas?', 'How many people?'),
+                  value: clamp(mobilityPeople || 1, 1, ps),
+                  min: 1,
+                  max: ps,
+                  onChange: (n: number) => setMobilityPeople(n),
+                  subtitle: text(`De un total de ${ps}`, `Out of ${ps} total`),
+                }]}
+              />
+            ) : null}
+
+            <div class="resvActions" data-testid="reservas-mobility-actions">
+              <button type="button" class="btn" data-testid="reservas-mobility-back" onClick={goPrev}>
+                {text('Anterior', 'Back')}
+              </button>
+              <button
+                type="button"
+                class="btn primary"
+                data-testid="reservas-mobility-next"
+                disabled={hasMobilityIssues == null}
+                onClick={goNextFromMobility}
+              >
+                {text('Siguiente', 'Next')}
+              </button>
             </div>
           </div>
         </div>
