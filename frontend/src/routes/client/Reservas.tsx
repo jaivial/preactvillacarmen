@@ -419,6 +419,11 @@ export function Reservas() {
   // Shareable URL state: ?step=rice&date=2026-08-10&party=4
   const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null } | null>(null)
   const urlSyncReadyRef = useRef(false)
+  // Blocks the URL writer while the async restore is still resolving.
+  // Without it, loadDateContext sets `selectedDate` mid-restore, the sync
+  // effect fires while `step` is still 'date', and it strips ?step= from the
+  // URL before the resolver has decided where the guest belongs.
+  const restoringRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -439,6 +444,7 @@ export function Reservas() {
       urlSyncReadyRef.current = true
       return
     }
+    if (restoringRef.current) return
     const params = new URLSearchParams(window.location.search)
     const curStep = params.get('step') || null
     const curDate = params.get('date') || null
@@ -1325,6 +1331,7 @@ export function Reservas() {
     const init = initialUrlStateRef.current
     if (!init) return
 
+    restoringRef.current = true
     const restore = async () => {
       if (!init.date || !init.party) {
         // Nothing to rebuild a later step from — start clean.
@@ -1403,7 +1410,9 @@ export function Reservas() {
       setStep(wanted >= 0 ? init.step : 'date')
     }
 
-    void restore()
+    void restore().finally(() => {
+      restoringRef.current = false
+    })
   }, [])
 
   const onPickDate = (iso: string, inMonth: boolean) => {
