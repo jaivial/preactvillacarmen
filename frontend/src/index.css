@@ -3480,6 +3480,14 @@ svg {
     padding: 1rem;
 }
 
+/* Personal step header: wider inset and flush to the fields below.
+   Scoped by data-testid because .resvCardHead is shared by every step card. */
+[data-testid="reservas-personal-card-head"] {
+    padding-top: 1.5rem;
+    padding-inline: 1.5rem;
+    padding-bottom: 0;
+}
+
 .resvCardTitle {
     font-family: var(--font-serif);
     font-weight: 300;
@@ -3797,6 +3805,12 @@ svg {
 
 .resvLabel--compact {
     padding-bottom: 0;
+}
+
+/* The phone field supplies its own spacing, so this label needs none.
+   Scoped by data-testid because .resvLabel is shared across the wizard. */
+[data-testid="reservas-personal-phone-label"] {
+    padding: 0;
 }
 
 .resvLabel--step1 {
