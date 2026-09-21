@@ -1387,13 +1387,28 @@ export function Reservas() {
           const specialRes = await apiGetJson<SpecialDateResponse>(
             `/api/reservations/special-date?date=${encodeURIComponent(selectedDate)}`
           )
-          setActiveSpecialDate(specialRes.special_date || null)
+          // The endpoint returns the row flat at the top level; older shapes
+          // wrapped it under `special_date`. Accept either, and treat a
+          // payload with no `date` as "not found" rather than storing a
+          // bogus object.
+          const sd = specialRes?.special_date ?? (specialRes?.date ? (specialRes as SpecialDatePublic) : null)
+          if (!sd) throw new Error('special-date payload missing')
+          setActiveSpecialDate(sd)
           setSpecialMenuSelections({})
           setSpecialPaymentMethod(null)
         } catch {
+          // The specialMenu step only renders when `activeSpecialDate` is
+          // set, so continuing here would skip it and land the guest on the
+          // summary. Keep them on the date step and surface the failure.
           setActiveSpecialDate(null)
           setSpecialMenuSelections({})
           setSpecialPaymentMethod(null)
+          pushToast(
+            'warning',
+            text('No se pudo cargar el menú especial', 'Could not load the special menu'),
+            text('Vuelve a intentarlo en unos segundos.', 'Please try again in a few seconds.'),
+          )
+          return
         }
         // Wipe state used by legacy menu steps so they don't leak in the summary.
         setMandatoryMenuData(null)

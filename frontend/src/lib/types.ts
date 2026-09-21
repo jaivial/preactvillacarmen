@@ -518,9 +518,18 @@ export type SpecialDatePublic = {
   menus: SpecialDateMenuPublic[]
 }
 
-export type SpecialDateResponse = {
-  success: true
-  special_date: SpecialDatePublic | null
+/**
+ * GET /api/reservations/special-date?date=
+ *
+ * The handler writes the row FLAT at the top level (no `success`, no
+ * `special_date` wrapper) — see reservation_special_dates_public.go. The
+ * optional wrapper is kept so an older/wrapped payload still parses.
+ *
+ * Coordination id: special_booking_v1
+ */
+export type SpecialDateResponse = SpecialDatePublic & {
+  success?: boolean
+  special_date?: SpecialDatePublic | null
 }
 
 // Coordination id: special_booking_politics_v1
