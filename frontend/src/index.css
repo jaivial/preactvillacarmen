@@ -3687,6 +3687,14 @@ svg {
     border-color: rgba(237, 137, 54, 0.22);
 }
 
+/* The "assigned guests" mismatch warning sits inside the special-menu
+   counter block, which is flush with the card edge. Inset it so the notice
+   does not touch the sides. Scoped to this notice so other .resvNotice
+   users keep their current spacing. */
+[data-testid="reservas-special-menu-counter-sum-error"] {
+    margin-inline: 1rem;
+}
+
 .resvField {
     margin-top: 14px;
 }
