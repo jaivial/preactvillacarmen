@@ -483,6 +483,8 @@ export type SpecialDateSummary = {
   title: string
   max_per_table_enabled: boolean
   max_per_table?: number | null
+  /** Ask the mobility question in the wizard. Coordination id: mobility_issues_v1 */
+  mobility_enabled?: boolean
 }
 
 export type SpecialDatesResponse = {
@@ -508,6 +510,8 @@ export type SpecialDatePublic = {
   prereserva_enabled: boolean
   max_per_table_enabled: boolean
   max_per_table?: number | null
+  /** Coordination id: mobility_issues_v1 */
+  mobility_enabled?: boolean
   requires_adelanto: boolean
   adelanto_payment_methods: PaymentMethodKey[]
   adelanto_unified: boolean
