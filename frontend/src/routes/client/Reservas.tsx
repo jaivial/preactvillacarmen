@@ -419,6 +419,11 @@ export function Reservas() {
   // Shareable URL state: ?step=rice&date=2026-08-10&party=4
   const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null } | null>(null)
   const urlSyncReadyRef = useRef(false)
+  // Blocks the URL writer while the async restore is still resolving.
+  // Without it, loadDateContext sets `selectedDate` mid-restore, the sync
+  // effect fires while `step` is still 'date', and it strips ?step= from the
+  // URL before the resolver has decided where the guest belongs.
+  const restoringRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -439,6 +444,7 @@ export function Reservas() {
       urlSyncReadyRef.current = true
       return
     }
+    if (restoringRef.current) return
     const params = new URLSearchParams(window.location.search)
     const curStep = params.get('step') || null
     const curDate = params.get('date') || null
@@ -1308,17 +1314,105 @@ export function Reservas() {
     }
   }, [selectedDate, partySize, lang])
 
+  // Restore from ?step=&date=&party= after a hard refresh.
+  //
+  // Setting `step` alone is not enough: every step past `date` renders behind
+  // a guard on data that only `goNextFromDate` fetches (`activeSpecialDate`,
+  // `mandatoryMenuData`, `groupMenus`). On a refresh those are null, the
+  // guard fails, the render falls through every branch and lands on the
+  // summary — which is what made a refresh mid-flow show the summary.
+  //
+  // So rehydrate the same data the forward navigation would have loaded,
+  // then clamp the requested step to one that is actually reachable for this
+  // date. The URL is treated as a hint, never as truth.
+  //
+  // Coordination id: special_booking_v1
   useEffect(() => {
     const init = initialUrlStateRef.current
     if (!init) return
+
+    restoringRef.current = true
     const restore = async () => {
-      if (init.date && init.party) {
-        await loadDateContext(init.date, { skipStepReset: !!init.step })
-        setPartySize(init.party)
+      if (!init.date || !init.party) {
+        // Nothing to rebuild a later step from — start clean.
+        return
       }
-      if (init.step) setStep(init.step)
+
+      await loadDateContext(init.date, { skipStepReset: !!init.step })
+      setPartySize(init.party)
+
+      if (!init.step || init.step === 'date') return
+
+      // Which flow does this date use? Ask the single-date endpoint rather
+      // than reading `specialDatesMap`: that map is filled by a separate
+      // async fetch and this effect runs once on mount, so its closure can
+      // still see an empty map and wrongly rebuild the legacy flow for a
+      // special date. The detail endpoint is authoritative and returns
+      // is_active, prereserva_enabled, mobility_enabled and menus together.
+      let sd: SpecialDatePublic | null = null
+      try {
+        const res = await apiGetJson<SpecialDateResponse>(
+          `/api/reservations/special-date?date=${encodeURIComponent(init.date)}`
+        )
+        sd = res?.special_date ?? (res?.date ? (res as SpecialDatePublic) : null)
+      } catch {
+        sd = null
+      }
+      // The endpoint 404s for inactive dates, so a payload that parsed at all
+      // is already active; `is_active` is only checked when present.
+      const isSpecialPrereserva = Boolean(sd && sd.is_active !== false && sd.prereserva_enabled)
+
+      // Steps that are reachable for this date, in order.
+      const reachable: StepId[] = ['date']
+
+      if (isSpecialPrereserva) {
+        setActiveSpecialDate(sd)
+        if (sd && (sd.menus || []).length > 0) reachable.push('specialMenu')
+        if (sd?.mobility_enabled) reachable.push('mobility')
+      } else {
+        setActiveSpecialDate(null)
+        // Legacy flow: mandatory menu -> group menu -> rice.
+        let hasMandatory = false
+        try {
+          const mandatoryRes = await apiGetJson<MandatoryMenuResponse>(
+            `/api/reservations/mandatory-menus?date=${encodeURIComponent(init.date)}`
+          )
+          hasMandatory = mandatoryRes.status === true && Array.isArray(mandatoryRes.menus) && mandatoryRes.menus.length > 0
+          setMandatoryMenuData(hasMandatory ? mandatoryRes : null)
+        } catch {
+          setMandatoryMenuData(null)
+        }
+        if (hasMandatory) reachable.push('mandatoryMenu')
+
+        let hasGroup = false
+        if (!hasMandatory) {
+          try {
+            const data = await apiGetJson<ValidGroupMenusForPartySizeResponse>(
+              `/api/reservations/group-menus?party_size=${encodeURIComponent(String(init.party))}`
+            )
+            hasGroup = Boolean(data.hasValidMenus) && Array.isArray(data.menus) && data.menus.length > 0
+            setGroupMenus(hasGroup ? data.menus : null)
+          } catch {
+            setGroupMenus(null)
+          }
+        }
+        if (hasGroup) reachable.push('groupMenu')
+        if (!hasMandatory) reachable.push('rice')
+      }
+
+      reachable.push('personal', 'adults', 'summary')
+
+      // Never restore past a step the guest has not actually completed, and
+      // never onto a step this date does not have. Falling back to the last
+      // reachable step before the requested one keeps them inside the flow
+      // instead of dumping them on the summary.
+      const wanted = reachable.indexOf(init.step)
+      setStep(wanted >= 0 ? init.step : 'date')
     }
-    void restore()
+
+    void restore().finally(() => {
+      restoringRef.current = false
+    })
   }, [])
 
   const onPickDate = (iso: string, inMonth: boolean) => {

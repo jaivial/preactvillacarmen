@@ -507,6 +507,8 @@ export type SpecialDatePublic = {
   date: string
   title: string
   description?: string | null
+  /** The handler only returns active rows, but it does send the flag. */
+  is_active?: boolean
   prereserva_enabled: boolean
   max_per_table_enabled: boolean
   max_per_table?: number | null
