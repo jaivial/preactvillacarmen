@@ -4167,6 +4167,13 @@ svg {
     padding-top: 12px;
 }
 
+/* The mobility step renders a single counter, so the grid track adds
+   nothing and forces it to stretch full width. Drop the grid here only —
+   the adults step still uses the shared grid for its three counters. */
+[data-testid="reservas-mobility-counters"] {
+    display: block;
+}
+
 .resvCounter {
     border: 1px solid rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.86);
