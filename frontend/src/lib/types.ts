@@ -470,7 +470,72 @@ export type MandatoryMenuResponse = {
   menus?: MandatoryMenuDisplay[]
 }
 
-export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos'
+// Coordination id: special_booking_v1
+// Public special-date types. Light shape for the calendar marking / availability
+// bypass (SpecialDateSummary) and full shape returned by
+// GET /reservations/special-date?date= (SpecialDatePublic).
+export type PaymentMethodKey = 'card' | 'bizum' | 'transferencia' | 'efectivo'
+
+export type SpecialDateSummary = {
+  date: string
+  is_active: boolean
+  prereserva_enabled: boolean
+  title: string
+  max_per_table_enabled: boolean
+  max_per_table?: number | null
+  /** Ask the mobility question in the wizard. Coordination id: mobility_issues_v1 */
+  mobility_enabled?: boolean
+}
+
+export type SpecialDatesResponse = {
+  success: true
+  special_dates: SpecialDateSummary[]
+}
+
+export type SpecialDateMenuPublic = {
+  id: number
+  menu_id?: number | null
+  label: string
+  price?: number | null
+  is_custom: boolean
+  custom_title?: string | null
+  custom_image_url?: string | null
+  adelanto_amount?: number | null
+}
+
+export type SpecialDatePublic = {
+  date: string
+  title: string
+  description?: string | null
+  /** The handler only returns active rows, but it does send the flag. */
+  is_active?: boolean
+  prereserva_enabled: boolean
+  max_per_table_enabled: boolean
+  max_per_table?: number | null
+  /** Coordination id: mobility_issues_v1 */
+  mobility_enabled?: boolean
+  requires_adelanto: boolean
+  adelanto_payment_methods: PaymentMethodKey[]
+  adelanto_unified: boolean
+  menus: SpecialDateMenuPublic[]
+}
+
+/**
+ * GET /api/reservations/special-date?date=
+ *
+ * The handler writes the row FLAT at the top level (no `success`, no
+ * `special_date` wrapper) — see reservation_special_dates_public.go. The
+ * optional wrapper is kept so an older/wrapped payload still parses.
+ *
+ * Coordination id: special_booking_v1
+ */
+export type SpecialDateResponse = SpecialDatePublic & {
+  success?: boolean
+  special_date?: SpecialDatePublic | null
+}
+
+// Coordination id: special_booking_politics_v1
+export type LegalPageSlug = 'aviso-legal' | 'booking-policies' | 'proteccion-datos' | 'special-booking-politics'
 
 export type LegalPage = {
   slug: LegalPageSlug

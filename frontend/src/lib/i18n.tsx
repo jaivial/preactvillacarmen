@@ -39,6 +39,19 @@ const DICT: Dictionary = {
   'reservations.confirm.fine': { es: 'Por favor no contestes a estos mensajes.', en: 'Please do not reply to these messages.' },
   'reservations.confirm.elegant': { es: 'Te esperamos pronto.', en: 'We look forward to seeing you soon.' },
 
+  // Coordination id: special_booking_v1
+  'reservations.special.summary.title': { es: 'Men\u00fa especial', en: 'Special menu' },
+  'reservations.special.summary.specialDate': { es: 'Fecha especial', en: 'Special date' },
+  'reservations.special.summary.mainsTBD': { es: 'Principales por decidir', en: 'Mains to be decided' },
+  'reservations.special.summary.adelanto': { es: 'Adelanto', en: 'Deposit' },
+  'reservations.special.summary.totalAdelanto': { es: 'Total adelanto a pagar', en: 'Total deposit to pay' },
+  'reservations.special.terms.prefix': { es: 'Acepto la', en: 'I accept the' },
+  'reservations.special.terms.link': { es: 'pol\u00edtica de reservas de d\u00edas especiales', en: 'special-days booking policy' },
+  'reservations.special.terms.required': { es: 'Debe aceptar la pol\u00edtica de reservas de d\u00edas especiales.', en: 'You must accept the special-days booking policy.' },
+  'reservations.special.confirm.for': { es: 'Reserva para:', en: 'Reservation for:' },
+  'reservations.special.confirm.deposit': { es: 'Adelanto a pagar:', en: 'Deposit to pay:' },
+  'reservations.special.specialDateFallback': { es: 'Fecha especial', en: 'Special date' },
+
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
   'home.hero.title': { es: 'Alquer\u00eda Villa Carmen', en: 'Alqueria Villa Carmen' },
   'home.hero.tagline': { es: 'Tradici\u00f3n y gastronom\u00eda mediterr\u00e1nea', en: 'Mediterranean tradition and gastronomy' },

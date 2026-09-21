@@ -3480,6 +3480,14 @@ svg {
     padding: 1rem;
 }
 
+/* Personal step header: wider inset and flush to the fields below.
+   Scoped by data-testid because .resvCardHead is shared by every step card. */
+[data-testid="reservas-personal-card-head"] {
+    padding-top: 1.5rem;
+    padding-inline: 1.5rem;
+    padding-bottom: 0;
+}
+
 .resvCardTitle {
     font-family: var(--font-serif);
     font-weight: 300;
@@ -3687,8 +3695,103 @@ svg {
     border-color: rgba(237, 137, 54, 0.22);
 }
 
+/* The "assigned guests" mismatch warning sits inside the special-menu
+   counter block, which is flush with the card edge. Inset it so the notice
+   does not touch the sides. Scoped to this notice so other .resvNotice
+   users keep their current spacing. */
+[data-testid="reservas-special-menu-counter-sum-error"] {
+    margin-inline: 1rem;
+}
+
 .resvField {
     margin-top: 14px;
+}
+
+.resvField--centered {
+    text-align: center;
+}
+
+.resvField--centered .resvCounterCenter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.resvWarn {
+    margin-top: 10px;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: rgba(9, 121, 105, 0.06);
+    border: 1px solid rgba(9, 121, 105, 0.22);
+    color: var(--text, #0e2a26);
+    text-align: left;
+}
+
+.resvWarnTitle {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.resvWarnHint {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.resvWarnList {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.resvWarnChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(9, 121, 105, 0.22);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.resvAdelantoSummary {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: grid;
+    gap: 6px;
+}
+
+.resvAdelantoRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.resvAdelantoRow--total {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.resvAdelantoTotal {
+    font-variant-numeric: tabular-nums;
+    color: rgba(9, 121, 105, 1);
+}
+
+.resvChoiceCheck {
+    margin-right: 6px;
+    color: rgba(9, 121, 105, 1);
+    font-weight: 700;
 }
 
 .resvLabel {
@@ -3702,6 +3805,12 @@ svg {
 
 .resvLabel--compact {
     padding-bottom: 0;
+}
+
+/* The phone field supplies its own spacing, so this label needs none.
+   Scoped by data-testid because .resvLabel is shared across the wizard. */
+[data-testid="reservas-personal-phone-label"] {
+    padding: 0;
 }
 
 .resvLabel--step1 {
@@ -4070,6 +4179,13 @@ svg {
     grid-template-columns: 1fr;
     gap: 18px;
     padding-top: 12px;
+}
+
+/* The mobility step renders a single counter, so the grid track adds
+   nothing and forces it to stretch full width. Drop the grid here only —
+   the adults step still uses the shared grid for its three counters. */
+[data-testid="reservas-mobility-counters"] {
+    display: block;
 }
 
 .resvCounter {
@@ -5584,11 +5700,6 @@ svg {
 .specialMenuSection {
     display: grid;
     gap: 10px;
-    padding: 14px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--surface-1, #fff) 96%, transparent);
-    box-shadow: 0 1px 2px color-mix(in srgb, #000 8%, transparent),
-                0 8px 24px color-mix(in srgb, #000 6%, transparent);
 }
 
 .specialMenuSectionTitle {
@@ -5618,9 +5729,6 @@ svg {
 }
 
 @media (prefers-color-scheme: dark) {
-    .specialMenuSection {
-        background: color-mix(in srgb, var(--surface-1, #14161a) 96%, transparent);
-    }
     .specialMenuSectionImage {
         outline-color: oklch(1 0 0 / 0.1);
     }
