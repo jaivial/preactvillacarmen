@@ -660,7 +660,14 @@ export function Reservas() {
     // Active special dates with prereserva_enabled replace the legacy menu
     // flow (mandatoryMenu / groupMenu / rice) with a single "specialMenu" step.
     if (isSpecialActiveForSelected && activeSpecialSummary?.prereserva_enabled) {
-      out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
+      // A special date with no menus assigned has nothing to choose, so the
+      // menu step is dropped from the queue entirely rather than rendered
+      // empty. `activeSpecialDate` is only loaded once the guest leaves the
+      // date step, so before that we keep the step listed (the summary of
+      // the flow stays stable) and drop it as soon as we know it is empty.
+      if (!activeSpecialDate || (activeSpecialDate.menus || []).length > 0) {
+        out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
+      }
       if (activeSpecialSummary?.mobility_enabled) {
         out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
       }
@@ -692,7 +699,7 @@ export function Reservas() {
 
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -1383,6 +1390,7 @@ export function Reservas() {
       // Active special dates with prereserva_enabled bypass the mandatory-menu
       // and group-menu flows and go straight to the new "specialMenu" step.
       if (isSpecialActiveForSelected && activeSpecialSummary?.prereserva_enabled) {
+        let sdLoaded: SpecialDatePublic | null = null
         try {
           const specialRes = await apiGetJson<SpecialDateResponse>(
             `/api/reservations/special-date?date=${encodeURIComponent(selectedDate)}`
@@ -1393,6 +1401,7 @@ export function Reservas() {
           // bogus object.
           const sd = specialRes?.special_date ?? (specialRes?.date ? (specialRes as SpecialDatePublic) : null)
           if (!sd) throw new Error('special-date payload missing')
+          sdLoaded = sd
           setActiveSpecialDate(sd)
           setSpecialMenuSelections({})
           setSpecialPaymentMethod(null)
@@ -1423,6 +1432,15 @@ export function Reservas() {
         setWantsRice(false)
         setRiceType('')
         setRiceServings(null)
+        // No menus assigned to this special date -> there is nothing to pick,
+        // so skip the menu step and go to whatever comes next in the queue
+        // (mobility when enabled, otherwise the personal details step).
+        if ((sdLoaded.menus || []).length === 0) {
+          setSpecialMenuSelections({})
+          setSpecialPaymentMethod(null)
+          setStep(activeSpecialSummary?.mobility_enabled ? 'mobility' : 'personal')
+          return
+        }
         setStep('specialMenu')
         return
       }
@@ -1774,7 +1792,14 @@ export function Reservas() {
       if (activeSpecialDate.requires_adelanto && specialPaymentMethod) {
         payload.payment_method = specialPaymentMethod
       }
-      fd.set('special_json', JSON.stringify(payload))
+      // The server rejects a snapshot with an empty `menus` array ("Debe
+      // seleccionar al menos un menú especial"). When the date has no menus
+      // assigned the menu step is skipped, so there is nothing to snapshot —
+      // omit `special_json` entirely and let it save as a normal booking on
+      // a special date rather than failing validation.
+      if (menusPayload.length > 0) {
+        fd.set('special_json', JSON.stringify(payload))
+      }
       fd.set('toggleArroz', 'false')
       fd.set('menu_de_grupo_selected', '0')
       fd.set('menu_de_grupo_id', '')
