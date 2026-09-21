@@ -358,6 +358,17 @@ export function Reservas() {
   }, [today, specialDatesMap])
   const todayISO = useMemo(() => isoFromLocalDate(today), [today])
   const maxISO = useMemo(() => isoFromLocalDate(maxDate), [maxDate])
+  // Coordination id: special_booking_v1
+  // Discovery horizon for the special-dates lookup. It must NOT depend on
+  // `maxISO`: `maxISO` only extends once a special date is already known, so
+  // querying up to `maxISO` could never find one past the default 40-day
+  // window — the bypass below was unreachable for exactly the dates it
+  // exists for. Querying the full cap breaks that cycle. It matches the
+  // server's own `publicSpecialDatesMaxRangeDays`, so the span is accepted.
+  const specialLookupToISO = useMemo(
+    () => isoFromLocalDate(addDaysLocal(today, SPECIAL_MAX_DAYS)),
+    [today],
+  )
 
   const [closedDays, setClosedDays] = useState<Set<string>>(new Set())
   const [openedDays, setOpenedDays] = useState<Set<string>>(new Set())
@@ -1021,7 +1032,7 @@ export function Reservas() {
     // bypass the 40-day limit and the Mon/Tue closure on active prereserva
     // special dates. The request is independent from closed-days.
     apiGetJson<SpecialDatesResponse>(
-      `/api/reservations/special-dates?from=${encodeURIComponent(closedFromISO)}&to=${encodeURIComponent(maxISO)}`
+      `/api/reservations/special-dates?from=${encodeURIComponent(closedFromISO)}&to=${encodeURIComponent(specialLookupToISO)}`
     )
       .then((d) => {
         if (cancelled) return
@@ -1053,7 +1064,7 @@ export function Reservas() {
     return () => {
       cancelled = true
     }
-  }, [maxISO, today])
+  }, [maxISO, specialLookupToISO, today])
 
   // Month availability fetch (cached per month/year).
   const monthCacheRef = useRef<Map<string, Record<string, { freeBookingSeats: number }>>>(new Map())
