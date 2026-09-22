@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { Trash2 } from 'lucide-react'
+import { Banknote, CreditCard, Landmark, Smartphone, Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import type { Lang } from '../../lib/i18n'
@@ -27,6 +27,7 @@ import { PopoverSelect, type PopoverSelectOption } from '../../components/reserv
 import { CounterGroup, type CounterField } from '../../components/reservas/CounterGroup'
 import { Checkbox } from '../../components/reservas/Checkbox'
 import { InlineCounter } from '../../components/reservas/InlineCounter'
+import { Counter } from '../../components/reservas/Counter'
 import { Modal } from '../../components/reservas/Modal'
 import { DuplicateBookingModal } from '../../components/reservas/DuplicateBookingModal'
 import { buildCountries, countrySelectOptions } from '../../components/reservas/countryOptions'
@@ -82,6 +83,14 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethodKey, string> = {
 }
 
 const PAYMENT_METHOD_OPTIONS: PaymentMethodKey[] = ['card', 'bizum', 'transferencia', 'efectivo']
+
+// Coordination id: festive_menu_counter_v1 - one icon per deposit method.
+const PAYMENT_METHOD_ICONS: Record<PaymentMethodKey, typeof CreditCard> = {
+  card: CreditCard,
+  bizum: Smartphone,
+  transferencia: Landmark,
+  efectivo: Banknote,
+}
 
 function paymentMethodOptions(methods: PaymentMethodKey[]): { value: PaymentMethodKey; label: string }[] {
   const allowed = methods.length > 0 ? methods : PAYMENT_METHOD_OPTIONS
@@ -1408,7 +1417,7 @@ export function Reservas() {
           setSpecialPaymentMethod(null)
           pushToast(
             'warning',
-            text('No se pudo cargar el menú especial', 'Could not load the special menu'),
+            text('No se pudo cargar el menú de fecha festiva', 'Could not load the festive date menu'),
             text('Vuelve a intentarlo en unos segundos.', 'Please try again in a few seconds.'),
           )
           return
@@ -1547,7 +1556,7 @@ export function Reservas() {
     if (!activeSpecialDate) return true
     const menus = Array.isArray(activeSpecialDate.menus) ? activeSpecialDate.menus : []
     if (menus.length === 0) {
-      pushToast('warning', text('Sin menús', 'No menus'), text('Esta fecha especial no tiene menús disponibles.', 'This special date has no available menus.'))
+      pushToast('warning', text('Sin menús', 'No menus'), text('Esta fecha festiva no tiene menús disponibles.', 'This festive date has no available menus.'))
       return false
     }
     const selections = Object.values(specialMenuSelections).filter((s) => s && s.count > 0)
@@ -1747,7 +1756,7 @@ export function Reservas() {
     // Special-dates politics acceptance: required in addition to the legacy
     // terms + privacy boxes when the booking targets an active special date.
     if (specialTermsRequired && !specialTermsAccepted) {
-      pushToast('warning', text('Términos', 'Terms'), text('Debe aceptar la política de reservas de días especiales.', 'You must accept the special-days booking policy.'))
+      pushToast('warning', text('Términos', 'Terms'), text('Debe aceptar la política de reservas de fechas festivas.', 'You must accept the festive-dates booking policy.'))
       return
     }
 
@@ -1885,7 +1894,7 @@ export function Reservas() {
       // non-special bookings so legacy users keep the original modal copy.
       if (isSpecialActiveForSelected && activeSpecialDate) {
         setConfirmationSpecial({
-          title: activeSpecialDate.title || text('Fecha especial', 'Special date'),
+          title: activeSpecialDate.title || text('Fecha festiva', 'Festive date'),
           totalAdelanto: specialTotalAdelanto,
           paymentMethod: specialPaymentMethod,
         })
@@ -2595,40 +2604,46 @@ export function Reservas() {
         <div class="resvStep" data-testid="reservas-step-special-menu">
           <div class="resvCard" data-testid="reservas-special-menu-card">
             <div class="resvCardHead" data-testid="reservas-special-menu-card-head">
-              <div class="resvCardTitle" data-testid="reservas-special-menu-card-title">{text('Menú especial', 'Special menu')}</div>
-              {activeSpecialDate.title || activeSpecialDate.description ? (
-                <div
-                  class="resvWarn"
-                  role="note"
-                  data-testid="reservas-special-date-warn-block"
-                >
-                  <div class="resvWarnTitle" data-testid="reservas-special-date-warn-block-title">
-                    {activeSpecialDate.title || text('Fecha especial', 'Special date')}
+              <div class="resvCardTitle" data-testid="reservas-special-menu-card-title">{text('Menús de fecha festiva', 'Festive date menus')}</div>
+              <div class="resvFestiveHead" role="note" data-testid="reservas-special-date-warn-block">
+                <div class="resvFestiveHeadTop">
+                  <div class="resvFestiveHeadTitle" data-testid="reservas-special-date-warn-block-title">
+                    {activeSpecialDate.title || text('Fecha festiva', 'Festive date')}
                   </div>
-                  {activeSpecialDate.description ? (
-                    <div class="resvWarnHint" data-testid="reservas-special-date-warn-block-desc">
-                      {activeSpecialDate.description}
-                    </div>
+                  {activeSpecialDate.prereserva_enabled ? (
+                    <span class="resvFestiveBadge" data-testid="reservas-special-date-prereserva-badge">{text('Prereserva', 'Pre-booking')}</span>
                   ) : null}
-                  <div class="resvWarnList" data-testid="reservas-special-date-warn-block-menus">
-                    {spMenus.map((m) => (
-                      <span key={m.id} class="resvWarnChip">
-                        {m.label}
-                        {typeof m.price === 'number' && m.price > 0 ? ` · ${m.price.toFixed(2)}€` : ''}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-              ) : null}
+                <div class="resvFestiveHeadDate" data-testid="reservas-special-date-warn-block-date">
+                  {new Date(`${activeSpecialDate.date}T12:00:00`).toLocaleDateString(lang === 'en' ? 'en-GB' : 'es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+                {activeSpecialDate.description ? (
+                  <div class="resvFestiveHeadDesc" data-testid="reservas-special-date-warn-block-desc">
+                    {activeSpecialDate.description}
+                  </div>
+                ) : null}
+                <div class="resvFestiveHeadHint" data-testid="reservas-special-date-warn-block-hint">
+                  {text('Indica cuántos comensales tomarán cada menú.', 'Tell us how many guests will have each menu.')}
+                </div>
+              </div>
             </div>
 
-            <div class="resvField text-center" data-testid="reservas-special-menu-counter-sum">
-              <div class="resvHint" data-testid="reservas-special-menu-counter-sum-hint">
-                {text('Comensales asignados', 'Assigned guests')}: {sumCount} / {partySize || 0}
+            {/* Coordination id: festive_menu_counter_v1 - live progress of the
+                guests assigned to menus, so the rule "must add up to the
+                party size" is visible before it blocks the Next button. */}
+            <div class={sumCount === (partySize || 0) ? 'resvFestiveProgress is-complete' : 'resvFestiveProgress'} data-testid="reservas-special-menu-counter-sum">
+              <div class="resvFestiveProgressHead" data-testid="reservas-special-menu-counter-sum-hint">
+                <span>{text('Comensales asignados', 'Assigned guests')}</span>
+                <strong>{sumCount} / {partySize || 0}</strong>
+              </div>
+              <div class="resvFestiveProgressBar" aria-hidden="true">
+                <span style={{ width: `${Math.min(100, partySize ? (sumCount / partySize) * 100 : 0)}%` }} />
               </div>
               {partySize && sumCount !== partySize ? (
-                <div class="resvNotice warn" data-testid="reservas-special-menu-counter-sum-error">
-                  {text(`El total debe sumar exactamente ${partySize} comensales.`, `The total must equal ${partySize} guests.`)}
+                <div class="resvFestiveProgressNote" data-testid="reservas-special-menu-counter-sum-error">
+                  {sumCount < partySize
+                    ? text(`Faltan ${partySize - sumCount} comensales por asignar a un menú.`, `${partySize - sumCount} guests still need a menu.`)
+                    : text(`El total debe sumar exactamente ${partySize} comensales.`, `The total must equal ${partySize} guests.`)}
                 </div>
               ) : null}
             </div>
@@ -2647,48 +2662,31 @@ export function Reservas() {
                 }))
 
                 return (
-                  <div class="resvMenuBlock" key={menu.id} data-testid={`reservas-special-menu-item-${menu.id}`}>
-                    <label class="resvCheck" data-testid={`reservas-special-menu-pick-${menu.id}`}>
-                      <Checkbox
-                        testId={`reservas-special-menu-pick-checkbox-${menu.id}`}
-                        checked={isChosen}
-                        onCheckedChange={(checked) => toggleMenu(menu.id, Boolean(checked))}
-                        variant="accent"
-                        size="sm"
-                      />
-                      <span>
-                        <strong>{menu.label || (menu.is_custom ? menu.custom_title : text('Menú', 'Menu'))}</strong>{' '}
-                        {typeof menu.price === 'number' ? (
-                          <span data-testid={`reservas-special-menu-price-${menu.id}`}>{menu.price}€/{text('persona', 'person')}</span>
-                        ) : null}
-                      </span>
-                    </label>
-
-                    {menu.is_custom ? (
-                      <div class="resvHint" data-testid={`reservas-special-menu-custom-note-${menu.id}`}>
-                        {text('Decidiré los principales más tarde', 'I will decide the main courses later')}
-                      </div>
-                    ) : null}
+                  <div class={isChosen ? 'resvMenuBlock resvFestiveMenu is-chosen' : 'resvMenuBlock resvFestiveMenu'} key={menu.id} data-testid={`reservas-special-menu-item-${menu.id}`}>
+                    {/* Coordination id: festive_menu_counter_v1 - same reusable
+                        Counter as the tronas step: the count itself selects
+                        the menu, no checkbox + hidden counter any more. */}
+                    <Counter
+                      testId={`reservas-special-menu-count-${menu.id}`}
+                      ariaLabel={menu.label || (menu.is_custom ? menu.custom_title || text('Menú', 'Menu') : text('Menú', 'Menu'))}
+                      subtitle={[
+                        typeof menu.price === 'number' && menu.price > 0 ? `${menu.price}€/${text('persona', 'person')}` : '',
+                        requiresAdelanto && menu.adelanto_amount ? `${text('Adelanto', 'Deposit')} ${Number(menu.adelanto_amount).toFixed(2)}€` : '',
+                        menu.is_custom ? text('Principales a decidir más tarde', 'Main courses decided later') : '',
+                      ].filter(Boolean).join(' · ')}
+                      value={sel?.count || 0}
+                      min={0}
+                      max={Math.max(restantes, 0)}
+                      onChange={(v) => {
+                        if (v <= 0) toggleMenu(menu.id, false)
+                        else if (!sel) updateSelection(menu.id, { count: v, rows: [] })
+                        else updateMenuCount(menu.id, v)
+                      }}
+                      className="resvCounter--plain"
+                    />
 
                     {isChosen ? (
                       <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${menu.id}`}>
-                        <div
-                          class="resvField resvField--centered text-center"
-                          data-testid={`reservas-special-menu-count-field-${menu.id}`}
-                        >
-                          <div class="resvLabel" data-testid={`reservas-special-menu-count-label-${menu.id}`}>{text('Comensales', 'Guests')}</div>
-                          <div class="resvCounterCenter">
-                            <InlineCounter
-                              testId={`reservas-special-menu-count-${menu.id}`}
-                              ariaLabel={text('Comensales', 'Guests')}
-                              value={sel?.count || 0}
-                              min={0}
-                              max={Math.max(restantes, 0)}
-                              onChange={(v) => updateMenuCount(menu.id, v)}
-                            />
-                          </div>
-                        </div>
-
                         {!menu.is_custom ? (
                           <div class="resvPrincipales" data-testid={`reservas-special-menu-rows-${menu.id}`}>
                             {(sel?.rows || []).map((row, idx) => (
@@ -2741,11 +2739,6 @@ export function Reservas() {
                           </div>
                         ) : null}
 
-                        {requiresAdelanto && menu.adelanto_amount ? (
-                          <div class="resvHint" data-testid={`reservas-special-menu-adelanto-${menu.id}`}>
-                            {text('Adelanto', 'Deposit')}: {Number(menu.adelanto_amount).toFixed(2)}€ × {sel?.count || 0} = {(Number(menu.adelanto_amount) * (sel?.count || 0)).toFixed(2)}€
-                          </div>
-                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -2756,37 +2749,47 @@ export function Reservas() {
             {requiresAdelanto ? (
               <div class="resvField mt-3" data-testid="reservas-special-menu-payment-field">
                 <div class="resvLabel mb-3" data-testid="reservas-special-menu-payment-label">{text('Método de pago del adelanto', 'Deposit payment method')}</div>
-                <div class="resvChips" data-testid="reservas-special-menu-payment-chips">
-                  {pmOptions.map((opt) => (
-                    <button
-                      type="button"
-                      key={opt.value}
-                      class={specialPaymentMethod === opt.value ? 'resvChoice selected' : 'resvChoice'}
-                      data-testid={`reservas-special-menu-payment-chip-${opt.value}`}
-                      onClick={() => setSpecialPaymentMethod(opt.value)}
-                    >
-                      {specialPaymentMethod === opt.value ? (
-                        <span class="resvChoiceCheck" aria-hidden="true">✓</span>
-                      ) : null}
-                      <span>{opt.label}</span>
-                    </button>
-                  ))}
+                <div class="resvPayGrid" role="radiogroup" aria-label={text('Método de pago del adelanto', 'Deposit payment method')} data-testid="reservas-special-menu-payment-chips">
+                  {pmOptions.map((opt) => {
+                    const Icon = PAYMENT_METHOD_ICONS[opt.value]
+                    const selected = specialPaymentMethod === opt.value
+                    return (
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        key={opt.value}
+                        class={selected ? 'resvPayOption selected' : 'resvPayOption'}
+                        data-testid={`reservas-special-menu-payment-chip-${opt.value}`}
+                        onClick={() => setSpecialPaymentMethod(opt.value)}
+                      >
+                        {Icon ? <Icon size={20} strokeWidth={1.8} aria-hidden="true" data-testid={`reservas-special-menu-payment-icon-${opt.value}`} /> : null}
+                        <span>{opt.label}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             ) : null}
 
-            {requiresAdelanto ? (
+            {requiresAdelanto && totalAdelanto > 0 ? (
               <div class="resvAdelantoSummary" data-testid="reservas-special-menu-adelanto-summary">
-                <div class="resvAdelantoRow" data-testid="reservas-special-menu-adelanto-summary-row">
-                  <span class="resvHint">{text('Adelanto por menú', 'Deposit per menu')}</span>
-                  <span class="resvAdelantoVal">{totalAdelanto.toFixed(2)}€</span>
-                </div>
+                {selections.filter((sel) => sel.count > 0).map((sel) => {
+                  const m = spMenus.find((mm) => mm.id === sel.special_date_menu_id)
+                  if (!m || !m.adelanto_amount) return null
+                  return (
+                    <div class="resvAdelantoRow" key={sel.special_date_menu_id} data-testid={`reservas-special-menu-adelanto-summary-row-${sel.special_date_menu_id}`}>
+                      <span class="resvHint">{m.label || m.custom_title || text('Menú', 'Menu')} · {Number(m.adelanto_amount).toFixed(2)}€ × {sel.count}</span>
+                      <span class="resvAdelantoVal">{(Number(m.adelanto_amount) * sel.count).toFixed(2)}€</span>
+                    </div>
+                  )
+                })}
                 <div class="resvAdelantoRow" data-testid="reservas-special-menu-adelanto-summary-row-all">
                   <span class="resvHint">{text('Método elegido', 'Selected method')}</span>
                   <span class="resvAdelantoVal">{pmOptions.find((o) => o.value === specialPaymentMethod)?.label || '—'}</span>
                 </div>
                 <div class="resvAdelantoRow resvAdelantoRow--total" data-testid="reservas-special-menu-adelanto-total">
-                  <span>{text('Total a pagar', 'Total to pay')}</span>
+                  <span>{text('Adelanto a pagar', 'Deposit to pay')}</span>
                   <span class="resvAdelantoTotal">{totalAdelanto.toFixed(2)}€</span>
                 </div>
               </div>
@@ -3179,11 +3182,11 @@ export function Reservas() {
               // adelanto row and the total adelanto a pagar.
               <div class="resvSummaryBlock" data-testid="reservas-summary-special-menu-block">
                 <div class="resvSummaryBlockTitle" data-testid="reservas-summary-special-menu-title">
-                  {text('Menú especial', 'Special menu')}
+                  {text('Menús de fecha festiva', 'Festive date menus')}
                 </div>
                 {activeSpecialDate?.title ? (
                   <div class="resvSummaryRow" data-testid="reservas-summary-row-special-menu-title">
-                    <span data-testid="reservas-summary-label-special-menu-title">{text('Fecha especial', 'Special date')}</span>
+                    <span data-testid="reservas-summary-label-special-menu-title">{text('Fecha festiva', 'Festive date')}</span>
                     <span class="resvSummaryValue" data-testid="reservas-summary-value-special-menu-title">{activeSpecialDate.title}</span>
                   </div>
                 ) : null}
@@ -3310,7 +3313,7 @@ export function Reservas() {
                 <span data-testid="reservas-terms-special-text">
                   {text('Acepto la', 'I accept the')}{' '}
                   <a href="/reservas-especiales-politica" target="_blank" rel="noreferrer" data-testid="reservas-terms-special-politics-link">
-                    {text('política de reservas de días especiales', 'special-days booking policy')}
+                    {text('política de reservas de fechas festivas', 'festive-dates booking policy')}
                   </a>
                   .
                 </span>
@@ -3341,7 +3344,11 @@ export function Reservas() {
     <div class="page resvPage" data-testid="reservas-page">
       <section class="page-hero resvHero" data-testid="reservas-hero">
         <div class="container" data-testid="reservas-hero-container">
-          <h1 class="page-title" data-testid="reservas-hero-title">{text('Reservas', 'Reservations')}</h1>
+          {/* Coordination id: festive_prereserva_title_v1 - a festive date
+              with prereserva turns the whole flow into a prereserva. */}
+          <h1 class="page-title" data-testid="reservas-hero-title">
+            {selectedDate && isPrereservaSpecialISO(selectedDate, specialDatesMap) ? text('Prereserva', 'Pre-booking') : text('Reservas', 'Reservations')}
+          </h1>
           <p class="page-subtitle" data-testid="reservas-hero-subtitle">{text('Selecciona fecha, personas y completa tu reserva.', 'Select a date and number of guests, then complete your reservation.')}</p>
         </div>
       </section>

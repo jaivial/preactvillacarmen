@@ -5883,3 +5883,143 @@ svg {
         outline-color: oklch(1 0 0 / 0.1);
     }
 }
+
+/* =====================================================================
+ * Festive date step (menus + adelanto).
+ * Coordination id: festive_menu_counter_v1
+ * ===================================================================== */
+.resvFestiveHead {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(9, 121, 105, 0.1), rgba(196, 140, 44, 0.08));
+    border: 1px solid rgba(9, 121, 105, 0.18);
+}
+
+.resvFestiveHeadTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.resvFestiveHeadTitle {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.resvFestiveHeadDate {
+    font-size: 14px;
+    text-transform: capitalize;
+    color: rgba(20, 37, 32, 0.74);
+}
+
+.resvFestiveHeadDesc,
+.resvFestiveHeadHint {
+    font-size: 14px;
+    color: rgba(20, 37, 32, 0.74);
+}
+
+.resvFestiveHeadHint {
+    font-weight: 500;
+    color: rgba(9, 121, 105, 1);
+}
+
+.resvFestiveBadge {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(196, 140, 44, 0.16);
+    color: #8a5d0c;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.resvFestiveProgress {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0 6px;
+}
+
+.resvFestiveProgressHead {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.resvFestiveProgressBar {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.resvFestiveProgressBar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: rgba(196, 140, 44, 0.9);
+    transition: width 220ms ease;
+}
+
+.resvFestiveProgress.is-complete .resvFestiveProgressBar span {
+    background: rgba(9, 121, 105, 1);
+}
+
+.resvFestiveProgressNote {
+    font-size: 13px;
+    color: #8a5d0c;
+}
+
+.resvFestiveMenu {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 18px;
+    padding: 6px 4px;
+    background: rgba(255, 255, 255, 0.86);
+    transition: border-color 160ms ease, background 160ms ease;
+}
+
+.resvFestiveMenu.is-chosen {
+    border-color: rgba(9, 121, 105, 0.35);
+    background: rgba(9, 121, 105, 0.05);
+}
+
+.resvFestiveMenu .resvMenuDetails {
+    padding: 0 12px 12px;
+}
+
+.resvPayGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+}
+
+.resvPayOption {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.86);
+    font: inherit;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.resvPayOption:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 0, 0, 0.24);
+}
+
+.resvPayOption.selected {
+    background: rgba(9, 121, 105, 0.12);
+    border-color: rgba(9, 121, 105, 0.45);
+    color: rgba(9, 121, 105, 1);
+    font-weight: 600;
+}
