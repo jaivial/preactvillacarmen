@@ -150,7 +150,7 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   const riceAnnotations: string[] = []
   const riceAnnotationsEnglish: string[] = []
   const others: PublicMenuViewSection[] = []
-  let mainsTitle = menu.principales.titulo_principales || 'Principales'
+  let mainsTitle = menu.principales?.titulo_principales || 'Principales'
   let mainsTitleEnglish: string | undefined
   let mainsSubtitle: string | undefined
   let mainsSubtitleEnglish: string | undefined
