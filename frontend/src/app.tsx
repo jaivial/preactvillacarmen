@@ -14,6 +14,7 @@ import { MenusDeGrupos } from './routes/client/MenusDeGrupos.tsx'
 import { Postres } from './routes/client/Postres.tsx'
 import { Placeholder } from './routes/client/Placeholder.tsx'
 import { Reservas } from './routes/client/Reservas.tsx'
+import { ModificarReserva } from './routes/client/ModificarReserva.tsx'
 import { AvisoLegal } from './routes/client/AvisoLegal.tsx'
 import { BookingPolicies } from './routes/client/BookingPolicies.tsx'
 import { ConfirmBooking } from './routes/client/ConfirmBooking.tsx'
@@ -57,6 +58,7 @@ function ClientApp() {
             <Bebidas />
           </FoodPageGuard>
         </Route>
+        <Route path="/reservas/modificar" component={ModificarReserva} />
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
         <Route path="/avisolegal" component={AvisoLegal} />
