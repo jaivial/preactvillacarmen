@@ -89,6 +89,10 @@ export function ModificarReserva() {
   const [step, setStep] = useState<StepId>('date')
   const [dateLocked, setDateLocked] = useState(false)
   const [mobilityEnabled, setMobilityEnabled] = useState(false)
+  // The booked date / time as inherited, so the untouched booking keeps its own
+  // service time selectable even when it sits outside the currently open slots.
+  const [inheritedDate, setInheritedDate] = useState('')
+  const [inheritedTime, setInheritedTime] = useState('')
 
   // --- calendar + availability data ---------------------------------------
   const todayISO = useMemo(() => isoFromLocalDate(startOfDayLocal(new Date())), [])
@@ -142,6 +146,8 @@ export function ModificarReserva() {
         setDate(b.reservationDate)
         setPartySize(b.partySize)
         setTime(b.reservationTime)
+        setInheritedDate(b.reservationDate)
+        setInheritedTime(b.reservationTime)
         setWantsRice(Boolean(b.arrozType))
         setRiceType(b.arrozType || '')
         setRiceServings(b.arrozServings && b.arrozServings >= 2 ? b.arrozServings : null)
@@ -286,16 +292,17 @@ export function ModificarReserva() {
       if (splitEnabled && typeof slot.capacity === 'number' && partySize && slot.capacity < partySize) continue
       out.push({ hour: h, status: slot.status === 'limited' ? 'limited' : 'available' })
     }
-    // The booked time stays selectable so a no-op edit is always possible.
-    if (time && !out.some((h) => h.hour === time)) {
-      const slot = hourData?.hourData?.[time]
-      if (slot && !slot.isClosed) {
-        out.push({ hour: time, status: 'available' })
-        out.sort((a, b) => a.hour.localeCompare(b.hour))
-      }
+    // While the guest has not moved the date, their own service time stays
+    // selectable: the restaurant already holds that booking, so forcing a new
+    // time just to fix an email would be a trap. Changing the date drops it and
+    // makes them pick again from that day's open slots.
+    const keepingBookedTime = time && date === inheritedDate && inheritedTime && time === inheritedTime
+    if (keepingBookedTime && !out.some((h) => h.hour === time)) {
+      out.push({ hour: time, status: 'available' })
+      out.sort((a, b) => a.hour.localeCompare(b.hour))
     }
     return out
-  }, [hourData, partySize, time])
+  }, [hourData, partySize, time, date, inheritedDate, inheritedTime])
 
   const freeSeats = typeof monthAvailability?.[date]?.freeBookingSeats === 'number' ? monthAvailability[date].freeBookingSeats : null
 
