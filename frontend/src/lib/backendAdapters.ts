@@ -103,6 +103,21 @@ function normalizePublicMenuType(value: unknown): PublicMenuType {
   return 'closed_conventional'
 }
 
+// Coordination id: special_menu_minimal_payload_v1
+// GET /api/menus/{id} answers special menus with a minimal payload that omits
+// `menu_type` and the conventional fields (see handlePublicMenuByID). The
+// special sections/image are the only stable discriminator in that shape, so
+// infer the type instead of letting the router fall back to the closed
+// conventional template and read missing fields.
+function inferPublicMenuType(record: Record<string, unknown>): PublicMenuType {
+  const explicit = toText(record.menu_type)
+  if (explicit) return normalizePublicMenuType(explicit)
+  const looksSpecial =
+    Object.prototype.hasOwnProperty.call(record, 'special_menu_sections') ||
+    Object.prototype.hasOwnProperty.call(record, 'special_menu_image_url')
+  return looksSpecial ? 'special' : 'closed_conventional'
+}
+
 function normalizePublicMenuDish(value: unknown): PublicMenuDish | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
@@ -192,16 +207,11 @@ function normalizePublicMenuSettings(value: unknown): PublicMenuSettings {
   }
 }
 
-function normalizePublicMenu(value: unknown): PublicMenu | null {
-  if (!value || typeof value !== 'object') return null
-  const record = value as Record<string, unknown>
+export function normalizePublicMenu(value: unknown): PublicMenu {
+  const record = toRecord(value)
 
   const id = Math.trunc(toNumber(record.id, 0))
-  if (id <= 0) return null
-
   const title = toText(record.menu_title)
-  if (!title) return null
-
   const slug = toText(record.slug)
   const sectionsRaw = Array.isArray(record.sections) ? record.sections : []
   const sections: PublicMenuSection[] = []
@@ -217,7 +227,7 @@ function normalizePublicMenu(value: unknown): PublicMenu | null {
     id,
     slug,
     menu_title: title,
-    menu_type: normalizePublicMenuType(record.menu_type),
+    menu_type: inferPublicMenuType(record),
     price: toText(record.price),
     active: toBool(record.active) !== false,
     menu_subtitle: toStringArray(record.menu_subtitle),
@@ -343,7 +353,7 @@ export function normalizePublicMenusResponse(data: unknown): PublicMenu[] {
 
   for (const row of rows) {
     const normalized = normalizePublicMenu(row)
-    if (!normalized) continue
+    if (normalized.id <= 0 || !normalized.menu_title) continue
     menus.push(normalized)
   }
 

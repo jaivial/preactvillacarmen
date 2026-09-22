@@ -377,7 +377,11 @@ export type HomeMenu = {
   menu_preview_image_url: string
 }
 
-// Response shape for GET /api/menus/{id}
+// Response shape for GET /api/menus/{id}.
+// Coordination id: special_menu_minimal_payload_v1
+// Special menus answer with a reduced payload (no `menu_type`/`principales`),
+// so consumers must go through fetchMenuByID(), which normalizes the body into
+// a complete PublicMenu before it reaches the template router.
 export type MenuByIDResponse = {
   success: true
   menu: PublicMenu
