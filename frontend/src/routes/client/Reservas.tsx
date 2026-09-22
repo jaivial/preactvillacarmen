@@ -32,6 +32,19 @@ import { DuplicateBookingModal } from '../../components/reservas/DuplicateBookin
 import { buildCountries, countrySelectOptions } from '../../components/reservas/countryOptions'
 import { lookupDuplicateReservation, storeSelfServiceProof, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
 import { onlyDigits } from '../../lib/phone'
+import {
+  addDaysLocal,
+  isClosedByDefaultISO,
+  isPrereservaSpecialISO,
+  normalizeDateSet,
+  isoFromLocalDate,
+  parseISODateLocal,
+  startOfDayLocal,
+  type CalendarRuleContext,
+} from '../../lib/reservationCalendar'
+import { ReservationCalendar } from '../../components/reservas/ReservationCalendar'
+import { ReservationHourPicker } from '../../components/reservas/ReservationHourPicker'
+import { ReservationChoice } from '../../components/reservas/ReservationChoice'
 
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
@@ -76,41 +89,8 @@ function paymentMethodOptions(methods: PaymentMethodKey[]): { value: PaymentMeth
 }
 
 
-function pad2(n: number) {
-  return String(n).padStart(2, '0')
-}
-
-function isoFromLocalDate(d: Date) {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-}
-
-function parseISODateLocal(iso: string): Date | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
-  if (!m) return null
-  const y = Number(m[1])
-  const mo = Number(m[2]) - 1
-  const da = Number(m[3])
-  const d = new Date(y, mo, da)
-  if (Number.isNaN(d.getTime())) return null
-  return d
-}
-
-function startOfDayLocal(d: Date) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-}
-
-function addDaysLocal(d: Date, days: number) {
-  const out = new Date(d)
-  out.setDate(out.getDate() + days)
-  return out
-}
-
 function textFor(lang: Lang, es: string, en: string) {
   return lang === 'en' ? en : es
-}
-
-function monthName(monthIndex0: number, lang: Lang) {
-  return new Intl.DateTimeFormat(lang, { month: 'long' }).format(new Date(2024, monthIndex0, 1))
 }
 
 function reservationDateDisplay(iso: string, lang: Lang) {
@@ -132,19 +112,6 @@ function readStringArray(v: unknown): string[] {
     .filter(Boolean)
 }
 
-function normalizeDateOnly(value: string): string {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
-  const match = /^(\d{4}-\d{2}-\d{2})[T\s]/.exec(trimmed)
-  if (match) return match[1]
-  return trimmed
-}
-
-function normalizeDateSet(values: unknown): Set<string> {
-  return new Set(readStringArray(values).map(normalizeDateOnly).filter(Boolean))
-}
-
 function getPrincipalesItems(menu: GroupMenuDisplay | null): string[] {
   if (!menu || !menu.principales || typeof menu.principales !== 'object') return []
   const items = (menu.principales as any).items
@@ -162,19 +129,6 @@ function getPrincipalesTitle(menu: GroupMenuDisplay | null, lang: Lang): string 
   const es = (menu.principales as any).titulo_principales
   const en = menu.principales_english?.titulo_principales
   return localized(typeof es === 'string' && es.trim() ? es.trim() : 'Principales', en, lang)
-}
-
-function buildCalendarCells(year: number, month0: number) {
-  const first = new Date(year, month0, 1)
-  const firstDow = first.getDay() // 0=Sun
-  const offsetMonFirst = (firstDow + 6) % 7 // 0=Mon
-  const start = addDaysLocal(first, -offsetMonFirst)
-  const cells: { date: Date; iso: string; inMonth: boolean }[] = []
-  for (let i = 0; i < 42; i++) {
-    const d = addDaysLocal(start, i)
-    cells.push({ date: d, iso: isoFromLocalDate(d), inMonth: d.getMonth() === month0 })
-  }
-  return cells
 }
 
 function ToastIcon(props: { type: ToastType; testId: string }) {
@@ -985,10 +939,6 @@ export function Reservas() {
     return out
   }, [activeShiftHours, hourData, partySize])
 
-  const selectedHour = useMemo(() => {
-    if (!reservationTime) return null
-    return availableHours.find((h) => h.hour === reservationTime) || null
-  }, [availableHours, reservationTime])
 
   // Initial fetch: closed/open days + arroz types.
   useEffect(() => {
@@ -1088,42 +1038,26 @@ export function Reservas() {
     if (selectedDate) setDateDisplay(reservationDateDisplay(selectedDate, lang))
   }, [lang, selectedDate])
 
-  const cells = useMemo(() => buildCalendarCells(viewYear, viewMonth0), [viewYear, viewMonth0])
-
-  const isClosedByDefault = (iso: string) => {
-    const d = parseISODateLocal(iso)
-    if (!d) return true
-    const dow = d.getDay()
-    const defaultClosed = dow === 1 || dow === 2 || dow === 3
-    if (openedDays.has(iso)) return false
-    if (closedDays.has(iso)) return true
-    return defaultClosed
-  }
+  const isClosedByDefault = (iso: string) => isClosedByDefaultISO(iso, openedDays, closedDays)
 
   // Coordination id: special_booking_v1
   // Active special dates with prereserva_enabled bypass ALL the gray-out rules:
   // Mon/Tue defaults, explicit closedDays, and the 40-day window. They only
   // appear disabled when they are in the past (same as every other date).
-  const isPrereservaSpecial = (iso: string) => {
-    const sd = specialDatesMap[iso]
-    return Boolean(sd && sd.is_active && sd.prereserva_enabled)
-  }
+  const isPrereservaSpecial = (iso: string) => isPrereservaSpecialISO(iso, specialDatesMap)
 
-  const isDisabledDate = (iso: string, inMonth: boolean) => {
-    if (!inMonth) return true
-    if (iso < todayISO) return true
-    if (isPrereservaSpecial(iso)) {
-      // Past dates remain blocked; active special dates are never gray.
-      const free = monthAvailability?.[iso]?.freeBookingSeats
-      if (typeof free === 'number' && free <= 0) return true
-      return false
-    }
-    if (iso > bookingMaxISO) return true
-    if (isClosedByDefault(iso)) return true
-    const free = monthAvailability?.[iso]?.freeBookingSeats
-    if (typeof free === 'number' && free <= 0) return true
-    return false
-  }
+  // Shared with the modify wizard so both grey out the exact same days.
+  const calendarRules = useMemo<CalendarRuleContext>(
+    () => ({
+      todayISO,
+      maxISO: bookingMaxISO,
+      openedDays,
+      closedDays,
+      specialDates: specialDatesMap,
+      monthAvailability,
+    }),
+    [todayISO, bookingMaxISO, openedDays, closedDays, specialDatesMap, monthAvailability],
+  )
 
   // Coordination id: special_booking_v1
   // Lookup the active special-date summary for the currently selected date.
@@ -1971,102 +1905,23 @@ export function Reservas() {
       return (
         <div class="resvStep" data-testid="reservas-step-date">
           <div class="resvGrid2" data-testid="reservas-date-grid">
-            <div class="resvCard" data-testid="reservas-calendar-card">
-              <div class="resvCardHead" data-testid="reservas-calendar-card-head">
-                <div class="resvCardTitle" data-testid="reservas-calendar-card-title">{text('Selecciona una fecha', 'Select a date')}</div>
-              </div>
-
-              <div class="resvCalendar" data-testid="reservas-calendar">
-                <div class="resvCalendarHead" data-testid="reservas-calendar-head">
-                  <button
-                    type="button"
-                    class="resvCalNav"
-                    data-testid="reservas-calendar-prev-month"
-                    aria-label={text('Mes anterior', 'Previous month')}
-                    onClick={() => {
-                      const m = viewMonth0 - 1
-                      if (m < 0) {
-                        setViewMonth0(11)
-                        setViewYear((y) => y - 1)
-                      } else {
-                        setViewMonth0(m)
-                      }
-                    }}
-                  >
-                    ‹
-                  </button>
-                  <div class="resvCalTitle" data-testid="reservas-calendar-month-title">
-                    {monthName(viewMonth0, lang)} {viewYear}
-                  </div>
-                  <button
-                    type="button"
-                    class="resvCalNav"
-                    data-testid="reservas-calendar-next-month"
-                    aria-label={text('Mes siguiente', 'Next month')}
-                    onClick={() => {
-                      const m = viewMonth0 + 1
-                      if (m > 11) {
-                        setViewMonth0(0)
-                        setViewYear((y) => y + 1)
-                      } else {
-                        setViewMonth0(m)
-                      }
-                    }}
-                  >
-                    ›
-                  </button>
-                </div>
-
-                <div class="resvCalWeekdays" aria-hidden="true" data-testid="reservas-calendar-weekdays">
-                  {(lang === 'en' ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['L', 'M', 'X', 'J', 'V', 'S', 'D']).map((day, index) => <div key={index} data-testid={`reservas-calendar-weekday-${index}`}>{day}</div>)}
-                </div>
-
-                <div class="resvCalDays" data-testid="reservas-calendar-days">
-                  {cells.map((c) => {
-                    const free = monthAvailability?.[c.iso]?.freeBookingSeats
-                    const fullyBooked = typeof free === 'number' && free <= 0
-                    const disabled = isDisabledDate(c.iso, c.inMonth)
-                    const isSelected = selectedDate === c.iso
-                    const isToday = c.iso === todayISO
-
-                    let cls = 'resvDay'
-                    if (!c.inMonth) cls += ' other'
-                    if (disabled) cls += ' disabled'
-                    if (fullyBooked) cls += ' full'
-                    if (isSelected && !disabled) cls += ' selected'
-                    if (isToday && !disabled) cls += ' today'
-
-                    return (
-                      <button
-                        type="button"
-                        class={cls}
-                        key={c.iso}
-                        data-testid={`reservas-calendar-day-${c.iso}`}
-                        disabled={disabled}
-                        onClick={() => onPickDate(c.iso, c.inMonth)}
-                      >
-                        {c.date.getDate()}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div class="resvLegend" aria-hidden="true" data-testid="reservas-calendar-legend">
-                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-available">
-                    <i class="swatch available" data-testid="reservas-calendar-legend-available-swatch" /> {text('Disponible', 'Available')}
-                  </div>
-                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-selected">
-                    <i class="swatch selected" data-testid="reservas-calendar-legend-selected-swatch" /> {text('Seleccionado', 'Selected')}
-                  </div>
-                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-unavailable">
-                    <i class="swatch disabled" data-testid="reservas-calendar-legend-unavailable-swatch" /> {text('No disponible', 'Unavailable')}
-                  </div>
-                  <div class="resvLegendItem" data-testid="reservas-calendar-legend-full">
-                    <i class="swatch full" data-testid="reservas-calendar-legend-full-swatch" /> {text('Completo', 'Full')}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ReservationCalendar
+              testId="reservas-calendar"
+              title={text('Selecciona una fecha', 'Select a date')}
+              selectedDate={selectedDate}
+              todayISO={todayISO}
+              viewMonth0={viewMonth0}
+              viewYear={viewYear}
+              onViewChange={(month0, year) => {
+                setViewMonth0(month0)
+                setViewYear(year)
+              }}
+              monthAvailability={monthAvailability}
+              rules={calendarRules}
+              onPickDate={onPickDate}
+              text={text}
+              lang={lang}
+            />
 
             {selectedDate ? (
               <motion.div
@@ -2191,50 +2046,20 @@ export function Reservas() {
 
                 {showHoursField ? (
                   <motion.div
-                    class="resvField"
-                    data-testid="reservas-hours-field"
+                    data-testid="reservas-hours-motion"
                     initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: reduceMotion ? 0 : 0.3, ease: 'easeOut' }}
                   >
-                    <div class="resvLabel" data-testid="reservas-hours-label">{text('Horas disponibles', 'Available times')}</div>
-                    {availableHours.length > 0 ? (
-                      <>
-                        <div class="resvHours" data-testid="reservas-hours-list">
-                          {availableHours.map((h) => (
-                            <button
-                              type="button"
-                              key={h.hour}
-                              data-testid={`reservas-hour-option-${h.hour.replace(/[^0-9]/g, '-')}`}
-                              class={
-                                reservationTime === h.hour
-                                  ? h.status === 'limited'
-                                    ? 'resvHourBtn selected limited'
-                                    : 'resvHourBtn selected'
-                                  : h.status === 'limited'
-                                    ? 'resvHourBtn limited'
-                                    : 'resvHourBtn'
-                              }
-                              onClick={() => setReservationTime(h.hour)}
-                            >
-                              {h.hour}
-                            </button>
-                          ))}
-                        </div>
-                        {selectedHour ? (
-                          <div
-                            data-testid="reservas-selected-hour"
-                            class={selectedHour.status === 'limited' ? 'resvSelectedTime limited' : 'resvSelectedTime'}
-                          >
-                            {text('Hora seleccionada:', 'Selected time:')} {selectedHour.hour}
-                          </div>
-                        ) : null}
-                      </>
-                    ) : (
-                      <div class="resvEmpty" data-testid="reservas-hours-empty">
-                        {text('No hay horas disponibles para', 'No times available for')} {partySize} {t('reservations.people.suffix')} {text('en esta fecha.', 'on this date.')}
-                      </div>
-                    )}
+                    <ReservationHourPicker
+                      testId="reservas"
+                      label={text('Horas disponibles', 'Available times')}
+                      hours={availableHours}
+                      value={reservationTime}
+                      onChange={setReservationTime}
+                      emptyLabel={`${text('No hay horas disponibles para', 'No times available for')} ${partySize} ${t('reservations.people.suffix')} ${text('en esta fecha.', 'on this date.')}`}
+                      text={text}
+                    />
                   </motion.div>
                 ) : null}
 
@@ -2991,28 +2816,19 @@ export function Reservas() {
               <div class="resvCardSub" data-testid="reservas-rice-card-subtitle">{text('Los arroces solo podrán servirse con reserva previa.', 'Rice dishes are only available when ordered in advance.')}</div>
             </div>
 
-            <div class="resvYesNo" data-testid="reservas-rice-choice">
-              <button
-                type="button"
-                data-testid="reservas-rice-yes"
-                class={wantsRice === true ? 'resvChoice selected' : 'resvChoice'}
-                onClick={() => setWantsRice(true)}
-              >
-                {text('Sí', 'Yes')}
-              </button>
-              <button
-                type="button"
-                data-testid="reservas-rice-no"
-                class={wantsRice === false ? 'resvChoice selected' : 'resvChoice'}
-                onClick={() => {
-                  setWantsRice(false)
+            <ReservationChoice
+              testId="reservas-rice"
+              value={wantsRice}
+              onChange={(next) => {
+                setWantsRice(next)
+                if (!next) {
                   setRiceType('')
                   setRiceServings(null)
-                }}
-              >
-                {text('No', 'No')}
-              </button>
-            </div>
+                }
+              }}
+              yesLabel={text('Sí', 'Yes')}
+              noLabel={text('No', 'No')}
+            />
 
             {wantsRice === true ? (
               <div class="resvRiceGrid" data-testid="reservas-rice-grid">
@@ -3164,24 +2980,20 @@ export function Reservas() {
               </div>
             </div>
 
-            <div class="resvYesNo" data-testid="reservas-mobility-choices">
-              <button
-                type="button"
-                class={hasMobilityIssues === true ? 'resvChoice selected' : 'resvChoice'}
-                data-testid="reservas-mobility-yes"
-                onClick={() => { setHasMobilityIssues(true); setMobilityPeople((n) => clamp(n || 1, 1, ps)) }}
-              >
-                {text('Sí', 'Yes')}
-              </button>
-              <button
-                type="button"
-                class={hasMobilityIssues === false ? 'resvChoice selected' : 'resvChoice'}
-                data-testid="reservas-mobility-no"
-                onClick={() => { setHasMobilityIssues(false); setMobilityPeople(0) }}
-              >
-                {text('No', 'No')}
-              </button>
-            </div>
+            <ReservationChoice
+              testId="reservas-mobility"
+              value={hasMobilityIssues}
+              onChange={(next) => {
+                setHasMobilityIssues(next)
+                if (next) {
+                  setMobilityPeople((n) => clamp(n || 1, 1, ps))
+                } else {
+                  setMobilityPeople(0)
+                }
+              }}
+              yesLabel={text('Sí', 'Yes')}
+              noLabel={text('No', 'No')}
+            />
 
             {chosen ? (
               <CounterGroup
