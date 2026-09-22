@@ -330,6 +330,9 @@ export type ReservationDayContextResponse = {
   floors: ReservationDayContextFloor[]
   activeFloors: ReservationDayContextFloor[]
   locationBooking?: ReservationDayContextLocationBooking
+  /** Resolved mobility setting for this date (global default with the per-day
+   *  override applied; the concrete day wins). Coordination id: mobility_day_override_v1 */
+  mobility_enabled?: boolean
 }
 
 export type ValidGroupMenusForPartySizeResponse = {
@@ -374,7 +377,11 @@ export type HomeMenu = {
   menu_preview_image_url: string
 }
 
-// Response shape for GET /api/menus/{id}
+// Response shape for GET /api/menus/{id}.
+// Coordination id: special_menu_minimal_payload_v1
+// Special menus answer with a reduced payload (no `menu_type`/`principales`),
+// so consumers must go through fetchMenuByID(), which normalizes the body into
+// a complete PublicMenu before it reaches the template router.
 export type MenuByIDResponse = {
   success: true
   menu: PublicMenu

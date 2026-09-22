@@ -1,4 +1,5 @@
 import { apiGetJson } from './api'
+import { normalizePublicMenu } from './backendAdapters'
 import type { PublicMenu, PublicVisibleSection, SidebarMenu, HomeMenu, MenuByIDResponse, MenuSidebarResponse, MenuHomeResponse, ComidaItem, ComidaItemsResponse } from './types'
 
 export type MenuSidebarData = {
@@ -41,7 +42,11 @@ export async function fetchMenuByID(id: number): Promise<PublicMenu> {
   // network-first: menu content is edited in the backoffice and must never
   // be served stale from the in-memory cache
   const data = await apiGetJson<MenuByIDResponse>(`/api/menus/${id}`, { noStore: true })
-  return data.menu
+  // Coordination id: special_menu_minimal_payload_v1
+  // Special menus answer with a reduced payload (no menu_type/principales), so
+  // normalize before returning: the template router and the menu helpers only
+  // ever receive a complete PublicMenu.
+  return normalizePublicMenu(data.menu)
 }
 
 export async function fetchComidaItems(tipo: 'cafes' | 'bebidas'): Promise<ComidaItem[]> {
