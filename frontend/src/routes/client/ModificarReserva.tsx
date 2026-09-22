@@ -6,6 +6,7 @@ import { buildCountries, countrySelectOptions } from '../../components/reservas/
 import { onlyDigits } from '../../lib/phone'
 import {
   fetchModifyContext,
+  readSelfServiceProof,
   submitBookingModification,
   type SelfServiceBooking,
 } from '../../lib/reservationSelfService'
@@ -22,8 +23,10 @@ import {
  */
 type PageState = 'loading' | 'ready' | 'blocked' | 'error' | 'success'
 
-function todayISO(): string {
+// The backend refuses same-day and past edits, so the picker never offers them.
+function tomorrowISO(): string {
   const d = new Date()
+  d.setDate(d.getDate() + 1)
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
@@ -65,10 +68,23 @@ export function ModificarReserva() {
       setMessage(text('ID de reserva inválido.', 'Invalid booking ID.'))
       return
     }
+    // Ownership proof captured by the wizard. Without it we cannot prove the
+    // guest owns the booking, so the page refuses to load its details.
+    const proof = readSelfServiceProof()
+    if (!proof || proof.id !== bookingId) {
+      setState('blocked')
+      setMessage(
+        text(
+          'No se pudo verificar la reserva. Vuelve a reservas e inténtalo de nuevo.',
+          'We could not verify the booking. Please go back to reservations and try again.',
+        ),
+      )
+      return
+    }
     let cancelled = false
     void (async () => {
       try {
-        const res = await fetchModifyContext(bookingId)
+        const res = await fetchModifyContext(bookingId, proof)
         if (cancelled) return
         if (!res.success || !res.booking) {
           setState('error')
@@ -117,6 +133,17 @@ export function ModificarReserva() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault()
     if (!bookingId || !ready) return
+    const proof = readSelfServiceProof()
+    if (!proof || proof.id !== bookingId) {
+      setState('blocked')
+      setMessage(
+        text(
+          'No se pudo verificar la reserva. Vuelve a reservas e inténtalo de nuevo.',
+          'We could not verify the booking. Please go back to reservations and try again.',
+        ),
+      )
+      return
+    }
     setSaving(true)
     try {
       const res = await submitBookingModification({
@@ -131,6 +158,10 @@ export function ModificarReserva() {
         contact_phone: onlyDigits(phoneNational),
         high_chairs: Math.min(highChairs, partySize),
         baby_strollers: Math.min(babyStrollers, partySize),
+        // Proof is the original contact, never the edited values.
+        verify_email: proof.email,
+        verify_country_code: proof.countryCode,
+        verify_phone: proof.phone,
       })
       if (res.success) {
         setState('success')
@@ -215,7 +246,7 @@ export function ModificarReserva() {
                     data-testid="modificar-reserva-date-input"
                     type="date"
                     value={date}
-                    min={todayISO()}
+                    min={tomorrowISO()}
                     disabled={dateLocked}
                     onInput={(e) => setDate((e.target as HTMLInputElement).value)}
                   />

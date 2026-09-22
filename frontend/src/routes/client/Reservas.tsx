@@ -30,7 +30,7 @@ import { InlineCounter } from '../../components/reservas/InlineCounter'
 import { Modal } from '../../components/reservas/Modal'
 import { DuplicateBookingModal } from '../../components/reservas/DuplicateBookingModal'
 import { buildCountries, countrySelectOptions } from '../../components/reservas/countryOptions'
-import { lookupDuplicateReservation, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
+import { lookupDuplicateReservation, storeSelfServiceProof, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
 import { onlyDigits } from '../../lib/phone'
 
 type ToastType = 'error' | 'warning' | 'success' | 'info'
@@ -1733,12 +1733,28 @@ export function Reservas() {
           contactPhone: onlyDigits(phoneNational),
         })
         if (dup.success && dup.duplicate) {
+          // Ownership proof for the modify route: the wizard already knows the
+          // contact, so it carries it client-side (never in the URL).
+          if (dup.booking?.id) {
+            storeSelfServiceProof({
+              id: dup.booking.id,
+              email: email.trim(),
+              countryCode: onlyDigits(countryCode),
+              phone: onlyDigits(phoneNational),
+            })
+          }
           setDuplicateCheck(dup)
           setDuplicateModalOpen(true)
           return
         }
       } catch {
-        // A failed lookup must never block a legitimate booking.
+        // A failed lookup must never block a legitimate booking, but the guest
+        // should know the duplicate check did not run.
+        pushToast(
+          'warning',
+          text('No pudimos comprobar duplicados', 'We could not check for duplicates'),
+          text('Puedes continuar; revisaremos tu reserva.', 'You can continue; we will review your booking.'),
+        )
       } finally {
         setCheckingContact(false)
       }

@@ -62,6 +62,53 @@ export type ModifyBookingPayload = {
   contact_phone: string
   high_chairs: number
   baby_strollers: number
+  /** Ownership proof: the contact captured in the wizard. */
+  verify_email: string
+  verify_country_code: string
+  verify_phone: string
+}
+
+/**
+ * Ownership proof for the self-service endpoints. Booking ids are sequential,
+ * so reading or writing a booking requires the contact the wizard already
+ * captured. It is kept in sessionStorage (not in the URL) so it never leaks
+ * into history, referrers or server logs.
+ *
+ * Coordination id: reservation_self_modification_v1
+ */
+export type SelfServiceProof = {
+  id: number
+  email: string
+  countryCode: string
+  phone: string
+}
+
+const SELF_SERVICE_PROOF_KEY = 'villacarmen_reserva_self_service_proof'
+
+export function storeSelfServiceProof(proof: SelfServiceProof): void {
+  try {
+    sessionStorage.setItem(SELF_SERVICE_PROOF_KEY, JSON.stringify(proof))
+  } catch {
+    // Storage unavailable (private mode): verification simply fails and the
+    // guest is pointed at the restaurant.
+  }
+}
+
+export function readSelfServiceProof(): SelfServiceProof | null {
+  try {
+    const raw = sessionStorage.getItem(SELF_SERVICE_PROOF_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<SelfServiceProof>
+    if (!parsed || typeof parsed.id !== 'number') return null
+    return {
+      id: parsed.id,
+      email: parsed.email || '',
+      countryCode: parsed.countryCode || '',
+      phone: parsed.phone || '',
+    }
+  } catch {
+    return null
+  }
 }
 
 /** POST /api/reservations/contact-lookup */
@@ -84,9 +131,21 @@ export function lookupDuplicateReservation(input: {
   })
 }
 
-/** GET /api/reservations/modify-context?id= */
-export async function fetchModifyContext(id: number): Promise<ModifyContextResponse> {
-  const res = await apiFetch(`/api/reservations/modify-context?id=${encodeURIComponent(String(id))}`)
+/** POST /api/reservations/modify-context */
+export async function fetchModifyContext(
+  id: number,
+  proof: { email: string; countryCode: string; phone: string },
+): Promise<ModifyContextResponse> {
+  const res = await apiFetch('/api/reservations/modify-context', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id,
+      email: proof.email,
+      country_code: proof.countryCode,
+      phone: proof.phone,
+    }),
+  })
   const data = (await res.json().catch(() => null)) as ModifyContextResponse | null
   if (!data) throw new Error(`HTTP ${res.status}`)
   return data
