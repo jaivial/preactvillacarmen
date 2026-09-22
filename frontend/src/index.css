@@ -4503,6 +4503,45 @@ svg {
     justify-content: flex-end;
 }
 
+/* Duplicate-booking modal: same chrome as the wizard modals, with the guest's
+   existing booking summarised so "modify instead of rebook" is an easy call.
+   Coordination id: reservation_self_modification_v1 */
+.resvDuplicateModal__lead {
+    margin: 0 0 14px;
+    font-size: 15px;
+}
+
+.resvDuplicateModal__details {
+    display: grid;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.resvDuplicateModal__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.resvDuplicateModal__label {
+    color: rgba(0, 0, 0, 0.52);
+}
+
+.resvDuplicateModal__value {
+    font-weight: 500;
+    text-align: right;
+}
+
+.resvDuplicateModal__note {
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
 .pickModal__card {
     max-height: min(80vh, 640px);
     overflow: hidden;

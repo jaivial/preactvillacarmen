@@ -27,6 +27,11 @@ import { PopoverSelect, type PopoverSelectOption } from '../../components/reserv
 import { CounterGroup, type CounterField } from '../../components/reservas/CounterGroup'
 import { Checkbox } from '../../components/reservas/Checkbox'
 import { InlineCounter } from '../../components/reservas/InlineCounter'
+import { Modal } from '../../components/reservas/Modal'
+import { DuplicateBookingModal } from '../../components/reservas/DuplicateBookingModal'
+import { buildCountries, countrySelectOptions } from '../../components/reservas/countryOptions'
+import { lookupDuplicateReservation, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
+import { onlyDigits } from '../../lib/phone'
 
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
@@ -70,7 +75,6 @@ function paymentMethodOptions(methods: PaymentMethodKey[]): { value: PaymentMeth
   return allowed.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }))
 }
 
-type Country = { name: string; code: string; flag: string; dial: string; keywords: string }
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -114,10 +118,6 @@ function reservationDateDisplay(iso: string, lang: Lang) {
   if (!d) return ''
   const date = new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(d)
   return `${textFor(lang, 'Reserva para', 'Reservation for')} ${date}`
-}
-
-function onlyDigits(s: string) {
-  return s.replace(/[^0-9]/g, '')
 }
 
 function clamp(n: number, min: number, max: number) {
@@ -279,49 +279,6 @@ function ToastIcon(props: { type: ToastType; testId: string }) {
         opacity="0.2"
       />
     </svg>
-  )
-}
-
-function Modal(props: {
-  open: boolean
-  title: string
-  children: any
-  onClose: () => void
-  primaryHref?: string
-  primaryLabel?: string
-  secondaryLabel?: string
-  testId: string
-}) {
-  const tid = props.testId
-  const { lang } = useI18n()
-  useEffect(() => {
-    if (!props.open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') props.onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [props.open, props.onClose])
-
-  if (!props.open) return null
-  return (
-    <div class="resvModal" role="dialog" aria-modal="true" aria-label={props.title} data-testid={tid}>
-      <div class="resvModal__backdrop" onClick={props.onClose} data-testid={`${tid}-backdrop`} />
-      <div class="resvModal__card" onClick={(e) => e.stopPropagation()} data-testid={`${tid}-card`}>
-        <div class="resvModal__title" data-testid={`${tid}-title`}>{props.title}</div>
-        <div class="resvModal__body" data-testid={`${tid}-body`}>{props.children}</div>
-        <div class="resvModal__actions" data-testid={`${tid}-actions`}>
-          <button type="button" class="btn" onClick={props.onClose} data-testid={`${tid}-close`}>
-            {props.secondaryLabel || textFor(lang, 'Cerrar', 'Close')}
-          </button>
-          {props.primaryHref ? (
-            <a class="btn primary" href={props.primaryHref} data-testid={`${tid}-primary`}>
-              {props.primaryLabel || textFor(lang, 'Continuar', 'Continue')}
-            </a>
-          ) : null}
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -605,6 +562,12 @@ export function Reservas() {
   const [moreThan10Open, setMoreThan10Open] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [confirmationOpen, setConfirmationOpen] = useState(false)
+  // Coordination id: reservation_self_modification_v1
+  // Personal-step duplicate guard: when the typed email / phone already match a
+  // live booking for the selected date we stop the wizard and offer to modify.
+  const [checkingContact, setCheckingContact] = useState(false)
+  const [duplicateCheck, setDuplicateCheck] = useState<DuplicateCheckResponse | null>(null)
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false)
   // Coordination id: special_booking_v1
   // Snapshot of the latest special-date booking that was successfully submitted.
   // Drives the confirmation-modal headline + total-adelanto line for special
@@ -848,39 +811,9 @@ export function Reservas() {
 
   const principalesItems = useMemo(() => getPrincipalesItems(selectedMenu), [selectedMenu])
 
-  const countries = useMemo<Country[]>(
-    () => [
-      { name: text('España', 'Spain'), code: 'ES', flag: '🇪🇸', dial: '34', keywords: 'spain espana esp' },
-      { name: text('Francia', 'France'), code: 'FR', flag: '🇫🇷', dial: '33', keywords: 'france' },
-      { name: 'Portugal', code: 'PT', flag: '🇵🇹', dial: '351', keywords: 'portugal' },
-      { name: text('Reino Unido', 'United Kingdom'), code: 'GB', flag: '🇬🇧', dial: '44', keywords: 'uk united kingdom britain' },
-      { name: text('Alemania', 'Germany'), code: 'DE', flag: '🇩🇪', dial: '49', keywords: 'germany deutschland' },
-      { name: text('Italia', 'Italy'), code: 'IT', flag: '🇮🇹', dial: '39', keywords: 'italy italia' },
-      { name: text('Estados Unidos', 'United States'), code: 'US', flag: '🇺🇸', dial: '1', keywords: 'usa united states' },
-      { name: text('México', 'Mexico'), code: 'MX', flag: '🇲🇽', dial: '52', keywords: 'mexico' },
-      { name: 'Argentina', code: 'AR', flag: '🇦🇷', dial: '54', keywords: 'argentina' },
-      { name: 'Colombia', code: 'CO', flag: '🇨🇴', dial: '57', keywords: 'colombia' },
-      { name: text('Países Bajos', 'Netherlands'), code: 'NL', flag: '🇳🇱', dial: '31', keywords: 'netherlands holland' },
-      { name: text('Bélgica', 'Belgium'), code: 'BE', flag: '🇧🇪', dial: '32', keywords: 'belgium' },
-      { name: text('Suiza', 'Switzerland'), code: 'CH', flag: '🇨🇭', dial: '41', keywords: 'switzerland suisse' },
-      { name: text('Irlanda', 'Ireland'), code: 'IE', flag: '🇮🇪', dial: '353', keywords: 'ireland' },
-      { name: text('Suecia', 'Sweden'), code: 'SE', flag: '🇸🇪', dial: '46', keywords: 'sweden' },
-      { name: text('Noruega', 'Norway'), code: 'NO', flag: '🇳🇴', dial: '47', keywords: 'norway' },
-      { name: text('Dinamarca', 'Denmark'), code: 'DK', flag: '🇩🇰', dial: '45', keywords: 'denmark' },
-    ],
-    [lang]
-  )
-
   const countryOptions = useMemo<PopoverSelectOption[]>(
-    () =>
-      countries.map((c) => ({
-        value: c.dial,
-        label: `${c.name}`,
-        left: c.flag,
-        right: `+${c.dial}`,
-        keywords: `${c.keywords} +${c.dial} ${c.dial}`,
-      })),
-    [countries]
+    () => countrySelectOptions(buildCountries(text)),
+    [lang]
   )
 
   const peopleOptions = useMemo<PopoverSelectOption[]>(() => {
@@ -1785,8 +1718,31 @@ export function Reservas() {
     return true
   }
 
-  const goNextFromPersonal = () => {
+  const goNextFromPersonal = async () => {
     if (!validatePersonal()) return
+    // Coordination id: reservation_self_modification_v1
+    // Same contact details for the same day -> offer to modify the existing
+    // booking instead of creating the duplicate the phone team kept deleting.
+    if (selectedDate) {
+      setCheckingContact(true)
+      try {
+        const dup = await lookupDuplicateReservation({
+          reservationDate: selectedDate,
+          contactEmail: email.trim(),
+          countryCode: onlyDigits(countryCode),
+          contactPhone: onlyDigits(phoneNational),
+        })
+        if (dup.success && dup.duplicate) {
+          setDuplicateCheck(dup)
+          setDuplicateModalOpen(true)
+          return
+        }
+      } catch {
+        // A failed lookup must never block a legitimate booking.
+      } finally {
+        setCheckingContact(false)
+      }
+    }
     if (partySize && (adults == null || adults < 1 || adults > partySize)) {
       setAdults(partySize)
     }
@@ -3158,8 +3114,14 @@ export function Reservas() {
                 {text('Anterior', 'Back')}
               </button>
               {personalStepReady ? (
-                <button type="button" class="btn primary" data-testid="reservas-personal-next" onClick={goNextFromPersonal}>
-                  {text('Siguiente', 'Next')}
+                <button
+                  type="button"
+                  class="btn primary"
+                  data-testid="reservas-personal-next"
+                  onClick={() => void goNextFromPersonal()}
+                  disabled={checkingContact}
+                >
+                  {checkingContact ? text('Comprobando…', 'Checking…') : text('Siguiente', 'Next')}
                 </button>
               ) : null}
             </div>
@@ -3645,6 +3607,12 @@ export function Reservas() {
           <div class="resvConfirm__elegant" data-testid="reservas-confirmation-elegant">{t('reservations.confirm.elegant')}</div>
         </div>
       </Modal>
+
+      <DuplicateBookingModal
+        open={duplicateModalOpen}
+        response={duplicateCheck}
+        onClose={() => setDuplicateModalOpen(false)}
+      />
 
       {submitting && (
         <div class="resvOverlay" role="alert" aria-label={text('Enviando reserva', 'Sending reservation')} data-testid="reservas-submitting-overlay">
