@@ -7,6 +7,7 @@ import type {
   PublicMenuSection,
   PublicMenuSettings,
   PublicMenuSpecialSection,
+  PublicMenuSpecialDate,
   PublicMenuType,
 } from './types'
 
@@ -68,9 +69,26 @@ function toPublicMenuSpecialSections(value: unknown): PublicMenuSpecialSection[]
       title: toText(item.title),
       image_url: toText(item.image_url),
       position: toNumber(item.position, sections.length),
+      price: toNumberOrNull(item.price),
     })
   }
   return sections.sort((a, b) => a.position - b.position)
+}
+
+// Coordination id: special_menu_price_date_v1
+function toPublicMenuSpecialDate(value: unknown): PublicMenuSpecialDate | null {
+  if (!value || typeof value !== 'object') return null
+  const item = value as Record<string, unknown>
+  const id = toNumberOrNull(item.id)
+  const date = toText(item.date)
+  if (id == null || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  return {
+    id,
+    date,
+    title: toText(item.title),
+    is_active: toBool(item.is_active) === true,
+    prereserva_enabled: toBool(item.prereserva_enabled) === true,
+  }
 }
 
 // Coordination id: special_menu_visibility_v1
@@ -244,6 +262,7 @@ export function normalizePublicMenu(value: unknown): PublicMenu {
     special_menu_image_url: toText(record.special_menu_image_url),
     // Coordination id: special_menu_sections_v1
     special_menu_sections: toPublicMenuSpecialSections(record.special_menu_sections),
+    special_date: toPublicMenuSpecialDate(record.special_date),
     // Coordination id: special_menu_visibility_v1
     web_placement: normalizeWebPlacement(record.web_placement),
     menu_public_active: toBool(record.menu_public_active) !== false,

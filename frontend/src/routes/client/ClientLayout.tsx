@@ -4,23 +4,31 @@ import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
 import { PublicAdPopover } from '../../components/PublicAdPopover'
-import { fetchPublicAds, type PublicAd } from '../../lib/publicAds'
+import { fetchPublicAds, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [location] = useLocation()
   const [activeAd, setActiveAd] = useState<PublicAd | null>(null)
 
+  const isHome = location === '/'
+
+  // Coordination id: public_ad_seen_once_v1 - ads only on the home page, and
+  // each ad at most once per session (closing it with the X marks it as seen).
   useEffect(() => {
+    if (!isHome) {
+      setActiveAd(null)
+      return
+    }
     let cancelled = false
     void fetchPublicAds()
       .then((ads) => {
-        if (!cancelled) setActiveAd(ads[0] || null)
+        if (!cancelled) setActiveAd(ads.find((ad) => !isAdSeen(ad.id)) || null)
       })
       .catch(() => {
         if (!cancelled) setActiveAd(null)
       })
     return () => { cancelled = true }
-  }, [])
+  }, [isHome])
 
   // Scroll to top on initial load and navigation
   useEffect(() => {
@@ -29,7 +37,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     document.body.scrollTop = 0
   }, [location])
 
-  const isTopPage = location === '/'
+  const isTopPage = isHome
   const isWinePage = location.startsWith('/vinos')
   const isEventosPage = location.startsWith('/eventos')
 
@@ -43,7 +51,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
-      {activeAd ? <PublicAdPopover ad={activeAd} onClose={() => setActiveAd(null)} /> : null}
+      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )
 }
