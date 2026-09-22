@@ -21,7 +21,7 @@ export function SpecialMenuSimpleTemplate(props: {
   const hasSections = sections.length > 0
 
   return (
-    <div class="page menuPage">
+    <div class="page menuPage menuPage--special">
       <section class="page-hero">
         <div class="container">
           <h1 class="page-title">{props.menu.menu_title}</h1>
