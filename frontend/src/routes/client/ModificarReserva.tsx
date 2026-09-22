@@ -154,7 +154,7 @@ export function ModificarReserva() {
         setChildren(b.children)
         setHighChairs(b.highChairs)
         setBabyStrollers(b.babyStrollers)
-        setDateLocked(Boolean(res.date_locked))
+        setDateLocked(Boolean(res.dateLocked))
         setMobilityEnabled(Boolean(res.mobilityEnabled))
         // Open on the month of the booked date.
         const booked = parseISODateLocal(b.reservationDate)
@@ -167,7 +167,7 @@ export function ModificarReserva() {
           setMessage(res.message || text('No se puede modificar esta reserva online.', 'This booking cannot be modified online.'))
           return
         }
-        setStep(res.date_locked ? 'time' : 'date')
+        setStep(res.dateLocked ? 'time' : 'date')
         setState('ready')
       } catch {
         if (!cancelled) {

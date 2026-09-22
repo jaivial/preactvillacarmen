@@ -43,7 +43,7 @@ export type ModifyContextResponse = {
   success: boolean
   modifiable: boolean
   /** Special-menu bookings freeze their menu snapshot, so their date is pinned. */
-  date_locked?: boolean
+  dateLocked?: boolean
   /** Resolved mobility setting for the booked date (mobility_day_override_v1). */
   mobilityEnabled?: boolean
   reason?: string
