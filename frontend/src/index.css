@@ -3709,6 +3709,14 @@ svg {
     margin-inline: 1rem;
 }
 
+/* The modify wizard's success notice reads as a plain confirmation line, so it
+   is inset from the card edge and drawn without the shared notice border.
+   Coordination id: reservation_self_modification_v1 */
+[data-testid="modificar-reserva-success-message"] {
+    margin-inline: 1rem;
+    border: none;
+}
+
 .resvField {
     margin-top: 14px;
 }

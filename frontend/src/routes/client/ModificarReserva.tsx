@@ -304,8 +304,6 @@ export function ModificarReserva() {
     return out
   }, [hourData, partySize, time, date, inheritedDate, inheritedTime])
 
-  const freeSeats = typeof monthAvailability?.[date]?.freeBookingSeats === 'number' ? monthAvailability[date].freeBookingSeats : null
-
   const peopleOptions = useMemo<PopoverSelectOption[]>(() => {
     const suffix = text('personas', 'guests')
     const max = Math.max(20, partySize)
@@ -528,11 +526,6 @@ export function ModificarReserva() {
                     setRiceServings((s) => (s != null && s > n ? null : s))
                   }}
                 />
-                {freeSeats != null ? (
-                  <div class="resvHint" data-testid="modificar-reserva-party-hint">
-                    {text('Quedan', 'Remaining')} {freeSeats} {text('plazas', 'seats')}
-                  </div>
-                ) : null}
               </div>
 
               <div class="resvActions" data-testid="modificar-reserva-date-actions">
