@@ -4463,6 +4463,7 @@ svg {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.54);
+    animation: resvModalBackdropIn 150ms ease-out;
 }
 
 .resvModal__card {
@@ -4479,6 +4480,10 @@ svg {
     padding: 18px;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    /* One-shot enter: the shell is a single surface with no inner staging, and
+       the keyframe is left without fill so no filter lingers on the glass card
+       once it has settled. */
+    animation: resvModalCardIn 300ms ease-out;
 }
 
 .resvModal__title {
@@ -4503,28 +4508,61 @@ svg {
     justify-content: flex-end;
 }
 
-/* Duplicate-booking modal: same chrome as the wizard modals, with the guest's
-   existing booking summarised so "modify instead of rebook" is an easy call.
+/* Tactile press feedback on the modal actions. `scale` is its own property so
+   it composes with the translateY these buttons already use on hover. */
+.resvModal__actions .btn {
+    transition:
+        scale 150ms ease-out,
+        transform 180ms ease,
+        background 180ms ease,
+        border-color 180ms ease;
+}
+
+.resvModal__actions .btn:active {
+    scale: 0.96;
+}
+
+/* Duplicate-booking modal: the guest's existing booking rendered as a
+   "receipt" surface, so "modify instead of rebook" is an easy call.
    Coordination id: reservation_self_modification_v1 */
 .resvDuplicateModal__lead {
     margin: 0 0 14px;
     font-size: 15px;
+    line-height: 1.6;
 }
 
+/* The card pads 18px, so the nesting radius is 26 − 18 = 8px: concentric with
+   the card instead of reusing its radius. Depth comes from a layered shadow
+   rather than a border, so the surface adapts to whatever sits behind it. */
 .resvDuplicateModal__details {
     display: grid;
-    gap: 8px;
-    padding: 12px 14px;
-    border-radius: var(--radius);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    background: rgba(255, 255, 255, 0.6);
+    padding: 4px 14px;
+    border-radius: calc(var(--radius) - 18px);
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow:
+        0px 0px 0px 1px oklch(0 0 0 / 0.06),
+        0px 1px 2px -1px oklch(0 0 0 / 0.06),
+        0px 2px 4px 0px oklch(0 0 0 / 0.04);
 }
 
 .resvDuplicateModal__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
     font-size: 14px;
+}
+
+/* Rows are separated by a divider, which stays a border: it communicates
+   structure, not depth. */
+.resvDuplicateModal__row + .resvDuplicateModal__row {
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.resvDuplicateModal__icon {
+    display: inline-flex;
+    color: rgba(0, 0, 0, 0.42);
 }
 
 .resvDuplicateModal__label {
@@ -4534,11 +4572,21 @@ svg {
 .resvDuplicateModal__value {
     font-weight: 500;
     text-align: right;
+    overflow-wrap: anywhere;
+}
+
+/* Hierarchy: the date is what the guest recognises the booking by. */
+.resvDuplicateModal__row--hero .resvDuplicateModal__value {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
 }
 
 .resvDuplicateModal__note {
     margin: 14px 0 0;
     font-size: 13px;
+    line-height: 1.55;
     color: rgba(0, 0, 0, 0.6);
 }
 
@@ -4713,6 +4761,28 @@ svg {
     color: rgba(255, 255, 255, 0.85);
     letter-spacing: 0.02em;
 }
+
+/* One-shot modal entrance: split entrance is not warranted for a dialog, so the
+   backdrop fades while the card lifts 12px out of a 4px blur. */
+@keyframes resvModalBackdropIn {
+    from { opacity: 0; }
+}
+
+@keyframes resvModalCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+        filter: blur(4px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .resvModal__backdrop,
+    .resvModal__card {
+        animation: none;
+    }
+}
+
 @keyframes resvSpin {
     to { transform: rotate(360deg); }
 }

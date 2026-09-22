@@ -20,6 +20,12 @@ export type SelfServiceBooking = {
   highChairs: number
   babyStrollers: number
   specialDateTitle?: string
+  /** Inherited rice order (leading entry of the stored arrays). */
+  arrozType?: string
+  arrozServings?: number
+  /** Inherited mobility answer. Coordination id: mobility_issues_v1 */
+  hasMobilityIssues?: boolean
+  mobilityPeople?: number
 }
 
 export type DuplicateCheckResponse = {
@@ -37,7 +43,9 @@ export type ModifyContextResponse = {
   success: boolean
   modifiable: boolean
   /** Special-menu bookings freeze their menu snapshot, so their date is pinned. */
-  date_locked?: boolean
+  dateLocked?: boolean
+  /** Resolved mobility setting for the booked date (mobility_day_override_v1). */
+  mobilityEnabled?: boolean
   reason?: string
   message?: string
   booking?: SelfServiceBooking
@@ -62,6 +70,13 @@ export type ModifyBookingPayload = {
   contact_phone: string
   high_chairs: number
   baby_strollers: number
+  /** Rice order. `toggle_arroz` false clears it server-side. */
+  toggle_arroz: boolean
+  arroz_type: string
+  arroz_servings: number
+  /** Mobility answer; omit to leave the stored value untouched. */
+  has_mobility_issues?: boolean
+  mobility_people: number
   /** Ownership proof: the contact captured in the wizard. */
   verify_email: string
   verify_country_code: string

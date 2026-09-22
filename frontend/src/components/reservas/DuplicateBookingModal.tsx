@@ -1,3 +1,4 @@
+import { CalendarDays, Clock, User, Users } from 'lucide-react'
 import { Modal } from './Modal'
 import { localized, useI18n } from '../../lib/i18n'
 import type { DuplicateCheckResponse } from '../../lib/reservationSelfService'
@@ -6,6 +7,12 @@ import type { DuplicateCheckResponse } from '../../lib/reservationSelfService'
  * Shown on the personal-details step when the guest's email / phone already
  * match a live booking for the same day. Offers the "modify instead of
  * rebook" path when the backend marks the booking modifiable.
+ *
+ * The booking summary is a "receipt" surface: one row per datum, a leading
+ * outline icon so each row is scannable before it is read, and the date as the
+ * hero line so the guest recognises the booking at a glance. Icons stay on
+ * one stroke weight (1.5px, matching the regular-weight labels) and inherit
+ * their colour from CSS.
  *
  * Coordination id: reservation_self_modification_v1
  */
@@ -25,12 +32,14 @@ export function DuplicateBookingModal(props: {
       'Message or call us and we will adjust it right away.',
     )
 
+  const tid = 'reservas-duplicate-modal'
+
   return (
     <Modal
       open={props.open}
       title={text('Ya tenemos una reserva tuya', 'We already have a booking for you')}
       onClose={props.onClose}
-      testId="reservas-duplicate-modal"
+      testId={tid}
       primaryHref={modifyUrl}
       primaryLabel={text('Modificar mi reserva', 'Modify my booking')}
       secondaryLabel={modifyUrl ? text('Cambiar mis datos', 'Change my details') : text('Cerrar', 'Close')}
@@ -47,21 +56,55 @@ export function DuplicateBookingModal(props: {
 
         {booking ? (
           <div class="resvDuplicateModal__details" data-testid="reservas-duplicate-modal-details">
-            <div class="resvDuplicateModal__row" data-testid="reservas-duplicate-modal-detail-date">
-              <span class="resvDuplicateModal__label">{text('Fecha', 'Date')}</span>
-              <span class="resvDuplicateModal__value">{booking.reservationDate}</span>
+            <div
+              class="resvDuplicateModal__row resvDuplicateModal__row--hero"
+              data-testid="reservas-duplicate-modal-detail-date"
+            >
+              <span class="resvDuplicateModal__icon" aria-hidden="true" data-testid="reservas-duplicate-modal-detail-date-icon">
+                <CalendarDays size={16} strokeWidth={1.5} />
+              </span>
+              <span class="resvDuplicateModal__label" data-testid="reservas-duplicate-modal-detail-date-label">
+                {text('Fecha', 'Date')}
+              </span>
+              <span class="resvDuplicateModal__value" data-testid="reservas-duplicate-modal-detail-date-value">
+                {booking.reservationDate}
+              </span>
             </div>
+
             <div class="resvDuplicateModal__row" data-testid="reservas-duplicate-modal-detail-time">
-              <span class="resvDuplicateModal__label">{text('Hora', 'Time')}</span>
-              <span class="resvDuplicateModal__value">{booking.reservationTime}</span>
+              <span class="resvDuplicateModal__icon" aria-hidden="true" data-testid="reservas-duplicate-modal-detail-time-icon">
+                <Clock size={16} strokeWidth={1.5} />
+              </span>
+              <span class="resvDuplicateModal__label" data-testid="reservas-duplicate-modal-detail-time-label">
+                {text('Hora', 'Time')}
+              </span>
+              <span class="resvDuplicateModal__value" data-testid="reservas-duplicate-modal-detail-time-value">
+                {booking.reservationTime}
+              </span>
             </div>
+
             <div class="resvDuplicateModal__row" data-testid="reservas-duplicate-modal-detail-party">
-              <span class="resvDuplicateModal__label">{text('Comensales', 'Guests')}</span>
-              <span class="resvDuplicateModal__value">{booking.partySize}</span>
+              <span class="resvDuplicateModal__icon" aria-hidden="true" data-testid="reservas-duplicate-modal-detail-party-icon">
+                <Users size={16} strokeWidth={1.5} />
+              </span>
+              <span class="resvDuplicateModal__label" data-testid="reservas-duplicate-modal-detail-party-label">
+                {text('Comensales', 'Guests')}
+              </span>
+              <span class="resvDuplicateModal__value" data-testid="reservas-duplicate-modal-detail-party-value">
+                {booking.partySize}
+              </span>
             </div>
+
             <div class="resvDuplicateModal__row" data-testid="reservas-duplicate-modal-detail-name">
-              <span class="resvDuplicateModal__label">{text('A nombre de', 'Booked under')}</span>
-              <span class="resvDuplicateModal__value">{booking.customerName}</span>
+              <span class="resvDuplicateModal__icon" aria-hidden="true" data-testid="reservas-duplicate-modal-detail-name-icon">
+                <User size={16} strokeWidth={1.5} />
+              </span>
+              <span class="resvDuplicateModal__label" data-testid="reservas-duplicate-modal-detail-name-label">
+                {text('A nombre de', 'Booked under')}
+              </span>
+              <span class="resvDuplicateModal__value" data-testid="reservas-duplicate-modal-detail-name-value">
+                {booking.customerName}
+              </span>
             </div>
           </div>
         ) : null}
