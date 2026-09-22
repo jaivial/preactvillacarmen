@@ -1,5 +1,13 @@
 import type { PublicMenu } from '../../../lib/types'
 
+function formatEuro(value: number): string {
+  return `${Number.isInteger(value) ? value : value.toFixed(2)}€`
+}
+
+function formatSpecialDay(iso: string): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 /**
  * Special menu rendering.
  *
@@ -19,6 +27,8 @@ export function SpecialMenuSimpleTemplate(props: {
     ? props.menu.special_menu_sections
     : []
   const hasSections = sections.length > 0
+  // Coordination id: special_menu_price_date_v1
+  const specialDate = props.menu.special_date ?? null
 
   return (
     <div class="page menuPage menuPage--special">
@@ -26,6 +36,19 @@ export function SpecialMenuSimpleTemplate(props: {
         <div class="container">
           <h1 class="page-title">{props.menu.menu_title}</h1>
           <p class="page-subtitle">{props.subtitle}</p>
+          {specialDate ? (
+            <div class="specialMenuDay" data-coordination-id="special_menu_price_date_v1" data-testid="public-special-menu-day">
+              <p class="specialMenuDayDate">
+                {specialDate.title ? `${specialDate.title} · ` : ''}{formatSpecialDay(specialDate.date)}
+              </p>
+              {specialDate.prereserva_enabled ? (
+                <p class="specialMenuDayPrereserva" data-testid="public-special-menu-prereserva">Es necesaria prereserva para esta fecha.</p>
+              ) : null}
+              <a class="btn btn--primary specialMenuDayBook" href={`/reservas?date=${encodeURIComponent(specialDate.date)}`} data-testid="public-special-menu-book">
+                Reservar para esta fecha
+              </a>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -55,6 +78,9 @@ export function SpecialMenuSimpleTemplate(props: {
                 >
                   {section.title ? (
                     <h2 class="specialMenuSectionTitle">{section.title}</h2>
+                  ) : null}
+                  {section.price != null ? (
+                    <p class="specialMenuSectionPrice" data-testid={`public-menu-section-price-${section.id}`}>{formatEuro(section.price)} / pax</p>
                   ) : null}
                   {section.image_url ? (
                     <img
