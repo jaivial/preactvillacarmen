@@ -149,6 +149,8 @@ export type PublicMenu = {
   // Ordered list of image sections rendered below the hero on a special
   // menu. Each section has an optional title and an image URL.
   special_menu_sections: PublicMenuSpecialSection[]
+  // Coordination id: special_menu_price_date_v1
+  special_date?: PublicMenuSpecialDate | null
   // Coordination id: special_menu_visibility_v1
   // Per-menu placement / visibility, parallel to the food-type settings
   // exposed in the sidebar payload.
@@ -181,6 +183,17 @@ export type PublicMenuSpecialSection = {
   title: string
   image_url: string
   position: number
+  // Coordination id: special_menu_price_date_v1 - null when not priced.
+  price: number | null
+}
+
+// Coordination id: special_menu_price_date_v1 - special day of a special menu.
+export type PublicMenuSpecialDate = {
+  id: number
+  date: string
+  title: string
+  is_active: boolean
+  prereserva_enabled: boolean
 }
 
 export type PublicMenusResponse = {

@@ -59,3 +59,29 @@ export async function fetchPublicAds(isoDate = localISODate()): Promise<PublicAd
   const response = await apiGetJson<PublicAdsResponse>(`/api/public/ads?date=${encodeURIComponent(isoDate)}`)
   return activeAdsForDate(response.ads || [], isoDate)
 }
+
+// Coordination id: public_ad_seen_once_v1 - an ad closed with the X is marked
+// as seen for the browser session and never shown again in that session.
+const SEEN_ADS_KEY = 'vc_seen_ad_ids'
+
+function readSeenAdIds(): number[] {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(SEEN_ADS_KEY) || '[]')
+    return Array.isArray(parsed) ? parsed.filter((id): id is number => typeof id === 'number') : []
+  } catch {
+    return []
+  }
+}
+
+export function isAdSeen(adId: number): boolean {
+  return readSeenAdIds().includes(adId)
+}
+
+export function markAdSeen(adId: number): void {
+  try {
+    const seen = readSeenAdIds()
+    if (!seen.includes(adId)) sessionStorage.setItem(SEEN_ADS_KEY, JSON.stringify([...seen, adId]))
+  } catch {
+    console.warn('[public_ad_seen_once_v1] sessionStorage unavailable')
+  }
+}
