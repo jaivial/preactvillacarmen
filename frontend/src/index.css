@@ -6040,6 +6040,17 @@ svg {
 [data-testid="reservas-special-menu-list"] {
     padding-inline: 0;
     margin-inline: 1rem;
+    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Counter body of every step-2 menu entry (e.g.
+   reservas-special-menu-count-section-1-body): compact and centred. */
+[data-testid="reservas-special-menu-list"] [data-testid^="reservas-special-menu-count-"][data-testid$="-body"] {
+    width: min-content;
+    gap: 2rem;
+    margin-inline: auto;
 }
 
 .resvPrincipalesTitle {
