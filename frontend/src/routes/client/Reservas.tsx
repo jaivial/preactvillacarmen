@@ -1237,8 +1237,17 @@ export function Reservas() {
 
     restoringRef.current = true
     const restore = async () => {
-      if (!init.date || !init.party) {
-        // Nothing to rebuild a later step from — start clean.
+      if (!init.date) return
+      // Coordination id: special_menu_cta_v1 - a deep link with only ?date=
+      // (special menu "RESERVAR" button) opens the calendar on that month
+      // with the day already selected.
+      if (!init.party) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(init.date) || init.date < todayISO) return
+        const [linkYear, linkMonth] = init.date.split('-').map(Number)
+        setViewYear(linkYear)
+        setViewMonth0(linkMonth - 1)
+        await loadDateContext(init.date)
+        console.log('[checkpoint] reservas_date_deeplink_selected', init.date)
         return
       }
 

@@ -1,4 +1,5 @@
 import type { PublicMenu } from '../../../lib/types'
+import { CtaButton } from '../../../components/ui/CtaButton'
 
 function formatEuro(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(2)}€`
@@ -97,6 +98,19 @@ export function SpecialMenuSimpleTemplate(props: {
                   )}
                 </article>
               ))}
+            </div>
+          ) : null}
+
+          {props.menu.special_cta?.href ? (
+            <div class="specialMenuCta" data-testid="public-special-menu-cta-row">
+              <CtaButton
+                className="specialMenuCtaButton"
+                href={props.menu.special_cta.href}
+                label={props.menu.special_cta.label || 'RESERVAR'}
+                newTab={props.menu.special_cta.opens_new_tab}
+                testId="public-special-menu-cta"
+                coordinationId="special_menu_cta_v1"
+              />
             </div>
           ) : null}
         </div>

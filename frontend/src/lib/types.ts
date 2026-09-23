@@ -151,6 +151,8 @@ export type PublicMenu = {
   special_menu_sections: PublicMenuSpecialSection[]
   // Coordination id: special_menu_price_date_v1
   special_date?: PublicMenuSpecialDate | null
+  // Coordination id: special_menu_cta_v1 - only present when enabled.
+  special_cta?: PublicMenuSpecialCta | null
   // Coordination id: special_menu_visibility_v1
   // Per-menu placement / visibility, parallel to the food-type settings
   // exposed in the sidebar payload.
@@ -185,6 +187,18 @@ export type PublicMenuSpecialSection = {
   position: number
   // Coordination id: special_menu_price_date_v1 - null when not priced.
   price: number | null
+}
+
+// Coordination id: special_menu_cta_v1 - button below the special sections.
+// `href` is absolute on the restaurant website (or a wa.me link), resolved by
+// the backend from the restaurant contact config.
+export type PublicMenuSpecialCta = {
+  enabled: boolean
+  label: string
+  action: 'menu' | 'whatsapp' | 'reservas'
+  href: string
+  opens_new_tab: boolean
+  target_date?: string
 }
 
 // Coordination id: special_menu_price_date_v1 - special day of a special menu.
