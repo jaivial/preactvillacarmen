@@ -4262,7 +4262,8 @@ svg {
 .resvInlineCounter {
     display: grid;
     grid-template-columns: 32px 1fr 32px;
-    gap: 4px;
+    gap: 1rem;
+    width: min-content;
     align-items: center;
     background: rgba(255, 255, 255, 0.86);
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -5841,12 +5842,6 @@ svg {
   margin-top: 14px;
 }
 
-.specialMenuDayDate {
-  margin: 0;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
 .specialMenuDayPrereserva {
   margin: 0;
   padding: 6px 12px;
@@ -5925,7 +5920,6 @@ svg {
     color: rgba(20, 37, 32, 0.74);
 }
 
-.resvFestiveHeadDesc,
 .resvFestiveHeadHint {
     font-size: 14px;
     color: rgba(20, 37, 32, 0.74);
@@ -6031,4 +6025,57 @@ svg {
     border-color: rgba(9, 121, 105, 0.45);
     color: rgba(9, 121, 105, 1);
     font-weight: 600;
+}
+
+/* =====================================================================
+ * Special-date menus step 2 spacing + principales per section.
+ * Coordination id: special_menu_principales_v1
+ * ===================================================================== */
+[data-testid="reservas-special-menu-counter-sum"],
+[data-testid="reservas-special-menu-payment-chips"],
+[data-testid="reservas-special-menu-adelanto-summary"] {
+    margin-inline: 2rem;
+}
+
+[data-testid="reservas-special-menu-list"] {
+    padding-inline: 0;
+    margin-inline: 1rem;
+}
+
+.resvPrincipalesTitle {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: 17px;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+}
+
+/* Counter + delete stay together; when the row wraps under the selector
+   they sit centred on their own line. Scoped to the special-menu rows so the
+   group / mandatory principales rows keep their layout. */
+.resvPrincipalRow--grouped {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.resvPrincipalRowControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+@media (max-width: 769px) {
+    .resvPrincipalRow.resvPrincipalRow--grouped {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .resvPrincipalRow--grouped .resvSelect,
+    .resvPrincipalRow--grouped .resvPrincipalRowControls {
+        grid-column: 1 / -1;
+    }
+
+    .resvPrincipalRow--grouped .resvPrincipalRowControls {
+        justify-self: center;
+    }
 }

@@ -9,6 +9,7 @@ import type {
   PublicMenuSpecialSection,
   PublicMenuSpecialDate,
   PublicMenuSpecialCta,
+  PublicMenuSpecialPrincipal,
   PublicMenuType,
 } from './types'
 
@@ -71,9 +72,25 @@ function toPublicMenuSpecialSections(value: unknown): PublicMenuSpecialSection[]
       image_url: toText(item.image_url),
       position: toNumber(item.position, sections.length),
       price: toNumberOrNull(item.price),
+      principales: toPublicMenuSpecialPrincipales(item.principales),
     })
   }
   return sections.sort((a, b) => a.position - b.position)
+}
+
+// Coordination id: special_menu_principales_v1
+function toPublicMenuSpecialPrincipales(value: unknown): PublicMenuSpecialPrincipal[] {
+  if (!Array.isArray(value)) return []
+  const out: PublicMenuSpecialPrincipal[] = []
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') continue
+    const item = raw as Record<string, unknown>
+    const dishId = toNumberOrNull(item.dish_id)
+    const title = toText(item.title)
+    if (dishId == null || dishId <= 0 || !title) continue
+    out.push({ dish_id: dishId, title })
+  }
+  return out
 }
 
 // Coordination id: special_menu_cta_v1 - keep the backend-resolved button only

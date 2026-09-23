@@ -5,10 +5,6 @@ function formatEuro(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(2)}€`
 }
 
-function formatSpecialDay(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 /**
  * Special menu rendering.
  *
@@ -32,16 +28,13 @@ export function SpecialMenuSimpleTemplate(props: {
   const specialDate = props.menu.special_date ?? null
 
   return (
-    <div class="page menuPage menuPage--special">
-      <section class="page-hero">
-        <div class="container">
-          <h1 class="page-title">{props.menu.menu_title}</h1>
-          <p class="page-subtitle">{props.subtitle}</p>
+    <div class="page menuPage menuPage--special" data-testid="public-special-menu-page">
+      <section class="page-hero" data-testid="public-special-menu-hero">
+        <div class="container" data-testid="public-special-menu-hero-container">
+          <h1 class="page-title" data-testid="public-special-menu-title">{props.menu.menu_title}</h1>
+          <p class="page-subtitle" data-testid="public-special-menu-subtitle">{props.subtitle}</p>
           {specialDate ? (
             <div class="specialMenuDay" data-coordination-id="special_menu_price_date_v1" data-testid="public-special-menu-day">
-              <p class="specialMenuDayDate">
-                {specialDate.title ? `${specialDate.title} · ` : ''}{formatSpecialDay(specialDate.date)}
-              </p>
               {specialDate.prereserva_enabled ? (
                 <p class="specialMenuDayPrereserva" data-testid="public-special-menu-prereserva">Es necesaria prereserva para esta fecha.</p>
               ) : null}
@@ -53,12 +46,13 @@ export function SpecialMenuSimpleTemplate(props: {
         </div>
       </section>
 
-      <section class="menuBody">
-        <div class="container">
+      <section class="menuBody" data-testid="public-special-menu-body">
+        <div class="container" data-testid="public-special-menu-body-container">
           {props.imageUrl ? (
-            <div class="specialMenuImageContainer">
+            <div class="specialMenuImageContainer" data-testid="public-special-menu-hero-image-wrap">
               <img
                 class="specialMenuImage"
+                data-testid="public-special-menu-hero-image"
                 src={props.imageUrl}
                 alt={props.menu.menu_title}
                 loading="eager"
@@ -66,11 +60,11 @@ export function SpecialMenuSimpleTemplate(props: {
               />
             </div>
           ) : !hasSections ? (
-            <div class="menuState">No hay imagen subida para este menú especial.</div>
+            <div class="menuState" data-testid="public-special-menu-empty">No hay imagen subida para este menú especial.</div>
           ) : null}
 
           {hasSections ? (
-            <div class="specialMenuSections" data-coordination-id="special_menu_sections_v1">
+            <div class="specialMenuSections" data-coordination-id="special_menu_sections_v1" data-testid="public-special-menu-sections">
               {sections.map((section) => (
                 <article
                   key={section.id}
@@ -78,7 +72,7 @@ export function SpecialMenuSimpleTemplate(props: {
                   data-testid={`public-menu-section-${section.id}`}
                 >
                   {section.title ? (
-                    <h2 class="specialMenuSectionTitle">{section.title}</h2>
+                    <h2 class="specialMenuSectionTitle" data-testid={`public-menu-section-title-${section.id}`}>{section.title}</h2>
                   ) : null}
                   {section.price != null ? (
                     <p class="specialMenuSectionPrice" data-testid={`public-menu-section-price-${section.id}`}>{formatEuro(section.price)} / pax</p>
@@ -86,13 +80,14 @@ export function SpecialMenuSimpleTemplate(props: {
                   {section.image_url ? (
                     <img
                       class="specialMenuSectionImage"
+                      data-testid={`public-menu-section-image-${section.id}`}
                       src={section.image_url}
                       alt={section.title || props.menu.menu_title}
                       loading="lazy"
                       decoding="async"
                     />
                   ) : (
-                    <div class="menuState specialMenuSectionEmpty">
+                    <div class="menuState specialMenuSectionEmpty" data-testid={`public-menu-section-empty-${section.id}`}>
                       Sin imagen para esta sección.
                     </div>
                   )}
