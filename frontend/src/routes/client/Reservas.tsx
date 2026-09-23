@@ -111,6 +111,36 @@ function specialPrincipalesGroupsFor(menu: PublicMenu | null | undefined): Speci
   return [{ key: 'principales', title: '', options, dishIds }]
 }
 
+// Coordination id: special_date_section_menus_v1
+// A special-type menu is booked per image section, so the wizard expands it
+// into one bookable entry per section: its own counter, price, adelanto and
+// principales. Entry ids are negative (never clash with special_date_menu ids)
+// and the submit regroups them into menus[].sections[].
+function specialSectionEntryId(sectionId: number): number {
+  return -sectionId
+}
+
+// Readable test-id key for a step-2 entry: "section-<id>" or the menu id.
+function specialEntryKey(menu: { id: number; section?: { section_id: number } }): string {
+  return menu.section ? `section-${menu.section.section_id}` : String(menu.id)
+}
+
+function expandSpecialDateMenus(sd: SpecialDatePublic): SpecialDatePublic {
+  const menus = (sd.menus || []).flatMap((m) => {
+    if (!m.is_special_menu || !Array.isArray(m.sections) || m.sections.length === 0) return [m]
+    return m.sections.map((sec) => ({
+      id: specialSectionEntryId(sec.id),
+      menu_id: m.menu_id,
+      label: sec.title ? `${m.label} · ${sec.title}` : m.label,
+      price: sec.price,
+      is_custom: false,
+      adelanto_amount: sec.adelanto_amount,
+      section: { special_date_menu_id: m.id, section_id: sec.id, title: sec.title, principales: sec.principales || [] },
+    }))
+  })
+  return { ...sd, menus }
+}
+
 function flattenSpecialRows(sel: SpecialMenuSelection | undefined): SpecialPrincipalesRow[] {
   return sel ? Object.values(sel.rows || {}).flat() : []
 }
@@ -491,8 +521,26 @@ export function Reservas() {
   // underlying PublicMenu. We only request once per special_date_menu_id.
   useEffect(() => {
     if (!activeSpecialDate) return
+    // Coordination id: special_date_section_menus_v1 - section entries bring
+    // their principales from the special menu configuracion tab.
+    const sectionGroups: Record<number, SpecialPrincipalesGroup[]> = {}
+    for (const m of activeSpecialDate.menus) {
+      if (!m.section || specialMenuPrincipales[m.id]) continue
+      sectionGroups[m.id] = m.section.principales.length > 0
+        ? [{
+            key: `section-${m.section.section_id}`,
+            title: '',
+            options: m.section.principales.map((p) => p.title),
+            dishIds: Object.fromEntries(m.section.principales.map((p) => [p.title, p.dish_id])),
+          }]
+        : []
+    }
+    if (Object.keys(sectionGroups).length > 0) {
+      setSpecialMenuPrincipales((prev) => ({ ...prev, ...sectionGroups }))
+      return
+    }
     const missing = activeSpecialDate.menus.filter(
-      (m) => !m.is_custom && m.menu_id && !specialMenuPrincipales[m.id]
+      (m) => !m.is_custom && !m.section && m.menu_id && !specialMenuPrincipales[m.id]
     )
     if (missing.length === 0) return
     let cancelled = false
@@ -1297,7 +1345,7 @@ export function Reservas() {
       const reachable: StepId[] = ['date']
 
       if (isSpecialPrereserva) {
-        setActiveSpecialDate(sd)
+        setActiveSpecialDate(sd ? expandSpecialDateMenus(sd) : sd)
         if (sd && (sd.menus || []).length > 0) reachable.push('specialMenu')
       } else {
         setActiveSpecialDate(null)
@@ -1432,7 +1480,7 @@ export function Reservas() {
           const sd = specialRes?.special_date ?? (specialRes?.date ? (specialRes as SpecialDatePublic) : null)
           if (!sd) throw new Error('special-date payload missing')
           sdLoaded = sd
-          setActiveSpecialDate(sd)
+          setActiveSpecialDate(expandSpecialDateMenus(sd))
           setSpecialMenuSelections({})
           setSpecialPaymentMethod(null)
         } catch {
@@ -1851,12 +1899,34 @@ export function Reservas() {
               })
             )
         return {
+          menu,
           special_date_menu_id: s.special_date_menu_id,
           count: s.count,
           items,
         }
       })
-      const payload: { menus: { special_date_menu_id: number; count: number; items: { dish_id: number }[] }[]; payment_method?: PaymentMethodKey } = { menus: menusPayload }
+      // Coordination id: special_date_section_menus_v1 - section entries of a
+      // special-type menu are sent under their real special_date_menu_id.
+      type SpecialPayloadMenu = {
+        special_date_menu_id: number
+        count: number
+        items: { dish_id: number }[]
+        sections?: { section_id: number; count: number; items: { dish_id: number }[] }[]
+      }
+      const bySpecialMenu = new Map<number, SpecialPayloadMenu>()
+      const regularMenus: SpecialPayloadMenu[] = []
+      for (const line of menusPayload) {
+        const sec = line.menu?.section
+        if (!sec) {
+          regularMenus.push({ special_date_menu_id: line.special_date_menu_id, count: line.count, items: line.items })
+          continue
+        }
+        const cur = bySpecialMenu.get(sec.special_date_menu_id) ?? { special_date_menu_id: sec.special_date_menu_id, count: 0, items: [], sections: [] }
+        cur.count += line.count
+        cur.sections!.push({ section_id: sec.section_id, count: line.count, items: line.items })
+        bySpecialMenu.set(sec.special_date_menu_id, cur)
+      }
+      const payload: { menus: SpecialPayloadMenu[]; payment_method?: PaymentMethodKey } = { menus: [...regularMenus, ...bySpecialMenu.values()] }
       if (activeSpecialDate.requires_adelanto && specialPaymentMethod) {
         payload.payment_method = specialPaymentMethod
       }
@@ -2670,14 +2740,15 @@ export function Reservas() {
                 // Coordination id: special_menu_principales_v1 - no groups
                 // means the menu has no principales: no "Añadir principal".
                 const principalesGroups = menu.is_custom ? [] : specialMenuPrincipales[menu.id] || []
+                const ek = specialEntryKey(menu)
 
                 return (
-                  <div class={isChosen ? 'resvMenuBlock resvFestiveMenu is-chosen' : 'resvMenuBlock resvFestiveMenu'} key={menu.id} data-testid={`reservas-special-menu-item-${menu.id}`}>
+                  <div class={isChosen ? 'resvMenuBlock resvFestiveMenu is-chosen' : 'resvMenuBlock resvFestiveMenu'} key={menu.id} data-testid={`reservas-special-menu-item-${ek}`}>
                     {/* Coordination id: festive_menu_counter_v1 - same reusable
                         Counter as the tronas step: the count itself selects
                         the menu, no checkbox + hidden counter any more. */}
                     <Counter
-                      testId={`reservas-special-menu-count-${menu.id}`}
+                      testId={`reservas-special-menu-count-${ek}`}
                       ariaLabel={menu.label || (menu.is_custom ? menu.custom_title || text('Menú', 'Menu') : text('Menú', 'Menu'))}
                       subtitle={[
                         typeof menu.price === 'number' && menu.price > 0 ? `${menu.price}€/${text('persona', 'person')}` : '',
@@ -2696,10 +2767,10 @@ export function Reservas() {
                     />
 
                     {isChosen && principalesGroups.length > 0 ? (
-                      <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${menu.id}`}>
+                      <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${ek}`}>
                         {principalesGroups.map((group) => {
                           const rows = sel?.rows[group.key] || []
-                          const gid = `${menu.id}-${group.key}`
+                          const gid = menu.section ? ek : `${ek}-${group.key}`
                           const options: PopoverSelectOption[] = group.options.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() }))
                           return (
                             <div class="resvPrincipales" key={group.key} data-testid={`reservas-special-menu-rows-${gid}`}>
@@ -2798,9 +2869,9 @@ export function Reservas() {
                   const m = spMenus.find((mm) => mm.id === sel.special_date_menu_id)
                   if (!m || !m.adelanto_amount) return null
                   return (
-                    <div class="resvAdelantoRow" key={sel.special_date_menu_id} data-testid={`reservas-special-menu-adelanto-summary-row-${sel.special_date_menu_id}`}>
-                      <span class="resvHint">{m.label || m.custom_title || text('Menú', 'Menu')} · {Number(m.adelanto_amount).toFixed(2)}€ × {sel.count}</span>
-                      <span class="resvAdelantoVal">{(Number(m.adelanto_amount) * sel.count).toFixed(2)}€</span>
+                    <div class="resvAdelantoRow" key={sel.special_date_menu_id} data-testid={`reservas-special-menu-adelanto-summary-row-${specialEntryKey(m)}`}>
+                      <span class="resvHint" data-testid={`reservas-special-menu-adelanto-summary-label-${specialEntryKey(m)}`}>{m.label || m.custom_title || text('Menú', 'Menu')} · {Number(m.adelanto_amount).toFixed(2)}€ × {sel.count}</span>
+                      <span class="resvAdelantoVal" data-testid={`reservas-special-menu-adelanto-summary-value-${specialEntryKey(m)}`}>{(Number(m.adelanto_amount) * sel.count).toFixed(2)}€</span>
                     </div>
                   )
                 })}
@@ -3219,43 +3290,43 @@ export function Reservas() {
                         .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
                         .filter((r) => r.name && r.servings > 0)
                   return (
-                    <div class="resvSpecialMenuSub" key={row.menu.id} data-testid={`reservas-summary-special-menu-item-${row.menu.id}`}>
-                      <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-${row.menu.id}`}>
-                        <span data-testid={`reservas-summary-label-special-menu-${row.menu.id}`}>{label}</span>
-                        <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-${row.menu.id}`}>
+                    <div class="resvSpecialMenuSub" key={row.menu.id} data-testid={`reservas-summary-special-menu-item-${specialEntryKey(row.menu)}`}>
+                      <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-${specialEntryKey(row.menu)}`}>
+                        <span data-testid={`reservas-summary-label-special-menu-${specialEntryKey(row.menu)}`}>{label}</span>
+                        <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-${specialEntryKey(row.menu)}`}>
                           {row.count}{' '}
                           {row.count === 1 ? text('persona', 'person') : text('personas', 'persons')}
                           {price != null ? ` · ${price}€/${text('persona', 'person')}` : ''}
                         </span>
                       </div>
                       {row.menu.is_custom ? (
-                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
                           {text('Principales por decidir', 'Mains to be decided')}
                         </div>
                       ) : cleanedRows.length > 0 ? (
                         <>
-                          <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                          <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
                             {text('Principales', 'Main courses')}
                           </div>
-                          <ul class="resvSummaryList" data-testid={`reservas-summary-special-menu-mains-list-${row.menu.id}`}>
+                          <ul class="resvSummaryList" data-testid={`reservas-summary-special-menu-mains-list-${specialEntryKey(row.menu)}`}>
                             {cleanedRows.map((r, mainIndex) => (
-                              <li key={`${r.name}-${mainIndex}`} data-testid={`reservas-summary-special-menu-main-${row.menu.id}-${mainIndex}`}>
+                              <li key={`${r.name}-${mainIndex}`} data-testid={`reservas-summary-special-menu-main-${specialEntryKey(row.menu)}-${mainIndex}`}>
                                 {r.name} x {r.servings}
                               </li>
                             ))}
                           </ul>
                         </>
                       ) : (
-                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${row.menu.id}`}>
+                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
                           {text('Principales por decidir', 'Mains to be decided')}
                         </div>
                       )}
                       {row.subtotal > 0 ? (
-                        <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-adelanto-${row.menu.id}`}>
-                          <span data-testid={`reservas-summary-label-special-menu-adelanto-${row.menu.id}`}>
+                        <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
+                          <span data-testid={`reservas-summary-label-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
                             {text('Adelanto', 'Deposit')}
                           </span>
-                          <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-adelanto-${row.menu.id}`}>
+                          <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
                             {Number(row.menu.adelanto_amount).toFixed(2)}€ x {row.count} = {row.subtotal.toFixed(2)}€
                           </span>
                         </div>

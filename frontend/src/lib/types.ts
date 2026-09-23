@@ -544,6 +544,22 @@ export type SpecialDateMenuPublic = {
   custom_title?: string | null
   custom_image_url?: string | null
   adelanto_amount?: number | null
+  // Coordination id: special_date_section_menus_v1 - special-type menus are
+  // booked per image section (price, adelanto and principales per section).
+  is_special_menu?: boolean
+  sections?: SpecialDateMenuSectionPublic[]
+  // Wizard-only: set on the per-section entries expanded from a special menu.
+  section?: { special_date_menu_id: number; section_id: number; title: string; principales: PublicMenuSpecialPrincipal[] }
+}
+
+// Coordination id: special_date_section_menus_v1
+export type SpecialDateMenuSectionPublic = {
+  id: number
+  title: string
+  price: number | null
+  adelanto_amount: number | null
+  position: number
+  principales: PublicMenuSpecialPrincipal[]
 }
 
 export type SpecialDatePublic = {
