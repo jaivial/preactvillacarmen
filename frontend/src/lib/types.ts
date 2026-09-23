@@ -187,6 +187,15 @@ export type PublicMenuSpecialSection = {
   position: number
   // Coordination id: special_menu_price_date_v1 - null when not priced.
   price: number | null
+  // Coordination id: special_menu_principales_v1 - empty = no principales
+  // (toggle off or nothing added, both treated the same).
+  principales: PublicMenuSpecialPrincipal[]
+}
+
+// Coordination id: special_menu_principales_v1 - one dish guests can pick.
+export type PublicMenuSpecialPrincipal = {
+  dish_id: number
+  title: string
 }
 
 // Coordination id: special_menu_cta_v1 - button below the special sections.
