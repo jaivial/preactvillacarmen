@@ -14,6 +14,7 @@ import { MenusDeGrupos } from './routes/client/MenusDeGrupos.tsx'
 import { Postres } from './routes/client/Postres.tsx'
 import { Placeholder } from './routes/client/Placeholder.tsx'
 import { Reservas } from './routes/client/Reservas.tsx'
+import { PrereservaPagoCompletado } from './routes/client/PrereservaPagoCompletado'
 import { ModificarReserva } from './routes/client/ModificarReserva.tsx'
 import { AvisoLegal } from './routes/client/AvisoLegal.tsx'
 import { BookingPolicies } from './routes/client/BookingPolicies.tsx'
@@ -59,6 +60,8 @@ function ClientApp() {
           </FoodPageGuard>
         </Route>
         <Route path="/reservas/modificar" component={ModificarReserva} />
+        {/* Coordination id: stripe_prereserva_adelanto_v1 */}
+        <Route path="/reservas/pago-completado" component={PrereservaPagoCompletado} />
         <Route path="/reservas" component={Reservas} />
         <Route path="/reservas.php" component={Reservas} />
         <Route path="/avisolegal" component={AvisoLegal} />
