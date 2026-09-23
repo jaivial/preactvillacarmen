@@ -4196,9 +4196,8 @@ svg {
     padding-top: 12px;
 }
 
-/* The mobility step renders a single counter, so the grid track adds
-   nothing and forces it to stretch full width. Drop the grid here only —
-   the adults step still uses the shared grid for its three counters. */
+/* Counter groups stack one counter per row on every viewport (adults step:
+   adults, high chairs, strollers). */
 [data-testid="reservas-mobility-counters"] {
     display: block;
 }
@@ -5336,10 +5335,6 @@ svg {
 }
 
 @media (min-width: 920px) {
-    .resvCounterGroup {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
     .resvRiceGrid {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }

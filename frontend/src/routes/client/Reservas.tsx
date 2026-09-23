@@ -3251,7 +3251,9 @@ export function Reservas() {
                   </>
                 ) : null}
               </div>
-            ) : (
+            ) : showSpecialBlock ? null : (
+              // Special-date menus replace the rice question, so the rice
+              // block would always read "No arroz" there.
               <div class="resvSummaryBlock" data-testid="reservas-summary-rice-block">
               <div class="resvSummaryBlockTitle" data-testid="reservas-summary-rice-title">{text('Arroz', 'Rice')}</div>
               <div class="resvSummaryRow" data-testid="reservas-summary-row-rice">
