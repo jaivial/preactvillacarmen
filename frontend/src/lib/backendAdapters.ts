@@ -8,6 +8,7 @@ import type {
   PublicMenuSettings,
   PublicMenuSpecialSection,
   PublicMenuSpecialDate,
+  PublicMenuSpecialCta,
   PublicMenuType,
 } from './types'
 
@@ -73,6 +74,24 @@ function toPublicMenuSpecialSections(value: unknown): PublicMenuSpecialSection[]
     })
   }
   return sections.sort((a, b) => a.position - b.position)
+}
+
+// Coordination id: special_menu_cta_v1 - keep the backend-resolved button only
+// when it is switched on and has a destination.
+function toPublicMenuSpecialCta(value: unknown): PublicMenuSpecialCta | null {
+  if (!value || typeof value !== 'object') return null
+  const item = value as Record<string, unknown>
+  const href = toText(item.href)
+  if (toBool(item.enabled) !== true || !href) return null
+  const action = toText(item.action)
+  return {
+    enabled: true,
+    label: toText(item.label) || 'RESERVAR',
+    action: action === 'menu' || action === 'whatsapp' ? action : 'reservas',
+    href,
+    opens_new_tab: toBool(item.opens_new_tab) === true,
+    target_date: toText(item.target_date) || undefined,
+  }
 }
 
 // Coordination id: special_menu_price_date_v1
@@ -263,6 +282,7 @@ export function normalizePublicMenu(value: unknown): PublicMenu {
     // Coordination id: special_menu_sections_v1
     special_menu_sections: toPublicMenuSpecialSections(record.special_menu_sections),
     special_date: toPublicMenuSpecialDate(record.special_date),
+    special_cta: toPublicMenuSpecialCta(record.special_cta),
     // Coordination id: special_menu_visibility_v1
     web_placement: normalizeWebPlacement(record.web_placement),
     menu_public_active: toBool(record.menu_public_active) !== false,
