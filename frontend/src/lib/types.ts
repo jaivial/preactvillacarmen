@@ -517,7 +517,7 @@ export type MandatoryMenuResponse = {
 // Public special-date types. Light shape for the calendar marking / availability
 // bypass (SpecialDateSummary) and full shape returned by
 // GET /reservations/special-date?date= (SpecialDatePublic).
-export type PaymentMethodKey = 'card' | 'bizum' | 'transferencia' | 'efectivo'
+export type PaymentMethodKey = 'card' | 'bizum' | 'transferencia' | 'efectivo' | 'stripe'
 
 export type SpecialDateSummary = {
   date: string

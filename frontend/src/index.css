@@ -6085,3 +6085,67 @@ svg {
         justify-self: center;
     }
 }
+
+/* Coordination id: stripe_prereserva_adelanto_v1 - prereserva payment success */
+.prereservaPagoCard {
+    text-align: left;
+    display: grid;
+    gap: 14px;
+}
+
+.prereservaPagoTitle {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: clamp(26px, 3vw, 36px);
+    margin: 0;
+}
+
+.prereservaPagoSubtitle {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: 20px;
+    margin: 6px 0 0;
+}
+
+.prereservaPagoList {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0;
+}
+
+.prereservaPagoList dt {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.prereservaPagoList dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.prereservaPagoLines {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.prereservaPagoLines li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.prereservaPagoTotal {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    padding-top: 8px;
+    font-weight: 600;
+}
+
+.prereservaPagoRef,
+.prereservaPagoDemo {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.62);
+}
