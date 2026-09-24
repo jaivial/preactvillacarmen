@@ -156,6 +156,7 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethodKey, string> = {
   bizum: 'Bizum',
   transferencia: 'Transferencia',
   efectivo: 'Efectivo',
+  stripe: 'Tarjeta (online)',
 }
 
 const PAYMENT_METHOD_OPTIONS: PaymentMethodKey[] = ['card', 'bizum', 'transferencia', 'efectivo']
@@ -508,6 +509,15 @@ export function Reservas() {
   // Declared before the steps useMemo and peopleOptions because both depend on it.
   const activeSpecialSummary = selectedDate ? specialDatesMap[selectedDate] : null
   const isSpecialActiveForSelected = Boolean(activeSpecialSummary && activeSpecialSummary.is_active)
+  // Coordination id: stripe_prereserva_adelanto_v1 - prereserva + adelanto
+  // paid only by Stripe: no method to choose, the summary opens the payment.
+  const stripeOnlyAdelanto = Boolean(
+    activeSpecialDate &&
+      activeSpecialDate.prereserva_enabled &&
+      activeSpecialDate.requires_adelanto &&
+      (activeSpecialDate.adelanto_payment_methods || []).length === 1 &&
+      activeSpecialDate.adelanto_payment_methods[0] === 'stripe'
+  )
 
   // Coordination id: mobility_day_override_v1 — resolved per-day mobility flag
   // (day-context carries the global setting with the per-day override applied;
@@ -1664,7 +1674,7 @@ export function Reservas() {
         }
       }
     }
-    if (activeSpecialDate.requires_adelanto && !specialPaymentMethod) {
+    if (activeSpecialDate.requires_adelanto && !stripeOnlyAdelanto && !specialPaymentMethod) {
       pushToast('warning', text('Método de pago', 'Payment method'), text('Selecciona el método de pago del adelanto.', 'Select the deposit payment method.'))
       return false
     }
@@ -1966,6 +1976,26 @@ export function Reservas() {
 
     fd.set('high_chairs', String(highChairs))
     fd.set('baby_strollers', String(babyStrollers))
+
+    // Coordination id: stripe_prereserva_adelanto_v1 - stripe-only prereserva:
+    // open the payment; the booking is only inserted after it is paid.
+    if (stripeOnlyAdelanto) {
+      setSubmitting(true)
+      try {
+        const res = await apiFetch('/api/bookings/front/checkout', { method: 'POST', body: fd })
+        const data = (await res.json().catch(() => null)) as { success?: boolean; message?: string; checkout_url?: string; checkout_id?: string } | null
+        if (!res.ok || !data || data.success !== true || !data.checkout_url) {
+          throw new Error((data && data.message) || `HTTP ${res.status}`)
+        }
+        console.log('[checkpoint] prereserva_checkout_redirect', data.checkout_id)
+        window.location.assign(data.checkout_url)
+        return
+      } catch (e) {
+        pushToast('error', text('Pago no disponible', 'Payment unavailable'), e instanceof Error ? e.message : text('No se pudo abrir el pago.', 'The payment could not be opened.'))
+        setSubmitting(false)
+        return
+      }
+    }
 
     setSubmitting(true)
     try {
@@ -2616,7 +2646,7 @@ export function Reservas() {
       const sumCount = selections.reduce((acc, s) => acc + (s.count || 0), 0)
       const requiresAdelanto = activeSpecialDate.requires_adelanto
       const pmOptions = paymentMethodOptions(activeSpecialDate.adelanto_payment_methods || [])
-      const haveRequiredPayment = !requiresAdelanto || Boolean(specialPaymentMethod)
+      const haveRequiredPayment = !requiresAdelanto || stripeOnlyAdelanto || Boolean(specialPaymentMethod)
       const specialStepReady =
         spMenus.length > 0 &&
         selections.length > 0 &&
@@ -2837,7 +2867,7 @@ export function Reservas() {
               })}
             </div>
 
-            {requiresAdelanto ? (
+            {requiresAdelanto && !stripeOnlyAdelanto ? (
               <div class="resvField mt-3" data-testid="reservas-special-menu-payment-field">
                 <div class="resvLabel mb-3" data-testid="reservas-special-menu-payment-label">{text('Método de pago del adelanto', 'Deposit payment method')}</div>
                 <div class="resvPayGrid" role="radiogroup" aria-label={text('Método de pago del adelanto', 'Deposit payment method')} data-testid="reservas-special-menu-payment-chips">
@@ -2877,7 +2907,7 @@ export function Reservas() {
                 })}
                 <div class="resvAdelantoRow" data-testid="reservas-special-menu-adelanto-summary-row-all">
                   <span class="resvHint">{text('Método elegido', 'Selected method')}</span>
-                  <span class="resvAdelantoVal">{pmOptions.find((o) => o.value === specialPaymentMethod)?.label || '—'}</span>
+                  <span class="resvAdelantoVal">{stripeOnlyAdelanto ? PAYMENT_METHOD_LABELS.stripe : pmOptions.find((o) => o.value === specialPaymentMethod)?.label || '—'}</span>
                 </div>
                 <div class="resvAdelantoRow resvAdelantoRow--total" data-testid="reservas-special-menu-adelanto-total">
                   <span>{text('Adelanto a pagar', 'Deposit to pay')}</span>
@@ -3420,7 +3450,11 @@ export function Reservas() {
             </button>
             {termsAccepted && privacyAccepted && (!specialTermsRequired || specialTermsAccepted) ? (
               <button type="button" class="btn primary" data-testid="reservas-summary-submit" onClick={() => void submitBooking()} disabled={submitting}>
-                {submitting ? text('Enviando...', 'Sending...') : text('Completar reserva', 'Complete reservation')}
+                {submitting
+                  ? text('Enviando...', 'Sending...')
+                  : stripeOnlyAdelanto
+                    ? text('Continuar al pago', 'Continue to payment')
+                    : text('Completar reserva', 'Complete reservation')}
               </button>
             ) : (
               <span class="resvActionFallback" data-testid="reservas-summary-terms-fallback">
