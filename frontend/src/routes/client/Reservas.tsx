@@ -167,6 +167,7 @@ const PAYMENT_METHOD_ICONS: Record<PaymentMethodKey, typeof CreditCard> = {
   bizum: Smartphone,
   transferencia: Landmark,
   efectivo: Banknote,
+  stripe: CreditCard,
 }
 
 function paymentMethodOptions(methods: PaymentMethodKey[]): { value: PaymentMethodKey; label: string }[] {
