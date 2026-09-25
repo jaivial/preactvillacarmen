@@ -4,3 +4,22 @@ dist/
 
 mysql-data/
 
+
+# Coordination id: repo_secret_guards_v1 - never commit secrets, keys or data dumps
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+certs/
+.tls/
+backup/
+*.sql.gz
+*.dump
+*dump*.sql
+*.sqlite
+*.sqlite-*
+!frontend/.env.development
