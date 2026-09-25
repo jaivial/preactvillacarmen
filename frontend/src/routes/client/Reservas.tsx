@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
-import { Banknote, CreditCard, Landmark, Smartphone, Trash2 } from 'lucide-react'
+import { Banknote, CreditCard, Landmark, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import type { Lang } from '../../lib/i18n'
@@ -51,9 +51,9 @@ import { ReservationChoice } from '../../components/reservas/ReservationChoice'
 type ToastType = 'error' | 'warning' | 'success' | 'info'
 type Toast = { id: number; type: ToastType; title: string; message: string }
 
-type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'mobility' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
+type StepId = 'date' | 'mandatoryMenu' | 'specialMenu' | 'specialPrincipales' | 'mobility' | 'groupMenu' | 'rice' | 'personal' | 'adults' | 'summary'
 
-const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'mobility', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
+const STEP_IDS: StepId[] = ['date', 'mandatoryMenu', 'specialMenu', 'specialPrincipales', 'mobility', 'groupMenu', 'rice', 'personal', 'adults', 'summary']
 
 // Coordination id: mobility_day_override_v1 — resolved mobility setting for a
 // date (global default + per-day override, the concrete day wins). Primary is
@@ -141,12 +141,86 @@ function expandSpecialDateMenus(sd: SpecialDatePublic): SpecialDatePublic {
   return { ...sd, menus }
 }
 
+// Coordination id: special_menu_url_state_v1
+// Festive selections live in the URL so every step rehydrates on refresh:
+//   ?sm=<entryId>:<count>,<entryId>:<count>
+//   &sp=<entryId>.<groupKey>.<dishIndex>*<servings>|…   (dish index in group.options)
+//   &pm=<payment method>
+// Entry ids may be negative (section entries), so ":" / "." / "*" / "|" are the separators.
+function encodeSpecialCounts(selections: Record<number, SpecialMenuSelection>): string {
+  return Object.values(selections)
+    .filter((sel) => sel && sel.count > 0)
+    .map((sel) => `${sel.special_date_menu_id}:${sel.count}`)
+    .join(',')
+}
+
+function decodeSpecialCounts(raw: string | null): Record<number, SpecialMenuSelection> {
+  const out: Record<number, SpecialMenuSelection> = {}
+  for (const part of (raw || '').split(',')) {
+    const [id, count] = part.split(':').map(Number)
+    if (Number.isFinite(id) && id !== 0 && Number.isFinite(count) && count > 0) out[id] = { special_date_menu_id: id, count, rows: {} }
+  }
+  return out
+}
+
+function encodeSpecialRows(selections: Record<number, SpecialMenuSelection>, groupsByMenu: Record<number, SpecialPrincipalesGroup[]>): string {
+  const parts: string[] = []
+  for (const sel of Object.values(selections)) {
+    for (const group of groupsByMenu[sel.special_date_menu_id] || []) {
+      for (const row of sel.rows[group.key] || []) {
+        const idx = group.options.indexOf(row.name)
+        if (idx >= 0 && row.servings > 0) parts.push(`${sel.special_date_menu_id}.${group.key}.${idx}*${row.servings}`)
+      }
+    }
+  }
+  return parts.join('|')
+}
+
+function applySpecialRows(
+  raw: string | null,
+  selections: Record<number, SpecialMenuSelection>,
+  groupsByMenu: Record<number, SpecialPrincipalesGroup[]>
+): Record<number, SpecialMenuSelection> {
+  if (!raw) return selections
+  const next = { ...selections }
+  for (const part of raw.split('|')) {
+    const m = /^(-?\d+)\.(.+)\.(\d+)\*(\d+)$/.exec(part)
+    if (!m) continue
+    const [id, key, idx, servings] = [Number(m[1]), m[2], Number(m[3]), Number(m[4])]
+    const sel = next[id]
+    const name = (groupsByMenu[id] || []).find((g) => g.key === key)?.options[idx]
+    if (!sel || !name || servings <= 0) continue
+    const rows = sel.rows[key] || []
+    if (rows.some((r) => r.name === name)) continue
+    next[id] = { ...sel, rows: { ...sel.rows, [key]: [...rows, { name, servings }] } }
+  }
+  return next
+}
+
 function flattenSpecialRows(sel: SpecialMenuSelection | undefined): SpecialPrincipalesRow[] {
   return sel ? Object.values(sel.rows || {}).flat() : []
 }
 
 function sumSpecialServings(rows: SpecialPrincipalesRow[] | undefined): number {
   return (rows || []).reduce((acc, r) => acc + (Number(r.servings) || 0), 0)
+}
+
+// Coordination id: special_menu_principales_step_v1 - when a menu count goes
+// down, trim its rows (last first) so no group's servings exceed the count.
+function capSpecialRows(rows: Record<string, SpecialPrincipalesRow[]>, count: number): Record<string, SpecialPrincipalesRow[]> {
+  const out: Record<string, SpecialPrincipalesRow[]> = {}
+  for (const [key, list] of Object.entries(rows || {})) {
+    let left = count
+    const kept: SpecialPrincipalesRow[] = []
+    for (const r of list) {
+      if (left <= 0) break
+      const servings = Math.min(r.servings, left)
+      kept.push({ ...r, servings })
+      left -= servings
+    }
+    out[key] = kept
+  }
+  return out
 }
 
 // Coordination id: special_booking_v1
@@ -424,7 +498,10 @@ export function Reservas() {
   const prevStepRef = useRef<StepId | null>(null)
 
   // Shareable URL state: ?step=rice&date=2026-08-10&party=4
-  const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null } | null>(null)
+  const initialUrlStateRef = useRef<{ step: StepId | null; date: string | null; party: number | null; sm: string | null; sp: string | null; pm: string | null } | null>(null)
+  // Coordination id: special_menu_url_state_v1 - main-course rows from ?sp=
+  // wait here until the menus' principales groups are loaded.
+  const pendingSpecialRowsRef = useRef<string | null>(null)
   const urlSyncReadyRef = useRef(false)
   // Blocks the URL writer while the async restore is still resolving.
   // Without it, loadDateContext sets `selectedDate` mid-restore, the sync
@@ -439,7 +516,7 @@ export function Reservas() {
     const stepParam = rawStep && (STEP_IDS as string[]).includes(rawStep) ? (rawStep as StepId) : null
     const rawParty = Number(params.get('party'))
     const partyParam = Number.isFinite(rawParty) && rawParty >= 2 ? rawParty : null
-    initialUrlStateRef.current = { step: stepParam, date: params.get('date'), party: partyParam }
+    initialUrlStateRef.current = { step: stepParam, date: params.get('date'), party: partyParam, sm: params.get('sm'), sp: params.get('sp'), pm: params.get('pm') }
     return () => {
       initialUrlStateRef.current = null
     }
@@ -504,6 +581,44 @@ export function Reservas() {
   // Each group carries its options and the name -> dish_id map the booking
   // submit needs (the backend validates items[] per menu type).
   const [specialMenuPrincipales, setSpecialMenuPrincipales] = useState<Record<number, SpecialPrincipalesGroup[]>>({})
+
+  // Coordination id: special_menu_url_state_v1 - mirror the festive choices
+  // (counts, main courses, payment method) into ?sm=&sp=&pm= so a refresh on
+  // any step rehydrates exactly where the guest was. Same guards as the
+  // step/date writer: never write while the restore is still resolving.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !urlSyncReadyRef.current || restoringRef.current) return
+    if (pendingSpecialRowsRef.current) return // principales not applied yet
+    const params = new URLSearchParams(window.location.search)
+    const want: Record<string, string> = activeSpecialDate
+      ? { sm: encodeSpecialCounts(specialMenuSelections), sp: encodeSpecialRows(specialMenuSelections, specialMenuPrincipales), pm: specialPaymentMethod || '' }
+      : { sm: '', sp: '', pm: '' }
+    let changed = false
+    for (const [k, v] of Object.entries(want)) {
+      if ((params.get(k) || '') === v) continue
+      if (v) params.set(k, v)
+      else params.delete(k)
+      changed = true
+    }
+    if (!changed) return
+    const qs = params.toString()
+    window.history.replaceState(window.history.state, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname)
+  }, [activeSpecialDate, specialMenuSelections, specialMenuPrincipales, specialPaymentMethod])
+
+  // Apply ?sp= rows once every counted menu has its principales groups.
+  useEffect(() => {
+    const raw = pendingSpecialRowsRef.current
+    if (!raw || !activeSpecialDate) return
+    const counted = Object.values(specialMenuSelections).filter((sel) => sel.count > 0)
+    const ready = counted.every((sel) => {
+      const m = activeSpecialDate.menus.find((mm) => mm.id === sel.special_date_menu_id)
+      return !m || m.is_custom || specialMenuPrincipales[m.id] !== undefined
+    })
+    if (!ready) return
+    pendingSpecialRowsRef.current = null
+    setSpecialMenuSelections((prev) => applySpecialRows(raw, prev, specialMenuPrincipales))
+    console.log('[checkpoint] special_menu_url_rows_restored')
+  }, [activeSpecialDate, specialMenuSelections, specialMenuPrincipales])
 
   // Coordination id: special_booking_v1
   // Lookup the active special-date summary for the currently selected date.
@@ -678,6 +793,17 @@ export function Reservas() {
   // on the legacy flow even if the user toggled it before navigating away.
   const specialTermsRequired = isSpecialActiveForSelected && Boolean(activeSpecialSummary?.prereserva_enabled)
 
+  // Coordination id: special_menu_principales_step_v1 - does any counted
+  // (non-custom) menu have principales to choose? Drives step 3's presence.
+  const specialNeedsPrincipales = Boolean(
+    activeSpecialDate &&
+      Object.values(specialMenuSelections).some((sel) => {
+        if (!sel || sel.count <= 0) return false
+        const m = activeSpecialDate.menus.find((mm) => mm.id === sel.special_date_menu_id)
+        return Boolean(m && !m.is_custom && (specialMenuPrincipales[m.id] || []).length > 0)
+      })
+  )
+
   const steps = useMemo(() => {
     const out: { id: StepId; label: string }[] = [{ id: 'date', label: text('Fecha y personas', 'Date and guests') }]
 
@@ -692,6 +818,9 @@ export function Reservas() {
       // the flow stays stable) and drop it as soon as we know it is empty.
       if (!activeSpecialDate || (activeSpecialDate.menus || []).length > 0) {
         out.push({ id: 'specialMenu', label: text('Menú', 'Menu') })
+        // Coordination id: special_menu_principales_step_v1 - step 3 picks
+        // the main courses of the menus counted in step 2 (only if any has).
+        if (specialNeedsPrincipales) out.push({ id: 'specialPrincipales', label: text('Principales', 'Main courses') })
       }
       if (mobilityEnabledForSelectedDate) {
         out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
@@ -728,7 +857,7 @@ export function Reservas() {
 
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate, mobilityEnabledForSelectedDate])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate, mobilityEnabledForSelectedDate, specialNeedsPrincipales])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -1353,11 +1482,26 @@ export function Reservas() {
       const isSpecialPrereserva = Boolean(sd && sd.is_active !== false && sd.prereserva_enabled)
 
       // Steps that are reachable for this date, in order.
-      const reachable: StepId[] = ['date']
+      let reachable: StepId[] = ['date']
+      let specialCountsIncomplete = false
 
       if (isSpecialPrereserva) {
-        setActiveSpecialDate(sd ? expandSpecialDateMenus(sd) : sd)
+        const expanded = sd ? expandSpecialDateMenus(sd) : sd
+        setActiveSpecialDate(expanded)
         if (sd && (sd.menus || []).length > 0) reachable.push('specialMenu')
+        // Coordination id: special_menu_url_state_v1 - rehydrate counts,
+        // payment method and (once groups load) the main-course rows.
+        const validIds = new Set((expanded?.menus || []).map((m) => m.id))
+        const counts = Object.fromEntries(Object.entries(decodeSpecialCounts(init.sm)).filter(([id]) => validIds.has(Number(id))))
+        setSpecialMenuSelections(counts)
+        const pmKey = init.pm as PaymentMethodKey | null
+        setSpecialPaymentMethod(pmKey && (expanded?.adelanto_payment_methods || []).includes(pmKey) ? pmKey : null)
+        pendingSpecialRowsRef.current = init.sp
+        const countedTotal = Object.values(counts).reduce((acc, c) => acc + c.count, 0)
+        // Steps past the menu counts are only reachable with a complete count.
+        specialCountsIncomplete = countedTotal !== init.party
+        reachable.push('specialPrincipales')
+        console.log('[checkpoint] special_menu_url_counts_restored', Object.keys(counts).length, countedTotal)
       } else {
         setActiveSpecialDate(null)
         // Legacy flow: mandatory menu -> group menu -> rice.
@@ -1401,8 +1545,9 @@ export function Reservas() {
       // never onto a step this date does not have. Falling back to the last
       // reachable step before the requested one keeps them inside the flow
       // instead of dumping them on the summary.
+      if (specialCountsIncomplete) reachable = reachable.filter((id) => id === 'date' || id === 'specialMenu')
       const wanted = reachable.indexOf(init.step)
-      setStep(wanted >= 0 ? init.step : 'date')
+      setStep(wanted >= 0 ? init.step : isSpecialPrereserva && reachable.includes('specialMenu') ? 'specialMenu' : 'date')
     }
 
     void restore().finally(() => {
@@ -1659,6 +1804,20 @@ export function Reservas() {
       pushToast('warning', text('Comensales', 'Guests'), text(`El total de comensales por menú debe sumar ${partySize}.`, `The total of menu guests must equal ${partySize}.`))
       return false
     }
+    if (activeSpecialDate.requires_adelanto && !stripeOnlyAdelanto && !specialPaymentMethod) {
+      pushToast('warning', text('Método de pago', 'Payment method'), text('Selecciona el método de pago del adelanto.', 'Select the deposit payment method.'))
+      return false
+    }
+    return true
+  }
+
+  // Coordination id: special_menu_principales_step_v1 - step 3: each chosen
+  // menu's principales must add up exactly to its count (the UI already caps
+  // them, this is the guard before advancing / submitting).
+  const validateSpecialPrincipalesStep = () => {
+    if (!activeSpecialDate) return true
+    const menus = Array.isArray(activeSpecialDate.menus) ? activeSpecialDate.menus : []
+    const selections = Object.values(specialMenuSelections).filter((s) => s && s.count > 0)
     // Coordination id: special_menu_principales_v1
     // Every principales group of a chosen menu must add up to its guests. A
     // menu with no groups (no principales, or toggle on but none added) has
@@ -1675,15 +1834,16 @@ export function Reservas() {
         }
       }
     }
-    if (activeSpecialDate.requires_adelanto && !stripeOnlyAdelanto && !specialPaymentMethod) {
-      pushToast('warning', text('Método de pago', 'Payment method'), text('Selecciona el método de pago del adelanto.', 'Select the deposit payment method.'))
-      return false
-    }
     return true
   }
 
   const goNextFromSpecialMenu = () => {
     if (!validateSpecialMenuStep()) return
+    setStep(specialNeedsPrincipales ? 'specialPrincipales' : mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
+  }
+
+  const goNextFromSpecialPrincipales = () => {
+    if (!validateSpecialPrincipalesStep()) return
     setStep(mobilityEnabledForSelectedDate ? 'mobility' : 'personal')
   }
 
@@ -1850,7 +2010,7 @@ export function Reservas() {
     // Validate the specialMenu step before submission so an incomplete selection
     // never reaches the server.
     if (isSpecialActiveForSelected && activeSpecialDate) {
-      if (!validateSpecialMenuStep()) return
+      if (!validateSpecialMenuStep() || !validateSpecialPrincipalesStep()) return
     }
     if (!validateRiceStep()) return
 
@@ -2652,11 +2812,6 @@ export function Reservas() {
         spMenus.length > 0 &&
         selections.length > 0 &&
         sumCount === (partySize || 0) &&
-        selections.every((s) => {
-          const m = spMenus.find((mm) => mm.id === s.special_date_menu_id)
-          if (!m || m.is_custom) return true
-          return (specialMenuPrincipales[m.id] || []).every((group) => sumSpecialServings(s.rows[group.key]) === s.count)
-        }) &&
         haveRequiredPayment
 
       const updateSelection = (menuId: number, patch: Partial<SpecialMenuSelection>) => {
@@ -2686,32 +2841,9 @@ export function Reservas() {
         setSpecialMenuSelections((prev) => {
           const cur = prev[menuId]
           if (!cur) return prev
-          const next = { ...cur, count: c }
-          return { ...prev, [menuId]: next }
+          return { ...prev, [menuId]: { ...cur, count: c, rows: capSpecialRows(cur.rows, c) } }
         })
       }
-
-      // Coordination id: special_menu_principales_v1 - rows live per group.
-      const setGroupRows = (menuId: number, groupKey: string, next: (rows: SpecialPrincipalesRow[]) => SpecialPrincipalesRow[]) => {
-        setSpecialMenuSelections((prev) => {
-          const cur = prev[menuId]
-          if (!cur) return prev
-          return { ...prev, [menuId]: { ...cur, rows: { ...cur.rows, [groupKey]: next(cur.rows[groupKey] || []) } } }
-        })
-      }
-
-      const updateRow = (menuId: number, groupKey: string, idx: number, patch: Partial<SpecialPrincipalesRow>) =>
-        setGroupRows(menuId, groupKey, (rows) => rows.map((r, i) => (i === idx ? { ...r, ...patch } : r)))
-
-      const addRow = (menuId: number, group: SpecialPrincipalesGroup) =>
-        setGroupRows(menuId, group.key, (rows) => {
-          if (rows.length >= 10) return rows
-          const placeholder = group.options.find((opt) => !rows.some((r) => r.name === opt)) || ''
-          return [...rows, { name: placeholder, servings: 0 }]
-        })
-
-      const removeRow = (menuId: number, groupKey: string, idx: number) =>
-        setGroupRows(menuId, groupKey, (rows) => rows.filter((_, i) => i !== idx))
 
       const totalAdelanto = selections.reduce((acc, s) => {
         const m = spMenus.find((mm) => mm.id === s.special_date_menu_id)
@@ -2737,7 +2869,7 @@ export function Reservas() {
                   {new Date(`${activeSpecialDate.date}T12:00:00`).toLocaleDateString(lang === 'en' ? 'en-GB' : 'es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
                 <div class="resvFestiveHeadHint" data-testid="reservas-special-date-warn-block-hint">
-                  {text('Indica cuántos comensales tomarán cada menú.', 'Tell us how many guests will have each menu.')}
+                  {text('Indica cuántos comensales tomarán cada menú. Los principales se eligen en el siguiente paso.', 'Tell us how many guests will have each menu. Main courses come in the next step.')}
                 </div>
               </div>
             </div>
@@ -2767,10 +2899,6 @@ export function Reservas() {
                 const sel = specialMenuSelections[menu.id]
                 const isChosen = Boolean(sel && sel.count > 0)
                 const restantes = (partySize || 0) - (sumCount - (sel?.count || 0))
-                const maxRows = Math.max(1, Math.min(10, sel?.count || 0))
-                // Coordination id: special_menu_principales_v1 - no groups
-                // means the menu has no principales: no "Añadir principal".
-                const principalesGroups = menu.is_custom ? [] : specialMenuPrincipales[menu.id] || []
                 const ek = specialEntryKey(menu)
 
                 return (
@@ -2797,72 +2925,6 @@ export function Reservas() {
                       className="resvCounter--plain"
                     />
 
-                    {isChosen && principalesGroups.length > 0 ? (
-                      <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${ek}`}>
-                        {principalesGroups.map((group) => {
-                          const rows = sel?.rows[group.key] || []
-                          const gid = menu.section ? ek : `${ek}-${group.key}`
-                          const options: PopoverSelectOption[] = group.options.map((it) => ({ value: it, label: it, keywords: it.toLowerCase() }))
-                          return (
-                            <div class="resvPrincipales" key={group.key} data-testid={`reservas-special-menu-rows-${gid}`}>
-                              {group.title ? (
-                                <div class="resvPrincipalesTitle" data-testid={`reservas-special-menu-rows-title-${gid}`}>{group.title}</div>
-                              ) : null}
-                              {rows.map((row, idx) => (
-                                <div class="resvPrincipalRow resvPrincipalRow--grouped" key={idx} data-ui="principal-row" data-testid={`reservas-special-menu-row-${gid}-${idx}`}>
-                                  <PopoverSelect
-                                    testId={`reservas-special-menu-select-${gid}-${idx}`}
-                                    ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
-                                    value={row.name ? row.name : null}
-                                    placeholder={text('Selecciona un principal', 'Select a main course')}
-                                    options={options}
-                                    searchable={options.length > 10}
-                                    searchPlaceholder={text('Buscar principal', 'Search main courses')}
-                                    onChange={(name) => updateRow(menu.id, group.key, idx, { name })}
-                                  />
-                                  <div class="resvPrincipalRowControls" data-testid={`reservas-special-menu-row-controls-${gid}-${idx}`}>
-                                    <InlineCounter
-                                      testId={`reservas-special-menu-servings-${gid}-${idx}`}
-                                      ariaLabel={`${text('Raciones', 'Servings')} ${idx + 1}`}
-                                      value={row.servings || 0}
-                                      min={0}
-                                      max={sel?.count || 0}
-                                      onChange={(v) => updateRow(menu.id, group.key, idx, { servings: v })}
-                                    />
-                                    <button
-                                      type="button"
-                                      class="resvIconBtn"
-                                      data-testid={`reservas-special-menu-remove-${gid}-${idx}`}
-                                      aria-label={text('Eliminar', 'Remove')}
-                                      onClick={() => removeRow(menu.id, group.key, idx)}
-                                    >
-                                      <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" data-testid={`reservas-special-menu-remove-icon-${gid}-${idx}`} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-
-                              <div class="resvPrincipalesActions" data-testid={`reservas-special-menu-rows-actions-${gid}`}>
-                                <button
-                                  type="button"
-                                  class="btn"
-                                  data-testid={`reservas-special-menu-add-${gid}`}
-                                  disabled={rows.length >= maxRows}
-                                  onClick={() => addRow(menu.id, group)}
-                                >
-                                  {text('Añadir principal', 'Add main course')}
-                                </button>
-                                <div class="resvHint" data-testid={`reservas-special-menu-rows-hint-${gid}`}>
-                                  {text('Total raciones:', 'Total servings:')}{' '}
-                                  {sumSpecialServings(rows)} / {sel?.count || 0}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-
-                      </div>
-                    ) : null}
                   </div>
                 )
               })}
@@ -2923,6 +2985,142 @@ export function Reservas() {
               </button>
               {specialStepReady ? (
                 <button type="button" class="btn primary" data-testid="reservas-special-menu-next" onClick={goNextFromSpecialMenu}>
+                  {text('Siguiente', 'Next')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Coordination id: special_menu_principales_step_v1
+    // Step 3: main courses of every menu counted in step 2. Per group the
+    // servings can never exceed the menu count, every new row starts at 1,
+    // and a dish already picked in a row is hidden from the other rows.
+    if (step === 'specialPrincipales' && activeSpecialDate) {
+      const spMenus = activeSpecialDate.menus || []
+      const chosen = Object.values(specialMenuSelections)
+        .filter((sel) => sel && sel.count > 0)
+        .map((sel) => ({ sel, menu: spMenus.find((m) => m.id === sel.special_date_menu_id) }))
+        .filter((x): x is { sel: SpecialMenuSelection; menu: SpecialDatePublic['menus'][number] } => Boolean(x.menu && !x.menu.is_custom && (specialMenuPrincipales[x.menu.id] || []).length > 0))
+
+      const setGroupRows = (menuId: number, groupKey: string, next: (rows: SpecialPrincipalesRow[]) => SpecialPrincipalesRow[]) =>
+        setSpecialMenuSelections((prev) => {
+          const cur = prev[menuId]
+          if (!cur) return prev
+          return { ...prev, [menuId]: { ...cur, rows: { ...cur.rows, [groupKey]: next(cur.rows[groupKey] || []) } } }
+        })
+
+      const principalesReady = chosen.every(({ sel, menu }) =>
+        (specialMenuPrincipales[menu.id] || []).every((g) => sumSpecialServings(sel.rows[g.key]) === sel.count && (sel.rows[g.key] || []).every((r) => r.name))
+      )
+
+      return (
+        <div class="resvStep" data-testid="reservas-step-special-principales">
+          <div class="resvCard" data-testid="reservas-special-principales-card">
+            <div class="resvCardHead" data-testid="reservas-special-principales-card-head">
+              <div class="resvCardTitle" data-testid="reservas-special-principales-card-title">{text('Elige los principales', 'Choose the main courses')}</div>
+              <div class="resvCardSub" data-testid="reservas-special-principales-card-subtitle">
+                {text('Reparte las raciones de cada menú entre sus principales.', 'Split each menu’s servings across its main courses.')}
+              </div>
+            </div>
+
+            <div class="resvMenuList" data-testid="reservas-special-principales-list">
+              {chosen.map(({ sel, menu }) => {
+                const ek = specialEntryKey(menu)
+                return (
+                  <div class="resvMenuBlock resvFestiveMenu is-chosen" key={menu.id} data-testid={`reservas-special-principales-item-${ek}`}>
+                    <div class="resvPrincipalesMenuHead" data-testid={`reservas-special-principales-item-head-${ek}`}>
+                      <span class="resvPrincipalesMenuName" data-testid={`reservas-special-principales-item-name-${ek}`}>{menu.label || text('Menú', 'Menu')}</span>
+                      <span class="resvFestiveBadge" data-testid={`reservas-special-principales-item-count-${ek}`}>
+                        {sel.count} {sel.count === 1 ? text('comensal', 'guest') : text('comensales', 'guests')}
+                      </span>
+                    </div>
+                    <div class="resvMenuDetails" data-testid={`reservas-special-menu-details-${ek}`}>
+                      {(specialMenuPrincipales[menu.id] || []).map((group) => {
+                        const rows = sel.rows[group.key] || []
+                        const gid = menu.section ? ek : `${ek}-${group.key}`
+                        const used = sumSpecialServings(rows)
+                        const left = sel.count - used
+                        const canAdd = left > 0 && rows.length < group.options.length
+                        return (
+                          <div class="resvPrincipales" key={group.key} data-testid={`reservas-special-menu-rows-${gid}`}>
+                            {group.title ? <div class="resvPrincipalesTitle" data-testid={`reservas-special-menu-rows-title-${gid}`}>{group.title}</div> : null}
+                            {rows.map((row, idx) => {
+                              const taken = new Set(rows.filter((_, i) => i !== idx).map((r) => r.name))
+                              const options: PopoverSelectOption[] = group.options
+                                .filter((opt) => !taken.has(opt))
+                                .map((it) => ({ value: it, label: it, keywords: it.toLowerCase() }))
+                              return (
+                                <div class="resvPrincipalRow resvPrincipalRow--grouped" key={idx} data-ui="principal-row" data-testid={`reservas-special-menu-row-${gid}-${idx}`}>
+                                  <PopoverSelect
+                                    testId={`reservas-special-menu-select-${gid}-${idx}`}
+                                    ariaLabel={`${text('Principal', 'Main course')} ${idx + 1}`}
+                                    value={row.name ? row.name : null}
+                                    placeholder={text('Selecciona un principal', 'Select a main course')}
+                                    options={options}
+                                    searchable={options.length > 10}
+                                    searchPlaceholder={text('Buscar principal', 'Search main courses')}
+                                    onChange={(name) => setGroupRows(menu.id, group.key, (rs) => rs.map((r, i) => (i === idx ? { ...r, name } : r)))}
+                                  />
+                                  <div class="resvPrincipalRowControls" data-testid={`reservas-special-menu-row-controls-${gid}-${idx}`}>
+                                    <InlineCounter
+                                      testId={`reservas-special-menu-servings-${gid}-${idx}`}
+                                      ariaLabel={`${text('Raciones', 'Servings')} ${idx + 1}`}
+                                      value={row.servings}
+                                      min={1}
+                                      max={row.servings + left}
+                                      onChange={(v) => setGroupRows(menu.id, group.key, (rs) => rs.map((r, i) => (i === idx ? { ...r, servings: Math.max(1, v) } : r)))}
+                                    />
+                                    <button
+                                      type="button"
+                                      class="resvIconBtn"
+                                      data-testid={`reservas-special-menu-remove-${gid}-${idx}`}
+                                      aria-label={text('Eliminar', 'Remove')}
+                                      onClick={() => setGroupRows(menu.id, group.key, (rs) => rs.filter((_, i) => i !== idx))}
+                                    >
+                                      <Trash2 size={18} strokeWidth={1.9} aria-hidden="true" data-testid={`reservas-special-menu-remove-icon-${gid}-${idx}`} />
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                            <div class="resvPrincipalesActions" data-testid={`reservas-special-menu-rows-actions-${gid}`}>
+                              <button
+                                type="button"
+                                class="btn resvAddPrincipalBtn"
+                                data-testid={`reservas-special-menu-add-${gid}`}
+                                disabled={!canAdd}
+                                onClick={() =>
+                                  setGroupRows(menu.id, group.key, (rs) => {
+                                    const free = group.options.find((opt) => !rs.some((r) => r.name === opt))
+                                    return free && sumSpecialServings(rs) < sel.count ? [...rs, { name: free, servings: 1 }] : rs
+                                  })
+                                }
+                              >
+                                <Plus size={18} strokeWidth={2} aria-hidden="true" data-testid={`reservas-special-menu-add-icon-${gid}`} />
+                                {text('Añadir principal', 'Add main course')}
+                              </button>
+                              <div class={left === 0 ? 'resvHint is-complete' : 'resvHint'} data-testid={`reservas-special-menu-rows-hint-${gid}`}>
+                                {text('Raciones', 'Servings')}: {used} / {sel.count}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div class="resvActions" data-testid="reservas-special-principales-actions">
+              <button type="button" class="btn" data-testid="reservas-special-principales-back" onClick={goPrev}>
+                {text('Anterior', 'Back')}
+              </button>
+              {principalesReady ? (
+                <button type="button" class="btn primary" data-testid="reservas-special-principales-next" onClick={goNextFromSpecialPrincipales}>
                   {text('Siguiente', 'Next')}
                 </button>
               ) : null}
