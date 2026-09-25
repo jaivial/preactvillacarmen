@@ -6149,3 +6149,73 @@ svg {
     font-size: 13px;
     color: rgba(0, 0, 0, 0.62);
 }
+
+/* =====================================================================
+ * Reservas layout + festive step 3 (principales).
+ * Coordination id: special_menu_principales_step_v1
+ * ===================================================================== */
+[data-testid="reservas-main-container"] {
+    --container: min(1320px, calc(100%));
+}
+
+[data-testid="reservas-hero"] {
+    margin-inline: 1rem;
+}
+
+[data-testid="reservas-step-content"] {
+    margin-inline: 0.75rem;
+}
+
+[data-testid="reservas-stepper"] > .resvStepSeg:first-child {
+    margin-left: 1rem;
+}
+
+[data-testid="reservas-stepper"] > .resvStepSeg:last-child {
+    margin-right: 1rem;
+}
+
+[data-testid="reservas-special-menu-adelanto-summary"] {
+    margin-inline: 1rem;
+}
+
+[data-testid^="reservas-special-menu-select-section-"] {
+    padding-inline: 0;
+}
+
+.resvFestiveMenu .resvMenuDetails[data-testid^="reservas-special-menu-details-section-"] {
+    padding-inline: 0;
+    margin-inline: 0.25rem;
+}
+
+.footer {
+    padding-inline: 1.5rem;
+}
+
+.resvPrincipalesMenuHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.resvPrincipalesMenuName {
+    font-weight: 600;
+}
+
+[data-testid="reservas-step-special-principales"] .resvPrincipalesActions {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.resvAddPrincipalBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-inline: auto;
+}
+
+.resvHint.is-complete {
+    color: var(--success, #15803d);
+}
