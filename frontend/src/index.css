@@ -3495,6 +3495,15 @@ svg {
     padding-bottom: 0;
 }
 
+/* Booking step: head flush to the party-size field below. */
+.resvCardHead[data-testid="reservas-booking-card-head"] {
+    margin-bottom: 0;
+}
+
+.resvField[data-testid="reservas-party-size-field"] {
+    margin-top: 0;
+}
+
 .resvCardTitle {
     font-family: var(--font-serif);
     font-weight: 300;
