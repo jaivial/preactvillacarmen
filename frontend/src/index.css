@@ -341,7 +341,7 @@ svg {
     gap: 10px;
 }
 
-@media (max-width: 479px) {
+@media (max-width: 640px) {
     .header__callAction {
         display: none;
     }
