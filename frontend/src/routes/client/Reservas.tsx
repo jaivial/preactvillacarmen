@@ -31,6 +31,11 @@ import { Counter } from '../../components/reservas/Counter'
 import { Modal } from '../../components/reservas/Modal'
 import { DuplicateBookingModal } from '../../components/reservas/DuplicateBookingModal'
 import { buildCountries, countrySelectOptions } from '../../components/reservas/countryOptions'
+import {
+  SpecialAdelantoSummary,
+  SpecialMenusSummary,
+  type SpecialMenuSummaryRow,
+} from '../../components/reservas/special/SpecialDateSummaryBlocks'
 import { lookupDuplicateReservation, storeSelfServiceProof, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
 import { onlyDigits } from '../../lib/phone'
 import { fetchMenuByID } from '../../lib/menuApi'
@@ -786,6 +791,27 @@ export function Reservas() {
     () => specialSummaryRows.reduce((acc, r) => acc + (r.subtotal || 0), 0),
     [specialSummaryRows]
   )
+
+  // Coordination id: special_summary_blocks_v1
+  // View-model for the reusable festive summary blocks. Keeps the label /
+  // price / mains / deposit shaping out of the render so the blocks can be
+  // reused by special dates with or without adelanto.
+  const specialSummaryItems = useMemo<SpecialMenuSummaryRow[]>(() => {
+    return specialSummaryRows.map((row) => ({
+      key: specialEntryKey(row.menu),
+      label: row.menu.label || (row.menu.is_custom ? row.menu.custom_title : '') || text('Men\u00fa', 'Menu'),
+      count: row.count,
+      price: typeof row.menu.price === 'number' ? row.menu.price : null,
+      // Custom menus have no dish picker, so they never list mains.
+      rows: row.menu.is_custom
+        ? []
+        : row.rows
+            .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
+            .filter((r) => r.name && r.servings > 0),
+      adelantoPerPerson: typeof row.menu.adelanto_amount === 'number' ? row.menu.adelanto_amount : null,
+      adelantoTotal: row.subtotal || 0,
+    }))
+  }, [specialSummaryRows])
 
   // Coordination id: special_booking_v1
   // Special-terms gating: only required when the booking targets an active
@@ -3043,6 +3069,7 @@ export function Reservas() {
                         const gid = menu.section ? ek : `${ek}-${group.key}`
                         const used = sumSpecialServings(rows)
                         const left = sel.count - used
+                        // Hidden (not just disabled) once the group is complete: used >= count.
                         const canAdd = left > 0 && rows.length < group.options.length
                         return (
                           <div class="resvPrincipales" key={group.key} data-testid={`reservas-special-menu-rows-${gid}`}>
@@ -3087,21 +3114,27 @@ export function Reservas() {
                               )
                             })}
                             <div class="resvPrincipalesActions" data-testid={`reservas-special-menu-rows-actions-${gid}`}>
-                              <button
-                                type="button"
-                                class="btn resvAddPrincipalBtn"
-                                data-testid={`reservas-special-menu-add-${gid}`}
-                                disabled={!canAdd}
-                                onClick={() =>
-                                  setGroupRows(menu.id, group.key, (rs) => {
-                                    const free = group.options.find((opt) => !rs.some((r) => r.name === opt))
-                                    return free && sumSpecialServings(rs) < sel.count ? [...rs, { name: free, servings: 1 }] : rs
-                                  })
-                                }
-                              >
-                                <Plus size={18} strokeWidth={2} aria-hidden="true" data-testid={`reservas-special-menu-add-icon-${gid}`} />
-                                {text('Añadir principal', 'Add main course')}
-                              </button>
+                              {/* Coordination id: special_menu_principales_step_v1
+                                  The add button only exists while the group still has
+                                  servings left (used < count) and free dishes. The
+                                  servings hint stays as the static "group complete"
+                                  cue, so removing the button never hides the state. */}
+                              {canAdd ? (
+                                <button
+                                  type="button"
+                                  class="btn resvAddPrincipalBtn"
+                                  data-testid={`reservas-special-menu-add-${gid}`}
+                                  onClick={() =>
+                                    setGroupRows(menu.id, group.key, (rs) => {
+                                      const free = group.options.find((opt) => !rs.some((r) => r.name === opt))
+                                      return free && sumSpecialServings(rs) < sel.count ? [...rs, { name: free, servings: 1 }] : rs
+                                    })
+                                  }
+                                >
+                                  <Plus size={18} strokeWidth={2} aria-hidden="true" data-testid={`reservas-special-menu-add-icon-${gid}`} />
+                                  {text('Añadir principal', 'Add main course')}
+                                </button>
+                              ) : null}
                               <div class={left === 0 ? 'resvHint is-complete' : 'resvHint'} data-testid={`reservas-special-menu-rows-hint-${gid}`}>
                                 {text('Raciones', 'Servings')}: {used} / {sel.count}
                               </div>
@@ -3497,86 +3530,24 @@ export function Reservas() {
           )}
 
             {showSpecialBlock ? (
-              // Coordination id: special_booking_v1
-              // Menú especial breakdown for active special dates: per-menu
-              // label + count, a tree of principales inside each menu (or
-              // "Principales por decidir" for custom menus), plus the per-menu
-              // adelanto row and the total adelanto a pagar.
-              <div class="resvSummaryBlock" data-testid="reservas-summary-special-menu-block">
-                <div class="resvSummaryBlockTitle" data-testid="reservas-summary-special-menu-title">
-                  {text('Menús de fecha festiva', 'Festive date menus')}
-                </div>
-                {activeSpecialDate?.title ? (
-                  <div class="resvSummaryRow" data-testid="reservas-summary-row-special-menu-title">
-                    <span data-testid="reservas-summary-label-special-menu-title">{text('Fecha festiva', 'Festive date')}</span>
-                    <span class="resvSummaryValue" data-testid="reservas-summary-value-special-menu-title">{activeSpecialDate.title}</span>
-                  </div>
-                ) : null}
-                {specialSummaryRows.map((row) => {
-                  const label = row.menu.label || (row.menu.is_custom ? row.menu.custom_title : '') || text('Menú', 'Menu')
-                  const price = typeof row.menu.price === 'number' ? row.menu.price : null
-                  const cleanedRows = row.menu.is_custom
-                    ? []
-                    : row.rows
-                        .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
-                        .filter((r) => r.name && r.servings > 0)
-                  return (
-                    <div class="resvSpecialMenuSub" key={row.menu.id} data-testid={`reservas-summary-special-menu-item-${specialEntryKey(row.menu)}`}>
-                      <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-${specialEntryKey(row.menu)}`}>
-                        <span data-testid={`reservas-summary-label-special-menu-${specialEntryKey(row.menu)}`}>{label}</span>
-                        <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-${specialEntryKey(row.menu)}`}>
-                          {row.count}{' '}
-                          {row.count === 1 ? text('persona', 'person') : text('personas', 'persons')}
-                          {price != null ? ` · ${price}€/${text('persona', 'person')}` : ''}
-                        </span>
-                      </div>
-                      {row.menu.is_custom ? (
-                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
-                          {text('Principales por decidir', 'Mains to be decided')}
-                        </div>
-                      ) : cleanedRows.length > 0 ? (
-                        <>
-                          <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
-                            {text('Principales', 'Main courses')}
-                          </div>
-                          <ul class="resvSummaryList" data-testid={`reservas-summary-special-menu-mains-list-${specialEntryKey(row.menu)}`}>
-                            {cleanedRows.map((r, mainIndex) => (
-                              <li key={`${r.name}-${mainIndex}`} data-testid={`reservas-summary-special-menu-main-${specialEntryKey(row.menu)}-${mainIndex}`}>
-                                {r.name} x {r.servings}
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : (
-                        <div class="resvSummaryListTitle" data-testid={`reservas-summary-special-menu-mains-title-${specialEntryKey(row.menu)}`}>
-                          {text('Principales por decidir', 'Mains to be decided')}
-                        </div>
-                      )}
-                      {row.subtotal > 0 ? (
-                        <div class="resvSummaryRow" data-testid={`reservas-summary-row-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
-                          <span data-testid={`reservas-summary-label-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
-                            {text('Adelanto', 'Deposit')}
-                          </span>
-                          <span class="resvSummaryValue" data-testid={`reservas-summary-value-special-menu-adelanto-${specialEntryKey(row.menu)}`}>
-                            {Number(row.menu.adelanto_amount).toFixed(2)}€ x {row.count} = {row.subtotal.toFixed(2)}€
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-                  )
-                })}
-                {specialTotalAdelanto > 0 ? (
-                  <div class="resvSummaryRow resvSummaryRow--total" data-testid="reservas-summary-row-special-menu-total-adelanto">
-                    <span data-testid="reservas-summary-label-special-menu-total-adelanto">
-                      {text('Total adelanto a pagar', 'Total deposit to pay')}
-                    </span>
-                    <span class="resvSummaryValue" data-testid="reservas-summary-value-special-menu-total-adelanto">
-                      {specialTotalAdelanto.toFixed(2)}€
-                      {specialPaymentMethod ? ` · ${PAYMENT_METHOD_LABELS[specialPaymentMethod]}` : ''}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
+              // Coordination id: special_summary_blocks_v1
+              // Two independent blocks: the menus the guest picked (persons,
+              // price per person and their main courses) and, when the date
+              // charges a deposit, the deposit split per menu section.
+              <SpecialMenusSummary
+                title={text('Men\u00fas de fecha festiva', 'Festive date menus')}
+                festiveDateTitle={activeSpecialDate?.title || undefined}
+                items={specialSummaryItems}
+              />
+            ) : null}
+
+            {showSpecialBlock ? (
+              <SpecialAdelantoSummary
+                title={text('Adelanto', 'Deposit')}
+                items={specialSummaryItems}
+                total={specialTotalAdelanto}
+                paymentMethodLabel={specialPaymentMethod ? PAYMENT_METHOD_LABELS[specialPaymentMethod] : ''}
+              />
             ) : null}
 
             {hasAccessories ? (
