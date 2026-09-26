@@ -6243,3 +6243,183 @@ svg {
 .resvHint.is-complete {
     color: var(--success, #15803d);
 }
+
+/* =====================================================================
+ * Special-date menus: main-courses step + summary blocks.
+ * Coordination ids: special_menu_principales_step_v1, special_summary_blocks_v1
+ * ===================================================================== */
+
+/* ---- Main-courses step (step 3) ------------------------------------
+   Each menu is its own centred column so a long section title never
+   stretches the layout, and the sections breathe apart. */
+[data-testid="reservas-special-principales-list"] {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-inline: 1rem;
+    padding-inline: 0;
+    align-items: stretch;
+}
+
+/* 25% less surface and 10% less border than .resvFestiveMenu: the block
+   recedes so the dish rows inside it read as the content. */
+[data-testid="reservas-step-special-principales"] .resvFestiveMenu {
+    background: rgba(9, 121, 105, 0.038);
+    border-color: rgba(9, 121, 105, 0.315);
+}
+
+/* The "Raciones: n / total" hint stays centred when the add button is
+   gone (group complete), so the row never collapses to an empty line. */
+[data-testid="reservas-step-special-principales"] .resvPrincipalesActions {
+    gap: 0.5rem;
+}
+
+/* The steps have no native <select>; padding lives on .resvSelect. Only
+   the block-level ones are zeroed so the trigger can breathe. */
+[data-testid="reservas-step-special-principales"] .resvSelect {
+    padding-inline: 0.5rem;
+}
+
+[data-testid="reservas-step-special-principales"] .resvSelectBtn {
+    padding-inline: 0.75rem;
+}
+
+[data-testid="reservas-step-special-principales"] .resvSelectOpt {
+    padding-inline: 0.75rem;
+}
+
+[data-testid="reservas-step-special-principales"] .resvSelectSearch__input {
+    padding-inline: 0.75rem;
+}
+
+/* ---- Festive-date summary blocks ----------------------------------- */
+.resvSummaryFestiveTitle {
+    display: grid;
+    gap: 2px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.resvSummaryFestiveTitleLabel {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(20, 37, 32, 0.6);
+}
+
+.resvSummaryFestiveTitleName {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.2;
+    color: rgba(0, 0, 0, 0.92);
+    overflow-wrap: anywhere;
+}
+
+.resvSummarySectionWrap {
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.resvSummarySection {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    min-width: 0;
+}
+
+.resvSummarySectionHead {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.resvSummarySectionTitle {
+    font-weight: 600;
+    line-height: 1.35;
+    color: rgba(0, 0, 0, 0.9);
+    overflow-wrap: anywhere;
+}
+
+/* Persons and price stack vertically: a two-column row overflows on
+   narrow phones, where the price cell wrapped into the dish list. */
+.resvSummarySectionMeta {
+    display: grid;
+    gap: 2px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: rgba(0, 0, 0, 0.68);
+}
+
+.resvSummarySectionCount {
+    font-variant-numeric: tabular-nums;
+}
+
+.resvSummarySectionPrice {
+    font-variant-numeric: tabular-nums;
+}
+
+.resvSummarySectionListTitle {
+    margin-top: 10px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(20, 37, 32, 0.66);
+}
+
+.resvSummarySectionList {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: rgba(0, 0, 0, 0.76);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.resvSummaryAdelantoRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    font-size: 14px;
+    min-width: 0;
+}
+
+.resvSummaryAdelantoLabel {
+    color: rgba(0, 0, 0, 0.72);
+    overflow-wrap: anywhere;
+}
+
+.resvSummaryAdelantoValue {
+    color: rgba(0, 0, 0, 0.9);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    flex: 0 0 auto;
+}
+
+/* The deposit rows sit inside a padded block, so the total drops the
+   row padding and aligns to the block's own inset. */
+.resvSummaryBlock:has(.resvSummaryAdelantoRow) .resvSummaryRow--total {
+    padding: 10px 0 0;
+    margin-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .resvSummaryAdelantoRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .resvSummaryAdelantoValue {
+        text-align: left;
+    }
+}
