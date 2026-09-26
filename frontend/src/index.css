@@ -341,7 +341,7 @@ svg {
     gap: 10px;
 }
 
-@media (max-width: 479px) {
+@media (max-width: 640px) {
     .header__callAction {
         display: none;
     }
@@ -430,10 +430,24 @@ svg {
     opacity: 0.78;
 }
 
+/* Coordination id: burger_menu_dvh_center_v1 - the overlay tracks the
+   dynamic viewport (dvh) so on iPhone Safari the panel stays centred on the
+   Y axis while the browser chrome (URL/tool bars) is visible. vh is kept as
+   the fallback for browsers without dvh support. */
 .navMenuBurger {
+    --burger-gutter: calc(var(--header-h) + 18px);
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    height: 100dvh;
     z-index: 120;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: var(--burger-gutter);
+    box-sizing: border-box;
     opacity: 0;
     pointer-events: none;
     transition: opacity 180ms ease;
@@ -459,7 +473,7 @@ svg {
 .navMenuBurger__panel {
     position: relative;
     z-index: 1;
-    margin-top: calc(var(--header-h) + 18px);
+    margin-block: 0;
     background:
         radial-gradient(
             820px 520px at 18% 10%,
@@ -473,7 +487,8 @@ svg {
     border: 1px solid rgba(0, 0, 0, 0.12);
     box-shadow: 0 44px 120px rgba(0, 0, 0, 0.34);
     padding: 16px;
-    max-height: calc(100vh - var(--header-h) - 36px);
+    max-height: calc(100vh - 2 * var(--burger-gutter));
+    max-height: calc(100dvh - 2 * var(--burger-gutter));
     overflow: auto;
 }
 
@@ -3495,6 +3510,15 @@ svg {
     padding-bottom: 0;
 }
 
+/* Booking step: head flush to the party-size field below. */
+.resvCardHead[data-testid="reservas-booking-card-head"] {
+    margin-bottom: 0;
+}
+
+.resvField[data-testid="reservas-party-size-field"] {
+    margin-top: 0;
+}
+
 .resvCardTitle {
     font-family: var(--font-serif);
     font-weight: 300;
@@ -6148,4 +6172,74 @@ svg {
     margin: 0;
     font-size: 13px;
     color: rgba(0, 0, 0, 0.62);
+}
+
+/* =====================================================================
+ * Reservas layout + festive step 3 (principales).
+ * Coordination id: special_menu_principales_step_v1
+ * ===================================================================== */
+[data-testid="reservas-main-container"] {
+    --container: min(1320px, calc(100%));
+}
+
+[data-testid="reservas-hero"] {
+    margin-inline: 1rem;
+}
+
+[data-testid="reservas-step-content"] {
+    margin-inline: 0.75rem;
+}
+
+[data-testid="reservas-stepper"] > .resvStepSeg:first-child {
+    margin-left: 1rem;
+}
+
+[data-testid="reservas-stepper"] > .resvStepSeg:last-child {
+    margin-right: 1rem;
+}
+
+[data-testid="reservas-special-menu-adelanto-summary"] {
+    margin-inline: 1rem;
+}
+
+[data-testid^="reservas-special-menu-select-section-"] {
+    padding-inline: 0;
+}
+
+.resvFestiveMenu .resvMenuDetails[data-testid^="reservas-special-menu-details-section-"] {
+    padding-inline: 0;
+    margin-inline: 0.25rem;
+}
+
+.footer {
+    padding-inline: 1.5rem;
+}
+
+.resvPrincipalesMenuHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.resvPrincipalesMenuName {
+    font-weight: 600;
+}
+
+[data-testid="reservas-step-special-principales"] .resvPrincipalesActions {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.resvAddPrincipalBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-inline: auto;
+}
+
+.resvHint.is-complete {
+    color: var(--success, #15803d);
 }
