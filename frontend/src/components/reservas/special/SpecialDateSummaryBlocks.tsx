@@ -187,7 +187,7 @@ export function SpecialAdelantoSummary(props: {
           </div>
         ))}
       </div>
-      <div class="resvSummaryRow resvSummaryRow--total" data-testid="reservas-summary-row-special-menu-total-adelanto">
+      <div class="resvSummaryRow resvSummaryRow--total resvSummaryTotalAdelanto" data-testid="reservas-summary-row-special-menu-total-adelanto">
         <span data-testid="reservas-summary-label-special-menu-total-adelanto">
           {t('Total adelanto a pagar', 'Total deposit to pay')}
         </span>

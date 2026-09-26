@@ -6404,8 +6404,10 @@ svg {
 }
 
 /* The deposit rows sit inside a padded block, so the total drops the
-   row padding and aligns to the block's own inset. */
-.resvSummaryBlock:has(.resvSummaryAdelantoRow) .resvSummaryRow--total {
+   row padding and aligns to the block's own inset. Scoped by its own
+   class rather than :has() on the block, so the stylesheet keeps no
+   dependency on relational selectors. */
+.resvSummaryTotalAdelanto {
     padding: 10px 0 0;
     margin-top: 12px;
     border-top: 1px solid rgba(0, 0, 0, 0.08);
