@@ -633,7 +633,7 @@ export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = 
   if (props.hidden || paths.length === 0 || paths.every((_, idx) => bad[idx])) return null
 
   return (
-    <section class="menuHeroMedia">
+    <section class="menuHeroMedia" data-testid="menu-hero-slider-section">
       <div class="container">
         <div class="menuHeroSlider" aria-label={t('menu.slider.aria')}>
           <div class="menuHeroSliderStage" aria-hidden="true">

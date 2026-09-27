@@ -312,7 +312,17 @@ export function normalizePublicMenu(value: unknown): PublicMenu {
     menu_subtitle_english: toStringArray(record.menu_subtitle_english),
     weekdays: normalizePublicMenuWeekdays(record.weekdays),
     weekdays_available: toStringArray(record.weekdays_available),
+    // Coordination id: menu_slider_mode_v1 (backoffice slider config -> public hero slider)
+    slider_mode: normalizeSliderMode(record.slider_mode),
+    slider_images: Array.isArray(record.slider_images) ? toStringArray(record.slider_images) : undefined,
   }
+}
+
+const SLIDER_MODES = ['default', 'custom', 'both', 'hidden'] as const
+
+function normalizeSliderMode(value: unknown): PublicMenu['slider_mode'] {
+  const mode = toText(value) as NonNullable<PublicMenu['slider_mode']>
+  return SLIDER_MODES.includes(mode) ? mode : undefined
 }
 
 // Coordination id: menu_weekday_availability_v1 (backend payload -> client SDK).
