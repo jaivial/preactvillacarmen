@@ -559,6 +559,9 @@ export type SpecialDateMenuSectionPublic = {
   price: number | null
   adelanto_amount: number | null
   position: number
+  // Coordination id: special_date_section_online_v1 - the backend already
+  // drops disabled sections; false is filtered out defensively too.
+  online_enabled?: boolean
   principales: PublicMenuSpecialPrincipal[]
 }
 
@@ -566,6 +569,11 @@ export type SpecialDatePublic = {
   date: string
   title: string
   description?: string | null
+  /**
+   * Personalised warn notice from the backoffice, shown on step 2.
+   * Coordination id: special_date_custom_notice_v1
+   */
+  custom_notice?: string | null
   /** The handler only returns active rows, but it does send the flag. */
   is_active?: boolean
   prereserva_enabled: boolean
