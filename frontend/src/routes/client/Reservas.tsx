@@ -132,8 +132,13 @@ function specialEntryKey(menu: { id: number; section?: { section_id: number } })
 
 function expandSpecialDateMenus(sd: SpecialDatePublic): SpecialDatePublic {
   const menus = (sd.menus || []).flatMap((m) => {
-    if (!m.is_special_menu || !Array.isArray(m.sections) || m.sections.length === 0) return [m]
-    return m.sections.map((sec) => ({
+    if (!m.is_special_menu || !Array.isArray(m.sections)) return [m]
+    // Coordination id: special_date_section_online_v1 - sections disabled for
+    // online booking get no count, principales or adelanto entry. A special
+    // menu with every section disabled is not bookable online at all.
+    const onlineSections = m.sections.filter((sec) => sec.online_enabled !== false)
+    if (onlineSections.length === 0) return m.sections.length === 0 ? [m] : []
+    return onlineSections.map((sec) => ({
       id: specialSectionEntryId(sec.id),
       menu_id: m.menu_id,
       label: sec.title ? `${m.label} · ${sec.title}` : m.label,
@@ -2899,6 +2904,14 @@ export function Reservas() {
                 </div>
               </div>
             </div>
+
+            {/* Coordination id: special_date_custom_notice_v1 - personalised
+                notice written in the backoffice for this date. */}
+            {activeSpecialDate.custom_notice && activeSpecialDate.custom_notice.trim() ? (
+              <div class="resvNotice warn resvFestiveCustomNotice" role="note" data-testid="reservas-special-date-custom-notice">
+                {activeSpecialDate.custom_notice.trim()}
+              </div>
+            ) : null}
 
             {/* Coordination id: festive_menu_counter_v1 - live progress of the
                 guests assigned to menus, so the rule "must add up to the
