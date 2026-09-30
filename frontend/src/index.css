@@ -3726,6 +3726,16 @@ svg {
     border-color: rgba(237, 137, 54, 0.22);
 }
 
+/* Personalised festive-date notice (step 2). Inset like the counter notice
+   and keeps the operator's line breaks. Coordination id:
+   special_date_custom_notice_v1 */
+.resvFestiveCustomNotice {
+    margin-inline: 1rem;
+    margin-top: 0.75rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
 /* The "assigned guests" mismatch warning sits inside the special-menu
    counter block, which is flush with the card edge. Inset it so the notice
    does not touch the sides. Scoped to this notice so other .resvNotice
