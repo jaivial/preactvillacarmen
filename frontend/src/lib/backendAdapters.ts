@@ -12,6 +12,11 @@ import type {
   PublicMenuSpecialPrincipal,
   PublicMenuType,
 } from './types'
+import {
+  normalizeMenuType,
+  MENU_TYPE_CLOSED_CONVENTIONAL,
+  MENU_TYPE_SPECIAL,
+} from './menuTypeCodes'
 
 function toText(value: unknown): string {
   if (typeof value === 'string') return value.trim()
@@ -138,23 +143,13 @@ function toRecord(value: unknown): Record<string, unknown> {
   return {}
 }
 
+// Coordination id: menu_type_numeric_codes_v1
+// The backend answers with a numeric `menu_type` code and still tolerates the
+// legacy strings during the transition window, so normalization lives in the
+// shared menuTypeCodes map (a numeric code maps to itself, a legacy token maps
+// to its code). Anything unrecognised becomes MENU_TYPE_UNKNOWN (0).
 function normalizePublicMenuType(value: unknown): PublicMenuType {
-  const normalized = toText(value)
-    .toLowerCase()
-    .replace(/[.\s-]+/g, '_')
-
-  if (normalized === 'a_la_carte') return 'a_la_carte'
-  if (normalized === 'special') return 'special'
-
-  const isGroupType = normalized === 'group' || normalized.endsWith('_group') || normalized.includes('_group_')
-  if (isGroupType) {
-    if (normalized.includes('a_la_carte') || normalized.includes('carta')) return 'a_la_carte_group'
-    return 'closed_group'
-  }
-
-  if (normalized.includes('a_la_carte')) return 'a_la_carte'
-  if (normalized.includes('special')) return 'special'
-  return 'closed_conventional'
+  return normalizeMenuType(value)
 }
 
 // Coordination id: special_menu_minimal_payload_v1
@@ -164,12 +159,15 @@ function normalizePublicMenuType(value: unknown): PublicMenuType {
 // infer the type instead of letting the router fall back to the closed
 // conventional template and read missing fields.
 function inferPublicMenuType(record: Record<string, unknown>): PublicMenuType {
-  const explicit = toText(record.menu_type)
-  if (explicit) return normalizePublicMenuType(explicit)
+  const explicit = record.menu_type
+  if (explicit !== null && explicit !== undefined && String(explicit).trim() !== '') {
+    return normalizePublicMenuType(explicit)
+  }
   const looksSpecial =
     Object.prototype.hasOwnProperty.call(record, 'special_menu_sections') ||
     Object.prototype.hasOwnProperty.call(record, 'special_menu_image_url')
-  return looksSpecial ? 'special' : 'closed_conventional'
+  // Falls back to MENU_TYPE_SPECIAL (code 6), not the string 'special'.
+  return looksSpecial ? MENU_TYPE_SPECIAL : MENU_TYPE_CLOSED_CONVENTIONAL
 }
 
 function normalizePublicMenuDish(value: unknown): PublicMenuDish | null {

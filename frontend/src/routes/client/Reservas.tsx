@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Banknote, CreditCard, Landmark, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import { normalizeMenuType, MENU_TYPE_SPECIAL } from '../../lib/menuTypeCodes'
 import type { Lang } from '../../lib/i18n'
 import type {
   ClosedDaysResponse,
@@ -94,7 +95,7 @@ type SpecialPrincipalesGroup = {
 
 function specialPrincipalesGroupsFor(menu: PublicMenu | null | undefined): SpecialPrincipalesGroup[] {
   if (!menu) return []
-  if (menu.menu_type === 'special') {
+  if (normalizeMenuType(menu.menu_type) === MENU_TYPE_SPECIAL) {
     return (menu.special_menu_sections || [])
       .filter((sec) => Array.isArray(sec.principales) && sec.principales.length > 0)
       .map((sec) => ({

@@ -53,9 +53,9 @@ export type GroupMenuDisplay = {
   main_dishes_limit_number: number
   created_at: string
   // Coordination id: special_menu_group_booking_v1
-  // A special-type menu (menu_type='special') offered as a group menu. Its
-  // principales.items is pre-populated with the dishes of its image sections,
-  // so the group-menu main courses block is reused as-is.
+  // A special-type menu (menu_type = MENU_TYPE_SPECIAL, code 6) offered as a
+  // group menu. Its principales.items is pre-populated with the dishes of its
+  // image sections, so the group-menu main courses block is reused as-is.
   special_group_menu_enabled?: boolean
   // Same coordination id: those main courses are mandatory for the booking, so
   // the wizard must not let the guest skip them.
@@ -68,12 +68,13 @@ export type GroupMenusDisplayResponse = {
   menus: GroupMenuDisplay[]
 }
 
-export type PublicMenuType =
-  | 'closed_conventional'
-  | 'closed_group'
-  | 'a_la_carte'
-  | 'a_la_carte_group'
-  | 'special'
+// Coordination id: menu_type_numeric_codes_v1
+// `menus.menu_type` is a NUMERIC code (not a string). The meaning of every code
+// is documented in `lib/menuTypeCodes.ts`, the single source of truth:
+//   0 = unknown | 1 = closed_conventional | 2 = closed_group | 3 = a_la_carte
+//   4 = a_la_carte_group | 5 = a_la_carte_time | 6 = special
+// Import the MENU_TYPE_* constants instead of writing bare numbers.
+export type PublicMenuType = number
 
 export type PublicMenuDish = {
   id: number
@@ -423,7 +424,7 @@ export type HomeMenu = {
 
 // Response shape for GET /api/menus/{id}.
 // Coordination id: special_menu_minimal_payload_v1
-// Special menus answer with a reduced payload (no `menu_type`/`principales`),
+// Special menus (code 6) answer with a reduced payload (no `menu_type`/`principales`),
 // so consumers must go through fetchMenuByID(), which normalizes the body into
 // a complete PublicMenu before it reaches the template router.
 export type MenuByIDResponse = {

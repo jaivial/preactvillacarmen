@@ -1,6 +1,11 @@
 import { createContext } from 'preact'
 import { useContext } from 'preact/hooks'
 import type { PublicMenu, PublicMenuType } from './types'
+import {
+  isGroupMenuTypeCode,
+  normalizeMenuType,
+  MENU_TYPE_CLOSED_CONVENTIONAL,
+} from './menuTypeCodes'
 
 export type LegacySourceTable = 'DIA' | 'FINDE'
 
@@ -10,21 +15,22 @@ export function usePublicMenus() {
   return useContext(PublicMenusContext)
 }
 
-function normalizeMenuTypeToken(menuType: PublicMenuType | string): string {
-  return String(menuType || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[.\s-]+/g, '_')
+// Coordination id: menu_type_numeric_codes_v1
+// `menu_type` is a numeric code now, so group detection is an explicit map
+// (codes 2 and 4) instead of a string pattern. The previous `endsWith('_group')`
+// heuristic silently returned false for every menu once the backend started
+// answering with numbers.
+export function isGroupMenuType(menuType: PublicMenuType | string | number | null | undefined): boolean {
+  return isGroupMenuTypeCode(normalizeMenuType(menuType))
 }
 
-export function isGroupMenuType(menuType: PublicMenuType | string): boolean {
-  const normalized = normalizeMenuTypeToken(menuType)
-  if (!normalized) return false
-  return normalized === 'group' || normalized.endsWith('_group') || normalized.includes('_group_')
-}
-
-export function isNonGroupMenuType(menuType: PublicMenuType | string): boolean {
+export function isNonGroupMenuType(menuType: PublicMenuType | string | number | null | undefined): boolean {
   return !isGroupMenuType(menuType)
+}
+
+/** True for the closed conventional set menu (code 1), tolerant of legacy strings. */
+function isClosedConventionalMenu(menuType: PublicMenuType | string | number | null | undefined): boolean {
+  return normalizeMenuType(menuType) === MENU_TYPE_CLOSED_CONVENTIONAL
 }
 
 export function buildPublicMenuHref(menu: Pick<PublicMenu, 'id' | 'slug'>): string {
@@ -36,13 +42,13 @@ export function buildPublicMenuHref(menu: Pick<PublicMenu, 'id' | 'slug'>): stri
 export function findLegacyConventionalMenu(menus: PublicMenu[], source: LegacySourceTable): PublicMenu | null {
   const match = menus.find(
     (menu) =>
-      menu.menu_type === 'closed_conventional' &&
+      isClosedConventionalMenu(menu.menu_type) &&
       String(menu.legacy_source_table || '').toUpperCase() === source &&
       menu.active,
   )
   if (match) return match
 
-  const fallback = menus.find((menu) => menu.menu_type === 'closed_conventional' && menu.active)
+  const fallback = menus.find((menu) => isClosedConventionalMenu(menu.menu_type) && menu.active)
   return fallback || null
 }
 
@@ -95,7 +101,7 @@ export function menuServesWeekday(menu: Pick<PublicMenu, 'weekdays'>, weekday: M
 export function findDefaultMenuForWeekday(menus: PublicMenu[], value: string | Date): PublicMenu | null {
   const weekday = menuWeekdayKeyForDate(value)
   if (!weekday) return null
-  const conventional = menus.filter((menu) => menu.menu_type === 'closed_conventional' && menu.active)
+  const conventional = menus.filter((menu) => isClosedConventionalMenu(menu.menu_type) && menu.active)
   const serving = conventional.find((menu) => menuServesWeekday(menu, weekday))
   return serving ?? conventional[0] ?? null
 }

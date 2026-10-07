@@ -36,7 +36,7 @@ const baseMenu = (settingsOverrides: Partial<Settings> = {}): PublicMenu => ({
   slug: 'menu-test-1',
   menu_title: 'Menu de prueba',
   menu_title_english: 'Test menu',
-  menu_type: 'closed_group',
+  menu_type: 2,
   price: '35',
   active: true,
   menu_subtitle: [],
