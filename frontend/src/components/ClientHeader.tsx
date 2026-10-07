@@ -7,6 +7,12 @@ import { cdnUrl } from '../lib/cdn'
 import { bebidasPageActiveAtom, cafePageActiveAtom, postresPageActiveAtom, vinosPageActiveAtom } from '../lib/config'
 import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
+import {
+  normalizeMenuType,
+  MENU_TYPE_A_LA_CARTE,
+  MENU_TYPE_CLOSED_CONVENTIONAL,
+  MENU_TYPE_SPECIAL,
+} from '../lib/menuTypeCodes'
 import { fetchMenuSidebar } from '../lib/menuApi'
 import { prefetchRoute } from '../lib/prefetch'
 import type { PublicVisibleSection, SidebarMenu } from '../lib/types'
@@ -216,10 +222,13 @@ export function ClientHeader() {
   const dynamicMenuItems = useMemo<NavItem[] | null>(() => {
     if (sidebarMenus == null) return null
 
-    const typeOrder: Record<string, number> = {
-      closed_conventional: 1,
-      a_la_carte: 2,
-      special: 3,
+    // Coordination id: menu_type_numeric_codes_v1
+    // Nav order unchanged from the string era:
+    // closed conventional -> a la carta -> special.
+    const typeOrder: Record<number, number> = {
+      [MENU_TYPE_CLOSED_CONVENTIONAL]: 1,
+      [MENU_TYPE_A_LA_CARTE]: 2,
+      [MENU_TYPE_SPECIAL]: 3,
     }
 
     // Coordination id: special_menu_visibility_v1
@@ -231,8 +240,8 @@ export function ClientHeader() {
       .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type))
       .filter((menu) => menu.web_placement !== 'independent_section')
       .sort((left, right) => {
-        const leftOrder = typeOrder[left.menu_type] || 99
-        const rightOrder = typeOrder[right.menu_type] || 99
+        const leftOrder = typeOrder[normalizeMenuType(left.menu_type)] || 99
+        const rightOrder = typeOrder[normalizeMenuType(right.menu_type)] || 99
         if (leftOrder !== rightOrder) return leftOrder - rightOrder
         const leftName = String(left.menu_title || '').toLowerCase()
         const rightName = String(right.menu_title || '').toLowerCase()

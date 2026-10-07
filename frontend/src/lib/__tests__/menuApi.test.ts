@@ -24,7 +24,7 @@ describe('fetchMenuByID', () => {
         id: 42,
         slug: 'menu-del-dia-42',
         menu_title: 'Menu del Dia',
-        menu_type: 'closed_conventional',
+        menu_type: 1,
         price: '18',
         active: true,
         menu_subtitle: ['Entrante + Principal + Postre'],
@@ -84,8 +84,8 @@ describe('fetchMenuSidebar', () => {
       success: true,
       count: 2,
       menus: [
-        { id: 1, slug: 'menu-1', menu_title: 'Menu 1', menu_type: 'closed_conventional', active: true },
-        { id: 2, slug: 'menu-2', menu_title: 'Menu 2', menu_type: 'a_la_carte', active: true },
+        { id: 1, slug: 'menu-1', menu_title: 'Menu 1', menu_type: 1, active: true },
+        { id: 2, slug: 'menu-2', menu_title: 'Menu 2', menu_type: 3, active: true },
       ] as SidebarMenu[],
     }
     mockGetJson.mockResolvedValueOnce(fakeResponse)
@@ -114,7 +114,7 @@ describe('fetchMenuHome', () => {
           slug: 'menu-1',
           menu_title: 'Menu 1',
           menu_title_english: 'Menu 1 EN',
-          menu_type: 'closed_conventional',
+          menu_type: 1,
           active: true,
           menu_subtitle: ['Subtitle'],
           menu_subtitle_english: ['Subtitle EN'],

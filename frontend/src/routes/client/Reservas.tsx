@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Banknote, CreditCard, Landmark, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import { normalizeMenuType, MENU_TYPE_SPECIAL } from '../../lib/menuTypeCodes'
 import type { Lang } from '../../lib/i18n'
 import type {
   ClosedDaysResponse,
@@ -94,7 +95,7 @@ type SpecialPrincipalesGroup = {
 
 function specialPrincipalesGroupsFor(menu: PublicMenu | null | undefined): SpecialPrincipalesGroup[] {
   if (!menu) return []
-  if (menu.menu_type === 'special') {
+  if (normalizeMenuType(menu.menu_type) === MENU_TYPE_SPECIAL) {
     return (menu.special_menu_sections || [])
       .filter((sec) => Array.isArray(sec.principales) && sec.principales.length > 0)
       .map((sec) => ({
@@ -2459,6 +2460,15 @@ export function Reservas() {
       const mandatoryEntrantes = selectedMandatoryMenu
         ? localizedArray(selectedMandatoryMenu.entrantes, selectedMandatoryMenu.entrantesEnglish, lang)
         : []
+      // Coordination id: menu_type_numeric_codes_v1
+      // `MandatoryMenuDisplay.menuType` is its own field: reservation_day_context
+      // emits it under the camelCase key `menuType`, separate from
+      // `menus.menu_type`. That endpoint is migrating to the numeric codes too,
+      // and both worktrees merge independently, so normalizeMenuType keeps this
+      // component correct with either contract (number or legacy string)
+      // regardless of the deploy order.
+      const selectedMandatoryMenuIsSpecial =
+        normalizeMenuType(selectedMandatoryMenu?.menuType) === MENU_TYPE_SPECIAL
 
       const mandatoryMenuOptions = useMemo<PopoverSelectOption[]>(() => {
         return mandatoryMenus.map((m) => ({
@@ -2513,7 +2523,7 @@ export function Reservas() {
 
             {selectedMandatoryMenu ? (
               <div class="resvMenuDetails" data-testid="reservas-mandatory-menu-details">
-                {selectedMandatoryMenu.menuType !== 'special' && (
+                {!selectedMandatoryMenuIsSpecial && (
                   <>
                     <div class="resvMenuBlock" data-testid="reservas-mandatory-starters-block">
                       <div class="resvMenuTitle" data-testid="reservas-mandatory-starters-title">{text('Entrantes incluidos', 'Starters included')}</div>

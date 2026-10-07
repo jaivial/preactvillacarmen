@@ -5,9 +5,17 @@ import { cdnUrl } from '../../lib/cdn'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import type { Lang } from '../../lib/i18n'
 import { buildPublicMenuHref, isGroupMenuType } from '../../lib/publicMenus'
+import {
+  normalizeMenuType,
+  MENU_TYPE_A_LA_CARTE,
+  MENU_TYPE_A_LA_CARTE_GROUP,
+  MENU_TYPE_CLOSED_CONVENTIONAL,
+  MENU_TYPE_CLOSED_GROUP,
+  MENU_TYPE_SPECIAL,
+} from '../../lib/menuTypeCodes'
 import { fetchMenuHome } from '../../lib/menuApi'
 import { ScrollReveal } from '../../components/ScrollReveal'
-import type { HomeMenu } from '../../lib/types'
+import type { HomeMenu, PublicMenuType } from '../../lib/types'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
   '16:9': [
@@ -43,16 +51,20 @@ type MenuCard = {
   sortPriority: number
 }
 
-const MENU_TYPE_SORT_PRIORITY: Record<string, number> = {
-  closed_conventional: 1,
-  a_la_carte: 2,
-  closed_group: 3,
-  a_la_carte_group: 4,
-  special: 5,
+// Coordination id: menu_type_numeric_codes_v1
+// Home card order, unchanged from the string era:
+// closed conventional -> a la carta -> closed group -> group carta -> special.
+// Keyed by the numeric `menu_type` code; anything unknown sorts last (99).
+const MENU_TYPE_SORT_PRIORITY: Record<number, number> = {
+  [MENU_TYPE_CLOSED_CONVENTIONAL]: 1,
+  [MENU_TYPE_A_LA_CARTE]: 2,
+  [MENU_TYPE_CLOSED_GROUP]: 3,
+  [MENU_TYPE_A_LA_CARTE_GROUP]: 4,
+  [MENU_TYPE_SPECIAL]: 5,
 }
 
-function getMenuTypeSortPriority(menuType: string): number {
-  return MENU_TYPE_SORT_PRIORITY[menuType] ?? 99
+function getMenuTypeSortPriority(menuType: PublicMenuType | string | number | null | undefined): number {
+  return MENU_TYPE_SORT_PRIORITY[normalizeMenuType(menuType)] ?? 99
 }
 
 function resolveMenuSubtitle(menu: HomeMenu | null, lang: Lang): string {
@@ -825,7 +837,7 @@ export function Home() {
       .map((menu) => {
         const previewImage = resolveMenuPreviewImage(menu)
         const subtitle = resolveMenuSubtitle(menu, lang)
-        const isSpecial = menu.menu_type === 'special'
+        const isSpecial = normalizeMenuType(menu.menu_type) === MENU_TYPE_SPECIAL
         const isGroupMenu = isGroupMenuType(menu.menu_type)
 
         let title = localized(menu.menu_title, menu.menu_title_english, lang)
