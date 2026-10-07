@@ -1020,14 +1020,21 @@ export function Reservas() {
   // them and their servings must add up exactly to the party size.
   const specialPrincipalesRequired = selectedMenu?.special_principales_required === true
 
-  // Coordination id: special_menu_group_booking_v1 - mandatory main courses are
-  // always on: flip the toggle for the guest and seed the first empty row so the
-  // step cannot be skipped.
+  // Coordination id: special_menu_group_booking_v1 - when the chosen menu makes
+  // the main courses mandatory they are always on: flip the toggle for the guest
+  // and seed the first empty row so the step can never be skipped. Depend on the
+  // selected menu id too, so switching to a menu that does NOT require them
+  // leaves the state clean (null / []) as it was before this flag existed.
   useEffect(() => {
     if (!specialPrincipalesRequired) return
     setPrincipalesEnabled((prev) => (prev === true ? prev : true))
     setPrincipalesRows((prev) => (prev.length === 0 ? [{ name: '', servings: 0 }] : prev))
-  }, [specialPrincipalesRequired])
+  }, [specialPrincipalesRequired, groupMenuId])
+
+  // Coordination id: special_menu_group_booking_v1 - the rows list is shown
+  // whenever the toggle is on, and always for a menu that requires the main
+  // courses, so a required menu can never render the step without it.
+  const principalesRowsVisible = principalesEnabled === true || specialPrincipalesRequired
 
   const countryOptions = useMemo<PopoverSelectOption[]>(
     () => countrySelectOptions(buildCountries(text)),
@@ -1786,11 +1793,11 @@ export function Reservas() {
       return false
     }
     // Coordination id: special_menu_group_booking_v1 - mandatory main courses.
-    if (specialPrincipalesRequired && principalesEnabled !== true) {
+    if (specialPrincipalesRequired && !principalesRows.length) {
       pushToast('warning', text('Principales', 'Main courses'), text('Debe elegir los platos principales del menú.', "You must choose the menu's main courses."))
       return false
     }
-    if (principalesEnabled === true) {
+    if (principalesRowsVisible) {
       const cleaned = principalesRows
         .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
         .filter((r) => r.name && r.servings > 0)
@@ -2747,8 +2754,8 @@ export function Reservas() {
 
                     {/* Coordination id: special_menu_group_booking_v1 - a special
                         menu offered as a group menu can make its main courses
-                        mandatory: keep the very same block, only hide the "No"
-                        option so the step cannot be skipped. */}
+                        mandatory: same block, but the Yes/No question is replaced
+                        by a notice and the rows are always shown. */}
                     <div
                       class="resvMenuBlock"
                       data-testid={specialPrincipalesRequired ? 'reservas-group-mains-required-block' : 'reservas-group-mains-block'}
@@ -2756,23 +2763,26 @@ export function Reservas() {
                       <div class="resvMenuTitle" data-testid="reservas-group-mains-title">{getPrincipalesTitle(selectedMenu, lang)}</div>
                       {specialPrincipalesRequired ? (
                         <div class="resvHint" data-testid="reservas-group-mains-required-hint">{text('Este menú exige elegir los platos principales.', 'This menu requires choosing main courses.')}</div>
-                      ) : null}
-                      <div class="resvHint" data-testid="reservas-group-mains-hint">{text('¿Quieres elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
-                      <div class="resvYesNo" data-testid="reservas-group-mains-choice">
-                        <button
-                          type="button"
-                          data-testid="reservas-group-mains-yes"
-                          class={principalesEnabled === true ? 'resvChoice selected' : 'resvChoice'}
-                          onClick={() => {
-                            setPrincipalesEnabled(true)
-                            if (principalesRows.length === 0) {
-                              setPrincipalesRows([{ name: '', servings: 0 }])
-                            }
-                          }}
-                        >
-                          {text('Sí', 'Yes')}
-                        </button>
-                        {specialPrincipalesRequired ? null : (
+                      ) : (
+                        <div class="resvHint" data-testid="reservas-group-mains-hint">{text('¿Quieres elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
+                      )}
+                      {/* Not a question any more when the menu requires the main
+                          courses: the rows below are the only thing to fill in. */}
+                      {specialPrincipalesRequired ? null : (
+                        <div class="resvYesNo" data-testid="reservas-group-mains-choice">
+                          <button
+                            type="button"
+                            data-testid="reservas-group-mains-yes"
+                            class={principalesEnabled === true ? 'resvChoice selected' : 'resvChoice'}
+                            onClick={() => {
+                              setPrincipalesEnabled(true)
+                              if (principalesRows.length === 0) {
+                                setPrincipalesRows([{ name: '', servings: 0 }])
+                              }
+                            }}
+                          >
+                            {text('Sí', 'Yes')}
+                          </button>
                           <button
                             type="button"
                             data-testid="reservas-group-mains-no"
@@ -2784,10 +2794,10 @@ export function Reservas() {
                           >
                             {text('No', 'No')}
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
-                      {principalesEnabled === true ? (
+                      {principalesRowsVisible ? (
                         <div class="resvPrincipales" data-testid="reservas-group-mains-rows">
                           {principalesRows.map((row, idx) => (
                             <div class="resvPrincipalRow" key={idx} data-ui="principal-row" data-testid={`reservas-group-main-row-${idx}`}>
