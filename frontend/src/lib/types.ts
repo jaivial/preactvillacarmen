@@ -503,7 +503,13 @@ export type MandatoryMenuDisplay = {
   menuTitle: string
   menuTitleEnglish?: string
   menuSubtitle: string
-  menuType: string
+  // Coordination id: menu_type_numeric_codes_v1
+  // Numeric `menu_type` code for this mandatory menu. Same domain as
+  // `menus.menu_type` (see lib/menuTypeCodes.ts), but a DIFFERENT field: the
+  // reservation_day_context endpoint emits it under the camelCase key
+  // `menuType`. Widen with normalizeMenuType() so the legacy string answers
+  // still work while that endpoint is being migrated.
+  menuType: PublicMenuType
   entrantes: string[]
   entrantesEnglish?: string[]
   principales: { items: string[]; titulo_principales?: string }
