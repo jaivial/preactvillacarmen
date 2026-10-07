@@ -283,6 +283,10 @@ function readStringArray(v: unknown): string[] {
     .filter(Boolean)
 }
 
+function sumPrincipalesServings(rows: PrincipalesRow[] | undefined): number {
+  return (rows || []).reduce((acc, r) => acc + (Number(r.servings) || 0), 0)
+}
+
 function getPrincipalesItems(menu: GroupMenuDisplay | null): string[] {
   if (!menu || !menu.principales || typeof menu.principales !== 'object') return []
   const items = (menu.principales as any).items
@@ -1010,6 +1014,20 @@ export function Reservas() {
   }, [groupMenus, groupMenuId])
 
   const principalesItems = useMemo(() => getPrincipalesItems(selectedMenu), [selectedMenu])
+
+  // Coordination id: special_menu_group_booking_v1 - a special menu offered as a
+  // group menu can make its main courses mandatory, so the guest cannot skip
+  // them and their servings must add up exactly to the party size.
+  const specialPrincipalesRequired = selectedMenu?.special_principales_required === true
+
+  // Coordination id: special_menu_group_booking_v1 - mandatory main courses are
+  // always on: flip the toggle for the guest and seed the first empty row so the
+  // step cannot be skipped.
+  useEffect(() => {
+    if (!specialPrincipalesRequired) return
+    setPrincipalesEnabled((prev) => (prev === true ? prev : true))
+    setPrincipalesRows((prev) => (prev.length === 0 ? [{ name: '', servings: 0 }] : prev))
+  }, [specialPrincipalesRequired])
 
   const countryOptions = useMemo<PopoverSelectOption[]>(
     () => countrySelectOptions(buildCountries(text)),
@@ -1767,6 +1785,11 @@ export function Reservas() {
       pushToast('warning', text('Menú requerido', 'Menu required'), text('Seleccione un menú de grupo.', 'Select a group menu.'))
       return false
     }
+    // Coordination id: special_menu_group_booking_v1 - mandatory main courses.
+    if (specialPrincipalesRequired && principalesEnabled !== true) {
+      pushToast('warning', text('Principales', 'Main courses'), text('Debe elegir los platos principales del menú.', "You must choose the menu's main courses."))
+      return false
+    }
     if (principalesEnabled === true) {
       const cleaned = principalesRows
         .map((r) => ({ name: r.name.trim(), servings: Number(r.servings) || 0 }))
@@ -1783,12 +1806,18 @@ export function Reservas() {
           return false
         }
       }
-      const sum = cleaned.reduce((acc, r) => acc + r.servings, 0)
+      const sum = sumPrincipalesServings(cleaned)
       if (cleaned.length === 0 || sum <= 0) {
         pushToast('warning', text('Principales', 'Main courses'), text('Añade al menos un principal.', 'Add at least one main course.'))
         return false
       }
-      if (partySize && sum > partySize) {
+      // Coordination id: special_menu_group_booking_v1 - mandatory main courses
+      // must add up EXACTLY to the guests (same rule as the special-date flow).
+      if (partySize && specialPrincipalesRequired && sum !== partySize) {
+        pushToast('warning', text('Principales', 'Main courses'), text('Las raciones deben sumar el número de comensales.', 'Servings must add up to the number of guests.'))
+        return false
+      }
+      if (partySize && !specialPrincipalesRequired && sum > partySize) {
         pushToast('warning', text('Principales', 'Main courses'), text('Las raciones superan el número de comensales.', 'Servings exceed the number of guests.'))
         return false
       }
@@ -2716,9 +2745,19 @@ export function Reservas() {
                       </ul>
                     </div>
 
-                    <div class="resvMenuBlock" data-testid="reservas-group-mains-block">
+                    {/* Coordination id: special_menu_group_booking_v1 - a special
+                        menu offered as a group menu can make its main courses
+                        mandatory: keep the very same block, only hide the "No"
+                        option so the step cannot be skipped. */}
+                    <div
+                      class="resvMenuBlock"
+                      data-testid={specialPrincipalesRequired ? 'reservas-group-mains-required-block' : 'reservas-group-mains-block'}
+                    >
                       <div class="resvMenuTitle" data-testid="reservas-group-mains-title">{getPrincipalesTitle(selectedMenu, lang)}</div>
-                      <div class="resvHint" data-testid="reservas-group-mains-hint">{text('¿Queréis elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
+                      {specialPrincipalesRequired ? (
+                        <div class="resvHint" data-testid="reservas-group-mains-required-hint">{text('Este menú exige elegir los platos principales.', 'This menu requires choosing main courses.')}</div>
+                      ) : null}
+                      <div class="resvHint" data-testid="reservas-group-mains-hint">{text('¿Quieres elegir ahora los principales?', 'Would you like to choose the main courses now?')}</div>
                       <div class="resvYesNo" data-testid="reservas-group-mains-choice">
                         <button
                           type="button"
@@ -2733,17 +2772,19 @@ export function Reservas() {
                         >
                           {text('Sí', 'Yes')}
                         </button>
-                        <button
-                          type="button"
-                          data-testid="reservas-group-mains-no"
-                          class={principalesEnabled === false ? 'resvChoice selected' : 'resvChoice'}
-                          onClick={() => {
-                            setPrincipalesEnabled(false)
-                            setPrincipalesRows([])
-                          }}
-                        >
-                          {text('No', 'No')}
-                        </button>
+                        {specialPrincipalesRequired ? null : (
+                          <button
+                            type="button"
+                            data-testid="reservas-group-mains-no"
+                            class={principalesEnabled === false ? 'resvChoice selected' : 'resvChoice'}
+                            onClick={() => {
+                              setPrincipalesEnabled(false)
+                              setPrincipalesRows([])
+                            }}
+                          >
+                            {text('No', 'No')}
+                          </button>
+                        )}
                       </div>
 
                       {principalesEnabled === true ? (

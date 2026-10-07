@@ -52,6 +52,14 @@ export type GroupMenuDisplay = {
   main_dishes_limit: boolean
   main_dishes_limit_number: number
   created_at: string
+  // Coordination id: special_menu_group_booking_v1
+  // A special-type menu (menu_type='special') offered as a group menu. Its
+  // principales.items is pre-populated with the dishes of its image sections,
+  // so the group-menu main courses block is reused as-is.
+  special_group_menu_enabled?: boolean
+  // Same coordination id: those main courses are mandatory for the booking, so
+  // the wizard must not let the guest skip them.
+  special_principales_required?: boolean
 }
 
 export type GroupMenusDisplayResponse = {
