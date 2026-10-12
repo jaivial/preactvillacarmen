@@ -29,6 +29,18 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     }}>
       <section class="publicAdModal" role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'}>
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
+        {props.ad.canvas ? (
+          <div
+            class="publicAdCanvasFrame"
+            style={{ aspectRatio: `${props.ad.canvas.width} / ${props.ad.canvas.height}` }}
+          >
+            <iframe
+              src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home`}
+              title={props.ad.name || 'Anuncio'}
+              loading="eager"
+            />
+          </div>
+        ) : (
         <div class="publicAdContent">
           {props.ad.content.map((item, index) => {
             const style = { textAlign: item.align || 'left' } as const
@@ -41,12 +53,13 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
             return [...before, <p key={item.id} style={style}>{item.value}</p>]
           })}
           {slotted.filter((cta) => (cta.slot as number) >= props.ad.content.length).map(renderCta)}
-        </div>
         {trailing.length ? (
           <div class="publicAdActions">
             {trailing.map(renderCta)}
           </div>
         ) : null}
+        </div>
+        )}
       </section>
     </div>
   )

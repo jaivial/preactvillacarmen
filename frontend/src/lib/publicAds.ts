@@ -18,12 +18,19 @@ export type PublicAdCTA = {
   slot?: number
 }
 
+export type PublicAdCanvas = {
+  width: number
+  height: number
+}
+
 export type PublicAd = {
   id: number
   name: string
   active: boolean
   content: PublicAdContent[]
   ctas: PublicAdCTA[]
+  /** Free-form canvas ads (ads_canvas_v1) render 1-1 through the render endpoint iframe. */
+  canvas?: PublicAdCanvas | null
   starts_at?: string | null
   ends_at?: string | null
 }
