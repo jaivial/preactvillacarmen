@@ -104,6 +104,11 @@ body.vc-modal-open {
     border-radius: 10px;
 }
 
+.publicAdClose {
+    position: absolute;
+    z-index: 3;
+}
+
 .publicAdCanvasFrame iframe {
     display: block;
     width: 100%;
