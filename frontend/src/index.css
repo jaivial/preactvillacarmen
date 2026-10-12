@@ -97,6 +97,25 @@ body.vc-modal-open {
     cursor: pointer;
 }
 
+/* Canvas ad (ads_canvas_v1): iframe renders 1-1 from the backend render endpoint. */
+.publicAdCanvasFrame {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.publicAdClose {
+    position: absolute;
+    z-index: 3;
+}
+
+.publicAdCanvasFrame iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
 .publicAdContent { display: grid; gap: 12px; }
 .publicAdContent h2, .publicAdContent h3, .publicAdContent p { margin: 0; }
 .publicAdContent h2 { font-family: var(--font-display); font-size: 26px; line-height: 1.2; }
