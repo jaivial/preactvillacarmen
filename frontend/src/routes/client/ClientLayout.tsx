@@ -22,7 +22,11 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     let cancelled = false
     void fetchPublicAds()
       .then((ads) => {
-        if (!cancelled) setActiveAd(ads.find((ad) => !isAdSeen(ad.id)) || null)
+        if (!cancelled) {
+          const query = new URLSearchParams(window.location.search)
+          const previewId = query.get('vc_preview') === '1' ? Number(query.get('vc_ad')) : 0
+          setActiveAd((previewId > 0 ? ads.find((ad) => ad.id === previewId) : ads.find((ad) => !isAdSeen(ad.id))) || null)
+        }
       })
       .catch(() => {
         if (!cancelled) setActiveAd(null)
@@ -51,7 +55,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
-      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
+      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (new URLSearchParams(window.location.search).get("vc_preview") !== "1") markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )
 }

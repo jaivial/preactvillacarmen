@@ -6457,3 +6457,8 @@ svg {
         text-align: left;
     }
 }
+
+/* The designed canvas owns its spacing. Legacy content ads keep their padding. */
+.publicAdModal--canvas { padding: 0; }
+.publicAdModal--canvas .publicAdCanvasFrame { border-radius: inherit; }
+.publicAdClose { z-index: 4; }
