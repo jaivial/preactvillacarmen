@@ -80,6 +80,12 @@ export async function fetchPublicAds(isoDate = localISODate()): Promise<PublicAd
   return activeAdsForDate(response.ads || [], isoDate)
 }
 
+// Preview reads scheduled ads without changing live visibility or seen state.
+export async function fetchPreviewAd(adId: number): Promise<PublicAd | null> {
+  const response = await apiGetJson<PublicAdsResponse>('/api/public/ads')
+  return (response.ads || []).find((ad) => ad.id === adId) || null
+}
+
 // Coordination id: public_ad_seen_once_v1 - an ad closed with the X is marked
 // as seen for the browser session and never shown again in that session.
 const SEEN_ADS_KEY = 'vc_seen_ad_ids'

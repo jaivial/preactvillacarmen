@@ -6462,3 +6462,5 @@ svg {
 .publicAdModal--canvas { padding: 0; }
 .publicAdModal--canvas .publicAdCanvasFrame { border-radius: inherit; }
 .publicAdClose { z-index: 4; }
+
+button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: pointer; }
