@@ -4,13 +4,11 @@ import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
 import { PublicAdPopover } from '../../components/PublicAdPopover'
-import { fetchPublicAds, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
+import { fetchPublicAds, fetchPreviewAd, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [location] = useLocation()
   const [activeAd, setActiveAd] = useState<PublicAd | null>(null)
-  // vc_ad_preview_v1: id of the ad forced open by /?vc_ad=<id> (backoffice
-  // preview); when set, closing the popover must not mark the ad as seen.
 
   const [previewAdId, setPreviewAdId] = useState(0)
   const isHome = location === '/'
@@ -23,27 +21,17 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       setActiveAd(null)
       return
     }
-    // Coordination id: vc_ad_preview_v1 - /?vc_ad=<id> (backoffice preview)
-    // forces that ad open ignoring isAdSeen, so an editor sees the ad even if
-    // it was already dismissed; the backend date filter still applies. Without
-    // vc_ad the normal once-per-session behaviour is untouched.
-    const requested = Number(new URLSearchParams(window.location.search).get('vc_ad'))
-    const previewId = Number.isFinite(requested) && requested > 0 ? requested : 0
-    setPreviewAdId(previewId)
     let cancelled = false
-    void fetchPublicAds()
-      .then((ads) => {
-        if (cancelled) return
-        const preview = previewId > 0 ? ads.find((ad) => ad.id === previewId) : undefined
-        if (preview) {
-          setActiveAd(preview)
-          return
-        }
-        setActiveAd(ads.find((ad) => !isAdSeen(ad.id)) || null)
-      })
-      .catch(() => {
-        if (!cancelled) setActiveAd(null)
-      })
+    const query = new URLSearchParams(window.location.search)
+    const requested = Number(query.get('vc_ad'))
+    const previewId = Number.isSafeInteger(requested) && requested > 0 ? requested : 0
+    setPreviewAdId(previewId)
+    // Preserve main vc_ad preview and read scheduled saved ads without live visibility changes.
+    if (previewId > 0) {
+      void fetchPreviewAd(previewId).then((ad) => { if (!cancelled) setActiveAd(ad) }).catch(() => { if (!cancelled) setActiveAd(null) })
+    } else {
+      void fetchPublicAds().then((ads) => { if (!cancelled) setActiveAd(ads.find((ad) => !isAdSeen(ad.id)) || null) }).catch(() => { if (!cancelled) setActiveAd(null) })
+    }
     return () => { cancelled = true }
   }, [isHome])
 
@@ -68,12 +56,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
-      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => {
-        // vc_ad_preview_v1: a previewed ad is not the real user's session, so
-        // closing it never writes the seen flag.
-        if (!previewAdId) markAdSeen(activeAd.id)
-        setActiveAd(null)
-      }} /> : null}
+      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (!previewAdId) markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )
 }
