@@ -34,17 +34,22 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
   }
 
+  const canvas = props.ad.canvas
+  const dims = canvas ? adCanvasDimsForWidth(canvas, viewportWidth) : null
+
   // Container chrome overrides (ads_canvas_container_v1) edited in the
   // backoffice studio: popover max width, overlay color and modal radius.
+  // Default: the modal hugs the edited canvas (1 canvas px = 1 screen px);
+  // an explicit maxWidth caps it. Mirrored in AdVisualStudio (backoffice).
+  const MODAL_PAD_X = 22
   const container = props.ad.canvas?.container
   const modalStyle = {
-    ['--vc-ad-modal-max' as string]: container?.maxWidth ? `${container.maxWidth}px` : undefined,
+    ['--vc-ad-modal-max' as string]: container?.maxWidth
+      ? `${container.maxWidth}px`
+      : dims ? `${dims.width + 2 * MODAL_PAD_X}px` : undefined,
     borderRadius: container?.radius ? `${container.radius}px` : undefined,
   } as const
   const overlayStyle = container?.overlay ? { background: container.overlay } as const : undefined
-
-  const canvas = props.ad.canvas
-  const dims = canvas ? adCanvasDimsForWidth(canvas, viewportWidth) : null
 
   const modal = (
     <div class="publicAdOverlay" role="presentation" style={overlayStyle} onClick={(event) => {
