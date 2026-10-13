@@ -1,6 +1,7 @@
-import { useEffect } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
 import type { PublicAd } from '../lib/publicAds'
+import { adCanvasDimsForWidth } from '../lib/publicAds'
 import { safeUrl } from '../lib/safeUrl'
 
 export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
@@ -16,6 +17,16 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     }
   }, [props])
 
+  // Coordination id: ads_canvas_breakpoints_v1 - the popover renders the same
+  // responsive variant a visitor's viewport maps to, and re-picks it when a
+  // resize crosses a breakpoint (768 / 1024, shared with the backend + studio).
+  const [viewportWidth, setViewportWidth] = useState(() => (typeof window === 'undefined' ? 0 : window.innerWidth))
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const slotted = props.ad.ctas.filter((cta) => typeof cta.slot === 'number')
   const trailing = props.ad.ctas.filter((cta) => typeof cta.slot !== 'number')
   const renderCta = (cta: PublicAd['ctas'][number]) => {
@@ -23,19 +34,31 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
   }
 
+  // Container chrome overrides (ads_canvas_container_v1) edited in the
+  // backoffice studio: popover max width, overlay color and modal radius.
+  const container = props.ad.canvas?.container
+  const modalStyle = {
+    ['--vc-ad-modal-max' as string]: container?.maxWidth ? `${container.maxWidth}px` : undefined,
+    borderRadius: container?.radius ? `${container.radius}px` : undefined,
+  } as const
+  const overlayStyle = container?.overlay ? { background: container.overlay } as const : undefined
+
+  const canvas = props.ad.canvas
+  const dims = canvas ? adCanvasDimsForWidth(canvas, viewportWidth) : null
+
   const modal = (
-    <div class="publicAdOverlay" role="presentation" onClick={(event) => {
+    <div class="publicAdOverlay" role="presentation" style={overlayStyle} onClick={(event) => {
       if (event.currentTarget === event.target) props.onClose()
     }}>
-      <section class="publicAdModal" role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'}>
+      <section class="publicAdModal" role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={modalStyle}>
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
-        {props.ad.canvas ? (
+        {canvas && dims ? (
           <div
             class="publicAdCanvasFrame"
-            style={{ aspectRatio: `${props.ad.canvas.width} / ${props.ad.canvas.height}` }}
+            style={{ aspectRatio: `${dims.width} / ${dims.height}` }}
           >
             <iframe
-              src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home`}
+              src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home&variant=${dims.variant}`}
               title={props.ad.name || 'Anuncio'}
               loading="eager"
             />
