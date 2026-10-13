@@ -4,7 +4,7 @@ import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
 import { useLocation } from 'wouter-preact'
 import { PublicAdPopover } from '../../components/PublicAdPopover'
-import { fetchPublicAds, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
+import { fetchPublicAds, fetchPreviewAd, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
   const [location] = useLocation()
@@ -20,17 +20,13 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       return
     }
     let cancelled = false
-    void fetchPublicAds()
-      .then((ads) => {
-        if (!cancelled) {
-          const query = new URLSearchParams(window.location.search)
-          const previewId = query.get('vc_preview') === '1' ? Number(query.get('vc_ad')) : 0
-          setActiveAd((previewId > 0 ? ads.find((ad) => ad.id === previewId) : ads.find((ad) => !isAdSeen(ad.id))) || null)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setActiveAd(null)
-      })
+    const query = new URLSearchParams(window.location.search)
+    const previewId = query.get('vc_preview') === '1' ? Number(query.get('vc_ad')) : 0
+    if (previewId > 0) {
+      void fetchPreviewAd(previewId).then((ad) => { if (!cancelled) setActiveAd(ad) }).catch(() => { if (!cancelled) setActiveAd(null) })
+    } else {
+      void fetchPublicAds().then((ads) => { if (!cancelled) setActiveAd(ads.find((ad) => !isAdSeen(ad.id)) || null) }).catch(() => { if (!cancelled) setActiveAd(null) })
+    }
     return () => { cancelled = true }
   }, [isHome])
 
