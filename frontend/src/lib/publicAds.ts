@@ -18,12 +18,25 @@ export type PublicAdCTA = {
   slot?: number
 }
 
-export type PublicAdCanvas = {
+export type PublicAdCanvasVariant = {
+  container?: PublicAdCanvas["container"];
   width: number
   height: number
 }
 
+export type PublicAdCanvas = {
+  width: number
+  height: number
+  /** Per-breakpoint overrides (ads_canvas_breakpoints_v1); absent = base doc. */
+  variants?: { tablet?: PublicAdCanvasVariant; mobile?: PublicAdCanvasVariant }
+  /** Popover chrome overrides (ads_canvas_container_v1); absent = site defaults. */
+  container?: { maxWidth?: number; overlay?: string; radius?: number } | null
+}
+
+export type PublicAdStep = { id: string; title: string; description: string; content: PublicAdContent[]; buttons: PublicAdCTA[]; see_more?: boolean; background_mode: string; background_color?: string; background_image?: string; detail_background_mode?: string; detail_background_color?: string; detail_background_image?: string; canvas?: PublicAdCanvas | null }
+
 export type PublicAd = {
+  layout?: { mode: "unico" | "multiple"; steps: PublicAdStep[] };
   id: number
   name: string
   active: boolean
@@ -91,4 +104,19 @@ export function markAdSeen(adId: number): void {
   } catch {
     console.warn('[public_ad_seen_once_v1] sessionStorage unavailable')
   }
+}
+
+// Coordination id: ads_canvas_breakpoints_v1 - same thresholds as the backend
+// render endpoint (internal/api/ads_canvas.go) and the backoffice studio.
+export function adVariantForWidth(vw: number): 'mobile' | 'tablet' | 'desktop' {
+  if (vw > 0 && vw < 768) return 'mobile'
+  if (vw > 0 && vw < 1024) return 'tablet'
+  return 'desktop'
+}
+
+/** Dims of the canvas document that renders at the given viewport width. */
+export function adCanvasDimsForWidth(canvas: PublicAdCanvas, vw: number): { width: number; height: number; variant: string } {
+  const variant = adVariantForWidth(vw)
+  const dims = variant === 'desktop' ? null : canvas.variants?.[variant]
+  return dims ? { ...dims, variant } : { width: canvas.width, height: canvas.height, variant }
 }

@@ -72,7 +72,10 @@ body.vc-modal-open {
    backoffice editor preview render the same single-column arrangement. */
 .publicAdModal {
     position: relative;
-    width: min(100%, 560px);
+    /* Width editable from the ad studio container panel (ads_canvas_container_v1).
+       Canvas ads set --vc-ad-modal-max inline to canvas width + padding so the
+       ad shows at its edited size; 560px stays the default for content ads. */
+    width: min(100%, var(--vc-ad-modal-max, 560px));
     max-height: 80vh;
     overflow: auto;
     border-radius: 24px;
@@ -6454,3 +6457,8 @@ svg {
         text-align: left;
     }
 }
+
+/* The designed canvas owns its spacing. Legacy content ads keep their padding. */
+.publicAdModal--canvas { padding: 0; }
+.publicAdModal--canvas .publicAdCanvasFrame { border-radius: inherit; }
+.publicAdClose { z-index: 4; }
