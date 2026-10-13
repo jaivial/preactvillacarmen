@@ -27,6 +27,11 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  const [stepId, setStepId] = useState<string | null>(null)
+  useEffect(() => { const q = new URLSearchParams(window.location.search); setStepId(q.get('vc_preview') === '1' ? q.get('vc_step') : null) }, [props.ad.id])
+  const steps = props.ad.layout?.mode === 'multiple' ? props.ad.layout.steps : []
+  const step = steps.find((s) => s.id === stepId)
+  const content = step?.content ?? props.ad.content
   const slotted = props.ad.ctas.filter((cta) => typeof cta.slot === 'number')
   const trailing = props.ad.ctas.filter((cta) => typeof cta.slot !== 'number')
   const renderCta = (cta: PublicAd['ctas'][number]) => {
@@ -34,43 +39,60 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     return href ? <a key={cta.id} href={href} class="publicAdAction" style={{ backgroundColor: cta.color || undefined }}>{cta.text}</a> : null
   }
 
-  const canvas = props.ad.canvas
+  const canvas = steps.length ? step?.canvas : props.ad.canvas
   const dims = canvas ? adCanvasDimsForWidth(canvas, viewportWidth) : null
 
   // Container chrome overrides (ads_canvas_container_v1) edited in the
   // backoffice studio: popover max width, overlay color and modal radius.
   // Default: the modal hugs the edited canvas (1 canvas px = 1 screen px);
   // an explicit maxWidth caps it. Mirrored in AdVisualStudio (backoffice).
-  const MODAL_PAD_X = 22
-  const container = props.ad.canvas?.container
+  const MODAL_PAD_X = 0
+  const container = { ...canvas?.container, ...(dims?.variant === "mobile" || dims?.variant === "tablet" ? canvas?.variants?.[dims.variant]?.container : undefined) }
   const modalStyle = {
     ['--vc-ad-modal-max' as string]: container?.maxWidth
       ? `${container.maxWidth}px`
       : dims ? `${dims.width + 2 * MODAL_PAD_X}px` : undefined,
-    borderRadius: container?.radius ? `${container.radius}px` : undefined,
+    borderRadius: container?.radius !== undefined ? `${container.radius}px` : undefined,
   } as const
+  const detailBg = step?.detail_background_mode || step?.background_mode
+  const detailImage = step?.detail_background_image || step?.background_image
+  const detailStyle = !canvas && step ? {
+    backgroundColor: detailBg === 'color' ? (step.detail_background_color || step.background_color) : detailBg === 'transparent' ? 'transparent' : undefined,
+    backgroundImage: detailBg === 'image' && safeUrl(detailImage) ? `url(${safeUrl(detailImage)})` : undefined,
+    backgroundSize: 'cover',
+  } : undefined
   const overlayStyle = container?.overlay ? { background: container.overlay } as const : undefined
 
   const modal = (
     <div class="publicAdOverlay" role="presentation" style={overlayStyle} onClick={(event) => {
       if (event.currentTarget === event.target) props.onClose()
     }}>
-      <section class="publicAdModal" role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={modalStyle}>
+      <section class={`publicAdModal${canvas ? " publicAdModal--canvas" : ""}`} role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={{ ...modalStyle, ...detailStyle }}>
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
+        {steps.length && !step ? (
+          <div class="publicAdContent">
+            {steps.map((item) => <div key={item.id} style={{ backgroundColor: item.background_mode === 'color' ? item.background_color : undefined, backgroundImage: item.background_mode === 'image' && safeUrl(item.background_image) ? `url(${safeUrl(item.background_image)})` : undefined, padding: '16px', borderRadius: '12px' }}>
+              <h2>{item.title}</h2><p>{item.description}</p>
+              {item.buttons.map(renderCta)}
+              <button type="button" class="publicAdAction" onClick={() => setStepId(item.id)} aria-label={`Abrir ${item.title}`}>{item.see_more === false ? 'Abrir' : 'Ver más'}</button>
+            </div>)}
+          </div>
+        ) : <>
+        {step ? <button type="button" onClick={() => setStepId(null)} style={{ position: canvas ? 'absolute' : undefined, zIndex: 2 }}>Volver</button> : null}
         {canvas && dims ? (
           <div
             class="publicAdCanvasFrame"
             style={{ aspectRatio: `${dims.width} / ${dims.height}` }}
           >
             <iframe
-              src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home&variant=${dims.variant}`}
+              src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home&variant=${dims.variant}${step ? `&step=${encodeURIComponent(step.id)}` : ""}`}
               title={props.ad.name || 'Anuncio'}
               loading="eager"
             />
           </div>
         ) : (
         <div class="publicAdContent">
-          {props.ad.content.map((item, index) => {
+          {content.map((item, index) => {
             const style = { textAlign: item.align || 'left' } as const
             // Coordination id: ads_button_slot_v1 - buttons placed inside the
             // content flow render before the content index they point at.
@@ -80,14 +102,14 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
             if (item.type === 'subtitle') return [...before, <h3 key={item.id} style={style}>{item.value}</h3>]
             return [...before, <p key={item.id} style={style}>{item.value}</p>]
           })}
-          {slotted.filter((cta) => (cta.slot as number) >= props.ad.content.length).map(renderCta)}
+          {slotted.filter((cta) => (cta.slot as number) >= content.length).map(renderCta)}
         {trailing.length ? (
           <div class="publicAdActions">
             {trailing.map(renderCta)}
           </div>
         ) : null}
         </div>
-        )}
+        )}</>}
       </section>
     </div>
   )
