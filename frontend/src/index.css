@@ -72,7 +72,9 @@ body.vc-modal-open {
    backoffice editor preview render the same single-column arrangement. */
 .publicAdModal {
     position: relative;
-    width: min(100%, 560px);
+    /* Max width editable from the ad studio container panel
+       (ads_canvas_container_v1); 560px is the site default. */
+    width: min(100%, var(--vc-ad-modal-max, 560px));
     max-height: 80vh;
     overflow: auto;
     border-radius: 24px;
