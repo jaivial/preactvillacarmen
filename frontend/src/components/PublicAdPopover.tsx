@@ -72,7 +72,12 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
         {steps.length && !step ? (
           <div class="publicAdContent">
             {steps.map((item) => <div key={item.id} style={{ backgroundColor: item.background_mode === 'color' ? item.background_color : undefined, backgroundImage: item.background_mode === 'image' && safeUrl(item.background_image) ? `url(${safeUrl(item.background_image)})` : undefined, padding: '16px', borderRadius: '12px' }}>
-              <h2>{item.title}</h2><p>{item.description}</p>
+              {item.card_canvas ? (() => {
+                const cardDims = adCanvasDimsForWidth(item.card_canvas, viewportWidth)
+                return <div class="publicAdCanvasFrame" style={{ aspectRatio: `${cardDims.width} / ${cardDims.height}`, width: '100%', pointerEvents: 'none' }}>
+                  <iframe src={`/api/public/ads/${props.ad.id}/render?src=villacarmen-home&variant=${cardDims.variant}&step=${encodeURIComponent(item.id)}&card=1`} title={item.title || 'Anuncio'} style={{ width: '100%', height: '100%', border: 0, display: 'block' }} />
+                </div>
+              })() : <><h2>{item.title}</h2><p>{item.description}</p></>}
               {item.buttons.map(renderCta)}
               <button type="button" class="publicAdAction" onClick={() => setStepId(item.id)} aria-label={`Abrir ${item.title}`}>{item.see_more === false ? 'Abrir' : 'Ver más'}</button>
             </div>)}
