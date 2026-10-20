@@ -6605,3 +6605,6 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     padding: 0.3rem 0.7rem;
     border-radius: 4px;
 }
+
+/* Step list: reserve a controls band so the close button never sits on a card. */
+.publicAdContent--steps { padding-top: 56px; }
