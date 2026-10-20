@@ -6464,3 +6464,64 @@ svg {
 .publicAdClose { z-index: 4; }
 
 button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: pointer; }
+
+/* Coordination id: special_menu_completo_v1
+   Red "COMPLETO" ribbon for special menus flagged in the backoffice.
+   Base (--banner): horizontal band above each section of the special menu
+   page. --diagonal: rotated corner ribbon on the home menu card. --nav:
+   small diagonal badge on burger panel items. */
+.vc-ribbon-completo {
+    display: inline-block;
+    background: #c00;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 0.4rem 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.vc-ribbon-completo--banner {
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: 6px 6px 0 0;
+}
+
+.vc-ribbon-completo--diagonal {
+    position: absolute;
+    top: 1.4rem;
+    left: -2.75rem;
+    transform: rotate(-45deg);
+    padding: 0.4rem 3rem;
+}
+
+/* The card clips the diagonal ribbon to its rounded corner. */
+.vc-menuCard.special {
+    position: relative;
+    overflow: hidden;
+}
+
+.vc-ribbon-completo--nav {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    margin-left: 2rem;
+    transform: translateY(-50%) rotate(-45deg);
+    font-size: 0.6rem;
+    padding: 0.25rem 0.7rem;
+}
+
+.navMenuBurger__links li {
+    position: relative;
+}
+
+/* Link text clears the diagonal badge when the item is marked COMPLETO. */
+.navMenuBurger__links li:has(> .vc-ribbon-completo) .navBurgerLink {
+    padding-left: 6rem;
+}

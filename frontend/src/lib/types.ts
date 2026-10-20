@@ -179,6 +179,9 @@ export type PublicMenu = {
   menu_subtitle_english?: string[]
   slider_mode?: 'default' | 'custom' | 'both' | 'hidden'
   slider_images?: string[]
+  // Coordination id: special_menu_completo_v1 - red "COMPLETO" ribbon when the
+  // backoffice flags the special menu as full.
+  completo?: boolean
   // Coordination id: menu_weekday_availability_v1
   // Weekly availability calendar persisted per menu in the backend. The client
   // SDK uses it to know which weekday a booking falls on and which menu is
@@ -378,6 +381,11 @@ export type ReservationDayContextResponse = {
   /** Resolved mobility setting for this date (global default with the per-day
    *  override applied; the concrete day wins). Coordination id: mobility_day_override_v1 */
   mobility_enabled?: boolean
+  /** Resolved guest-count toggles for this date (active special date wins,
+   *  otherwise all true). Coordination id: guest_count_flags_v1 */
+  ask_adults?: boolean
+  ask_high_chairs?: boolean
+  ask_baby_strollers?: boolean
 }
 
 export type ValidGroupMenusForPartySizeResponse = {
@@ -406,6 +414,8 @@ export type SidebarMenu = {
   // Coordination id: special_menu_visibility_v1
   web_placement?: string
   legacy_source_table?: string
+  // Coordination id: special_menu_completo_v1
+  completo?: boolean
 }
 
 // Lightweight menu data for the homepage cards section.
@@ -420,6 +430,8 @@ export type HomeMenu = {
   menu_subtitle_english?: string[]
   show_menu_preview_image: boolean
   menu_preview_image_url: string
+  // Coordination id: special_menu_completo_v1
+  completo?: boolean
 }
 
 // Response shape for GET /api/menus/{id}.
@@ -543,6 +555,10 @@ export type SpecialDateSummary = {
   max_per_table?: number | null
   /** Ask the mobility question in the wizard. Coordination id: mobility_issues_v1 */
   mobility_enabled?: boolean
+  /** Guest-count toggles. Coordination id: guest_count_flags_v1 */
+  ask_adults?: boolean
+  ask_high_chairs?: boolean
+  ask_baby_strollers?: boolean
 }
 
 export type SpecialDatesResponse = {
@@ -596,6 +612,10 @@ export type SpecialDatePublic = {
   max_per_table?: number | null
   /** Coordination id: mobility_issues_v1 */
   mobility_enabled?: boolean
+  /** Coordination id: guest_count_flags_v1 */
+  ask_adults?: boolean
+  ask_high_chairs?: boolean
+  ask_baby_strollers?: boolean
   requires_adelanto: boolean
   adelanto_payment_methods: PaymentMethodKey[]
   adelanto_unified: boolean
