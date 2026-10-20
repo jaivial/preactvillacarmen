@@ -298,6 +298,8 @@ export function normalizePublicMenu(value: unknown): PublicMenu {
     special_menu_sections: toPublicMenuSpecialSections(record.special_menu_sections),
     special_date: toPublicMenuSpecialDate(record.special_date),
     special_cta: toPublicMenuSpecialCta(record.special_cta),
+    // Coordination id: special_menu_completo_v1
+    completo: toBool(record.completo) === true,
     // Coordination id: special_menu_visibility_v1
     web_placement: normalizeWebPlacement(record.web_placement),
     menu_public_active: toBool(record.menu_public_active) !== false,

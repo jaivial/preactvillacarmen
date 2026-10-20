@@ -22,6 +22,9 @@ type NavItem = {
   href: string
   labelKey?: string
   label?: string
+  // Coordination id: special_menu_completo_v1 - diagonal "COMPLETO" ribbon on
+  // the burger item of a full special menu.
+  completo?: boolean
 }
 
 /**
@@ -251,6 +254,7 @@ export function ClientHeader() {
     const menuLinks = nonGroupMenus.map((menu) => ({
       href: buildPublicMenuHref(menu),
       label: menu.menu_title,
+      completo: menu.completo === true,
     }))
 
     const hasGroupMenus = sidebarMenus.some((menu) => menu.active && isGroupMenuType(menu.menu_type))
@@ -276,7 +280,7 @@ export function ClientHeader() {
       const standaloneMenus: NavItem[] = sidebarMenus
         ? sidebarMenus
             .filter((menu) => menu.active && isNonGroupMenuType(menu.menu_type) && menu.web_placement === 'independent_section')
-            .map((menu) => ({ href: buildPublicMenuHref(menu), label: menu.menu_title }))
+            .map((menu) => ({ href: buildPublicMenuHref(menu), label: menu.menu_title, completo: menu.completo === true }))
         : []
       const sections: NavItem[] = navSections
         .filter((section) => section.web_placement === 'independent_section')
@@ -354,6 +358,12 @@ export function ClientHeader() {
                   const label = item.label || t(item.labelKey || '')
                   return (
                     <li key={item.href} data-testid={`client-header-menu-sublink-item-${item.href}`}>
+                      {/* Coordination id: special_menu_completo_v1 */}
+                      {item.completo ? (
+                        <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-menu-sublink-completo-ribbon-${item.href}`}>
+                          COMPLETO
+                        </span>
+                      ) : null}
                       <Link
                         href={item.href}
                         className={isActive ? 'navBurgerLink navBurgerSubLink active' : 'navBurgerLink navBurgerSubLink'}
@@ -372,6 +382,12 @@ export function ClientHeader() {
             const isActive = location.startsWith(item.href.split('#')[0])
             return (
               <li key={item.href} data-testid={`client-header-independent-section-item-${item.href}`}>
+                {/* Coordination id: special_menu_completo_v1 */}
+                {item.completo ? (
+                  <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-independent-section-completo-ribbon-${item.href}`}>
+                    COMPLETO
+                  </span>
+                ) : null}
                 <Link
                   href={item.href}
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}

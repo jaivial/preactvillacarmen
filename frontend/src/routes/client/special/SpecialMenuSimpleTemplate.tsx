@@ -71,6 +71,13 @@ export function SpecialMenuSimpleTemplate(props: {
                   class="specialMenuSection"
                   data-testid={`public-menu-section-${section.id}`}
                 >
+                  {/* Coordination id: special_menu_completo_v1 - red band over
+                      every section while the menu is flagged COMPLETO. */}
+                  {props.menu.completo ? (
+                    <div class="vc-ribbon-completo vc-ribbon-completo--banner" data-testid={`public-menu-section-completo-ribbon-${section.id}`}>
+                      COMPLETO
+                    </div>
+                  ) : null}
                   {section.title ? (
                     <h2 class="specialMenuSectionTitle" data-testid={`public-menu-section-title-${section.id}`}>{section.title}</h2>
                   ) : null}
