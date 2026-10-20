@@ -70,6 +70,19 @@ const resolveMobilityEnabled = (
   fallback?: { mobility_enabled?: boolean } | null
 ): boolean => dayCtx?.mobility_enabled ?? fallback?.mobility_enabled ?? false
 
+// Coordination id: guest_count_flags_v1 — resolved guest-count toggles for a
+// date (active special date wins; anything missing defaults to asking, which
+// matches the legacy wizard). Same primary/fallback pattern as mobility.
+type GuestCountFlags = { ask_adults?: boolean; ask_high_chairs?: boolean; ask_baby_strollers?: boolean }
+const resolveGuestCountFlags = (
+  dayCtx?: GuestCountFlags | null,
+  fallback?: GuestCountFlags | null
+): { askAdults: boolean; askHighChairs: boolean; askBabyStrollers: boolean } => ({
+  askAdults: dayCtx?.ask_adults ?? fallback?.ask_adults ?? true,
+  askHighChairs: dayCtx?.ask_high_chairs ?? fallback?.ask_high_chairs ?? true,
+  askBabyStrollers: dayCtx?.ask_baby_strollers ?? fallback?.ask_baby_strollers ?? true,
+})
+
 type PrincipalesRow = { name: string; servings: number }
 
 type SpecialPrincipalesRow = { name: string; servings: number }
@@ -657,6 +670,11 @@ export function Reservas() {
   // never flickers on.
   const mobilityEnabledForSelectedDate: boolean = resolveMobilityEnabled(dayContext, activeSpecialSummary)
 
+  // Coordination id: guest_count_flags_v1 — resolved ask-toggles; when all
+  // three are off the whole "adults" step disappears from the wizard.
+  const { askAdults, askHighChairs, askBabyStrollers } = resolveGuestCountFlags(dayContext, activeSpecialSummary)
+  const guestCountsStepEnabled = askAdults || askHighChairs || askBabyStrollers
+
   // Coordination id: special_booking_v1
   // Lazy-load principales for each non-custom special menu by fetching the
   // underlying PublicMenu. We only request once per special_date_menu_id.
@@ -862,7 +880,7 @@ export function Reservas() {
         out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
       }
       out.push({ id: 'personal', label: text('Datos', 'Details') })
-      out.push({ id: 'adults', label: text('Adultos', 'Adults') })
+      if (guestCountsStepEnabled) out.push({ id: 'adults', label: text('Adultos', 'Adults') })
       out.push({ id: 'summary', label: text('Resumen', 'Summary') })
       return out
     }
@@ -889,11 +907,11 @@ export function Reservas() {
     if (mobilityEnabledForSelectedDate) out.push({ id: 'mobility', label: text('Movilidad', 'Mobility') })
 
     out.push({ id: 'personal', label: text('Datos', 'Details') })
-    out.push({ id: 'adults', label: text('Adultos', 'Adults') })
+    if (guestCountsStepEnabled) out.push({ id: 'adults', label: text('Adultos', 'Adults') })
 
     out.push({ id: 'summary', label: text('Resumen', 'Summary') })
     return out
-  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate, mobilityEnabledForSelectedDate, specialNeedsPrincipales])
+  }, [groupMenus, wantsGroupMenu, mandatoryMenuData, mandatoryMenuId, lang, isSpecialActiveForSelected, activeSpecialSummary, activeSpecialDate, mobilityEnabledForSelectedDate, specialNeedsPrincipales, guestCountsStepEnabled])
 
   const currentStepIndex = useMemo(() => steps.findIndex((s) => s.id === step), [steps, step])
 
@@ -1596,7 +1614,12 @@ export function Reservas() {
       // render value (mobilityEnabledForSelectedDate).
       if (resolveMobilityEnabled(dayCtx, sd)) reachable.push('mobility')
 
-      reachable.push('personal', 'adults', 'summary')
+      // Coordination id: guest_count_flags_v1 — the adults step only exists
+      // when at least one of the three counters is asked on this date.
+      const gf = resolveGuestCountFlags(dayCtx, sd)
+      reachable.push('personal')
+      if (gf.askAdults || gf.askHighChairs || gf.askBabyStrollers) reachable.push('adults')
+      reachable.push('summary')
 
       // Never restore past a step the guest has not actually completed, and
       // never onto a step this date does not have. Falling back to the last
@@ -2013,6 +2036,12 @@ export function Reservas() {
         setCheckingContact(false)
       }
     }
+    // Coordination id: guest_count_flags_v1 — without any counter question
+    // the adults step is skipped and personal goes straight to the summary.
+    if (!guestCountsStepEnabled) {
+      setStep('summary')
+      return
+    }
     if (partySize && (adults == null || adults < 1 || adults > partySize)) {
       setAdults(partySize)
     }
@@ -2098,10 +2127,14 @@ export function Reservas() {
     fd.set('contact_email', email.trim())
     fd.set('country_code', '+' + onlyDigits(countryCode))
     fd.set('contact_phone', onlyDigits(phoneNational))
-    const a = adults == null ? partySize : clamp(adults, 1, partySize)
-    const kids = clamp(partySize - a, 0, partySize)
-    fd.set('adults', String(a))
-    fd.set('children', String(kids))
+    // Coordination id: guest_count_flags_v1 — counters the date does not ask
+    // are not sent; the backend stores NULL for them.
+    if (askAdults) {
+      const a = adults == null ? partySize : clamp(adults, 1, partySize)
+      const kids = clamp(partySize - a, 0, partySize)
+      fd.set('adults', String(a))
+      fd.set('children', String(kids))
+    }
 
     // Coordination id: mobility_issues_v1 — only sent when the selected day's
     // resolved setting (mobility_day_override_v1) asks the question.
@@ -2203,8 +2236,9 @@ export function Reservas() {
       }
     }
 
-    fd.set('high_chairs', String(highChairs))
-    fd.set('baby_strollers', String(babyStrollers))
+    // Coordination id: guest_count_flags_v1
+    if (askHighChairs) fd.set('high_chairs', String(highChairs))
+    if (askBabyStrollers) fd.set('baby_strollers', String(babyStrollers))
 
     // Coordination id: stripe_prereserva_adelanto_v1 - stripe-only prereserva:
     // open the payment; the booking is only inserted after it is paid.
@@ -3463,11 +3497,13 @@ export function Reservas() {
     if (step === 'adults') {
       const ps = partySize || 2
       const a = adults == null ? ps : clamp(adults, 1, ps)
-      const fields: CounterField[] = [
-        { key: 'adults', testId: 'reservas-adults-counter', label: text('Adultos', 'Adults'), value: a, min: 1, max: ps, onChange: (n) => setAdults(n) },
-        { key: 'high-chairs', testId: 'reservas-high-chairs-counter', label: text('Tronas', 'High chairs'), value: highChairs, min: 0, max: 3, onChange: (n) => setHighChairs(n), subtitle: text('Suplemento de 2€ por trona', '€2 surcharge per high chair') },
-        { key: 'baby-strollers', testId: 'reservas-baby-strollers-counter', label: text('Carros de bebé', 'Baby strollers'), value: babyStrollers, min: 0, max: 5, onChange: (n) => setBabyStrollers(n), subtitle: text('Indique cuántos traerá', 'How many will you bring?') },
-      ]
+      // Coordination id: guest_count_flags_v1 — only the counters the date
+      // asks for are rendered; the step itself only exists when at least
+      // one of them is on.
+      const fields: CounterField[] = []
+      if (askAdults) fields.push({ key: 'adults', testId: 'reservas-adults-counter', label: text('Adultos', 'Adults'), value: a, min: 1, max: ps, onChange: (n) => setAdults(n) })
+      if (askHighChairs) fields.push({ key: 'high-chairs', testId: 'reservas-high-chairs-counter', label: text('Tronas', 'High chairs'), value: highChairs, min: 0, max: 3, onChange: (n) => setHighChairs(n), subtitle: text('Suplemento de 2€ por trona', '€2 surcharge per high chair') })
+      if (askBabyStrollers) fields.push({ key: 'baby-strollers', testId: 'reservas-baby-strollers-counter', label: text('Carros de bebé', 'Baby strollers'), value: babyStrollers, min: 0, max: 5, onChange: (n) => setBabyStrollers(n), subtitle: text('Indique cuántos traerá', 'How many will you bring?') })
       return (
         <div class="resvStep" data-testid="reservas-step-adults">
           <div class="resvCard" data-testid="reservas-adults-card">
@@ -3494,7 +3530,9 @@ export function Reservas() {
     // summary
     const ps = partySize || 0
     const wantsMenu = wantsGroupMenu === true && selectedMenu
-    const hasAccessories = highChairs > 0 || babyStrollers > 0
+    // Coordination id: guest_count_flags_v1 — counters the date never asked
+    // for are excluded from the summary even if a stale value lingers.
+    const hasAccessories = (askHighChairs && highChairs > 0) || (askBabyStrollers && babyStrollers > 0)
     const showSpecialBlock = Boolean(activeSpecialDate) && specialSummaryRows.length > 0
     return (
       <div class="resvStep" data-testid="reservas-step-summary">
@@ -3627,16 +3665,20 @@ export function Reservas() {
             {hasAccessories ? (
               <div class="resvSummaryBlock" data-testid="reservas-summary-accessories-block">
                 <div class="resvSummaryBlockTitle" data-testid="reservas-summary-accessories-title">{text('Accesorios', 'Accessories')}</div>
-                <div class="resvSummaryRow" data-testid="reservas-summary-row-baby-strollers">
-                  <span data-testid="reservas-summary-label-baby-strollers">{text('Carros de bebé', 'Baby strollers')}</span>
-                  <span class="resvSummaryValue" data-testid="reservas-summary-value-baby-strollers">{babyStrollers}</span>
-                </div>
-                <div class="resvSummaryRow" data-testid="reservas-summary-row-high-chairs">
-                  <span data-testid="reservas-summary-label-high-chairs">{text('Tronas', 'High chairs')}</span>
-                  <span class="resvSummaryValue" data-testid="reservas-summary-value-high-chairs">
-                    {highChairs} ({highChairs * 2}€)
-                  </span>
-                </div>
+                {askBabyStrollers && babyStrollers > 0 ? (
+                  <div class="resvSummaryRow" data-testid="reservas-summary-row-baby-strollers">
+                    <span data-testid="reservas-summary-label-baby-strollers">{text('Carros de bebé', 'Baby strollers')}</span>
+                    <span class="resvSummaryValue" data-testid="reservas-summary-value-baby-strollers">{babyStrollers}</span>
+                  </div>
+                ) : null}
+                {askHighChairs && highChairs > 0 ? (
+                  <div class="resvSummaryRow" data-testid="reservas-summary-row-high-chairs">
+                    <span data-testid="reservas-summary-label-high-chairs">{text('Tronas', 'High chairs')}</span>
+                    <span class="resvSummaryValue" data-testid="reservas-summary-value-high-chairs">
+                      {highChairs} ({highChairs * 2}€)
+                    </span>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
