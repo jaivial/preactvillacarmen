@@ -33,7 +33,7 @@ export type PublicAdCanvas = {
   container?: { maxWidth?: number; overlay?: string; radius?: number } | null
 }
 
-export type PublicAdStep = { id: string; title: string; description: string; content: PublicAdContent[]; buttons: PublicAdCTA[]; see_more?: boolean; background_mode: string; background_color?: string; background_image?: string; detail_background_mode?: string; detail_background_color?: string; detail_background_image?: string; canvas?: PublicAdCanvas | null }
+export type PublicAdStep = { id: string; title: string; description: string; content: PublicAdContent[]; buttons: PublicAdCTA[]; see_more?: boolean; background_mode: string; background_color?: string; background_image?: string; detail_background_mode?: string; detail_background_color?: string; detail_background_image?: string; canvas?: PublicAdCanvas | null; /** ads_step_card_canvas_v1: free-form card face; absent = classic card. */ card_canvas?: PublicAdCanvas | null }
 
 export type PublicAd = {
   layout?: { mode: "unico" | "multiple"; steps: PublicAdStep[] };
