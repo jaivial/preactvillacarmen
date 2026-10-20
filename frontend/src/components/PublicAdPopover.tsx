@@ -83,7 +83,7 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
             </div>)}
           </div>
         ) : <>
-        {step ? <button type="button" onClick={() => setStepId(null)} style={{ position: canvas ? 'absolute' : undefined, zIndex: 2 }}>Volver</button> : null}
+        {step ? <button type="button" onClick={() => setStepId(null)} class="publicAdBack" style={{ position: canvas ? 'absolute' : undefined, zIndex: 2 }}>Volver</button> : null}
         {canvas && dims ? (
           <div
             class="publicAdCanvasFrame"

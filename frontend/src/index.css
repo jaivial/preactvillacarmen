@@ -6564,3 +6564,16 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     padding: 0.3rem 0.7rem;
     border-radius: 4px;
 }
+
+.publicAdBack {
+  top: 14px;
+  left: 14px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(26, 46, 34, 0.1);
+  color: #1a2e22;
+  font-weight: 600; font-size: 16px; line-height: 1.2; font-family: inherit;
+  cursor: pointer;
+}
+.publicAdBack:hover { background: rgba(26, 46, 34, 0.18); }
