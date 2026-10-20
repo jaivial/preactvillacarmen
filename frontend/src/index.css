@@ -6555,14 +6555,10 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     position: relative;
 }
 
-/* Burger: simple horizontal badge to the right of the link text; the text
-   keeps its place. */
+/* Burger: simple horizontal badge inline, glued right after the link text. */
 .vc-ribbon-completo--nav {
-    position: absolute;
-    left: auto;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
+    margin-left: 0.75rem;
+    vertical-align: middle;
     font-size: 0.7rem;
     letter-spacing: 0.12em;
     padding: 0.3rem 0.7rem;
