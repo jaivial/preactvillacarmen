@@ -33,7 +33,10 @@ export function SpecialMenuSimpleTemplate(props: {
         <div class="container" data-testid="public-special-menu-hero-container">
           <h1 class="page-title" data-testid="public-special-menu-title">{props.menu.menu_title}</h1>
           <p class="page-subtitle" data-testid="public-special-menu-subtitle">{props.subtitle}</p>
-          {specialDate ? (
+          {/* Coordination id: special_menu_completo_v1 - a COMPLETO menu
+              hides the prereserva notice and the booking button even when
+              prereserva is enabled for the date. */}
+          {specialDate && !props.menu.completo ? (
             <div class="specialMenuDay" data-coordination-id="special_menu_price_date_v1" data-testid="public-special-menu-day">
               {specialDate.prereserva_enabled ? (
                 <p class="specialMenuDayPrereserva" data-testid="public-special-menu-prereserva">Es necesaria prereserva para esta fecha.</p>
@@ -50,6 +53,13 @@ export function SpecialMenuSimpleTemplate(props: {
         <div class="container" data-testid="public-special-menu-body-container">
           {props.imageUrl ? (
             <div class="specialMenuImageContainer" data-testid="public-special-menu-hero-image-wrap">
+              {/* Coordination id: special_menu_completo_v1 - diagonal ribbon
+                  corner-to-corner over the legacy single image. */}
+              {props.menu.completo ? (
+                <span class="vc-ribbon-completo vc-ribbon-completo--image" data-testid="public-special-menu-hero-completo-ribbon">
+                  COMPLETO
+                </span>
+              ) : null}
               <img
                 class="specialMenuImage"
                 data-testid="public-special-menu-hero-image"
@@ -71,9 +81,11 @@ export function SpecialMenuSimpleTemplate(props: {
                   class="specialMenuSection"
                   data-testid={`public-menu-section-${section.id}`}
                 >
-                  {/* Coordination id: special_menu_completo_v1 - red band over
-                      every section while the menu is flagged COMPLETO. */}
-                  {props.menu.completo ? (
+                  {/* Coordination id: special_menu_completo_v1 - big diagonal
+                      ribbon corner-to-corner over the section image while the
+                      menu is flagged COMPLETO. Sections without image fall
+                      back to the plain banner. */}
+                  {props.menu.completo && !section.image_url ? (
                     <div class="vc-ribbon-completo vc-ribbon-completo--banner" data-testid={`public-menu-section-completo-ribbon-${section.id}`}>
                       COMPLETO
                     </div>
@@ -85,14 +97,21 @@ export function SpecialMenuSimpleTemplate(props: {
                     <p class="specialMenuSectionPrice" data-testid={`public-menu-section-price-${section.id}`}>{formatEuro(section.price)} / pax</p>
                   ) : null}
                   {section.image_url ? (
-                    <img
-                      class="specialMenuSectionImage"
-                      data-testid={`public-menu-section-image-${section.id}`}
-                      src={section.image_url}
-                      alt={section.title || props.menu.menu_title}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    <div class="specialMenuSectionImageWrap" data-testid={`public-menu-section-image-wrap-${section.id}`}>
+                      {props.menu.completo ? (
+                        <span class="vc-ribbon-completo vc-ribbon-completo--image" data-testid={`public-menu-section-completo-image-ribbon-${section.id}`}>
+                          COMPLETO
+                        </span>
+                      ) : null}
+                      <img
+                        class="specialMenuSectionImage"
+                        data-testid={`public-menu-section-image-${section.id}`}
+                        src={section.image_url}
+                        alt={section.title || props.menu.menu_title}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
                   ) : (
                     <div class="menuState specialMenuSectionEmpty" data-testid={`public-menu-section-empty-${section.id}`}>
                       Sin imagen para esta sección.
@@ -103,7 +122,9 @@ export function SpecialMenuSimpleTemplate(props: {
             </div>
           ) : null}
 
-          {props.menu.special_cta?.href ? (
+          {/* Coordination id: special_menu_completo_v1 - no booking CTA while
+              the menu is flagged COMPLETO. */}
+          {props.menu.special_cta?.href && !props.menu.completo ? (
             <div class="specialMenuCta" data-testid="public-special-menu-cta-row">
               <CtaButton
                 className="specialMenuCtaButton"

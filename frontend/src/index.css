@@ -6472,7 +6472,7 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
    small diagonal badge on burger panel items. */
 .vc-ribbon-completo {
     display: inline-block;
-    background: #c00;
+    background: #9f0808;
     color: #fff;
     font-family: var(--font-sans);
     font-size: 0.75rem;
@@ -6493,12 +6493,17 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     border-radius: 6px 6px 0 0;
 }
 
+/* Home card: big diagonal band, corner to corner of the whole card. */
 .vc-ribbon-completo--diagonal {
     position: absolute;
-    top: 1.4rem;
-    left: -2.75rem;
-    transform: rotate(-45deg);
-    padding: 0.4rem 3rem;
+    top: 50%;
+    left: 50%;
+    width: 165%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    text-align: center;
+    font-size: 1.6rem;
+    letter-spacing: 0.22em;
+    padding: 0.8rem 0;
 }
 
 /* The card clips the diagonal ribbon to its rounded corner. */
@@ -6507,21 +6512,59 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     overflow: hidden;
 }
 
-.vc-ribbon-completo--nav {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    margin-left: 2rem;
-    transform: translateY(-50%) rotate(-45deg);
-    font-size: 0.6rem;
-    padding: 0.25rem 0.7rem;
+/* Special menu page: big diagonal band, corner to corner of each image.
+   The wrap hugs the image box (fit-content) so the band clips exactly to
+   the image corners instead of spanning the full column. */
+.specialMenuSectionImageWrap {
+    position: relative;
+    overflow: hidden;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
+.specialMenuSectionImageWrap .specialMenuSectionImage {
+    width: auto;
+    max-width: 100%;
+}
+
+.specialMenuImageContainer {
+    display: block;
+    width: fit-content;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius, 8px);
+}
+
+.vc-ribbon-completo--image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    text-align: center;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    letter-spacing: 0.2em;
+    padding: 0.7rem 0;
+}
+
+/* Burger: the ribbon wraps the row (3D fold at both ends) and sits OVER the
+   link text, which keeps its place. */
 .navMenuBurger__links li {
     position: relative;
 }
 
-/* Link text clears the diagonal badge when the item is marked COMPLETO. */
-.navMenuBurger__links li:has(> .vc-ribbon-completo) .navBurgerLink {
-    padding-left: 6rem;
+/* Burger: simple horizontal badge to the right of the link text; the text
+   keeps its place. */
+.vc-ribbon-completo--nav {
+    position: absolute;
+    left: auto;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
 }
