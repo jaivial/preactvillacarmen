@@ -6577,3 +6577,7 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
   cursor: pointer;
 }
 .publicAdBack:hover { background: rgba(26, 46, 34, 0.18); }
+
+/* Step list: reserve a controls band so the close button never sits on a card. */
+.publicAdContent--steps { padding-top: 56px; }
+.publicAdClose { background: rgba(26, 46, 34, 0.12); color: #1a2e22; }

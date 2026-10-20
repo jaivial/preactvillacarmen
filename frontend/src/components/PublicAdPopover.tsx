@@ -70,7 +70,7 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
       <section class={`publicAdModal${canvas ? " publicAdModal--canvas" : ""}`} role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={{ ...modalStyle, ...detailStyle }}>
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
         {steps.length && !step ? (
-          <div class="publicAdContent">
+          <div class="publicAdContent publicAdContent--steps">
             {steps.map((item) => <div key={item.id} style={{ backgroundColor: item.background_mode === 'color' ? item.background_color : undefined, backgroundImage: item.background_mode === 'image' && safeUrl(item.background_image) ? `url(${safeUrl(item.background_image)})` : undefined, padding: '16px', borderRadius: '12px' }}>
               {item.card_canvas ? (() => {
                 const cardDims = adCanvasDimsForWidth(item.card_canvas, viewportWidth)
