@@ -179,6 +179,9 @@ export type PublicMenu = {
   menu_subtitle_english?: string[]
   slider_mode?: 'default' | 'custom' | 'both' | 'hidden'
   slider_images?: string[]
+  // Coordination id: special_menu_completo_v1 - red "COMPLETO" ribbon when the
+  // backoffice flags the special menu as full.
+  completo?: boolean
   // Coordination id: menu_weekday_availability_v1
   // Weekly availability calendar persisted per menu in the backend. The client
   // SDK uses it to know which weekday a booking falls on and which menu is
@@ -406,6 +409,8 @@ export type SidebarMenu = {
   // Coordination id: special_menu_visibility_v1
   web_placement?: string
   legacy_source_table?: string
+  // Coordination id: special_menu_completo_v1
+  completo?: boolean
 }
 
 // Lightweight menu data for the homepage cards section.
@@ -420,6 +425,8 @@ export type HomeMenu = {
   menu_subtitle_english?: string[]
   show_menu_preview_image: boolean
   menu_preview_image_url: string
+  // Coordination id: special_menu_completo_v1
+  completo?: boolean
 }
 
 // Response shape for GET /api/menus/{id}.

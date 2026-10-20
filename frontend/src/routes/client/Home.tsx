@@ -49,6 +49,8 @@ type MenuCard = {
   image9x16: string
   hasMedia: boolean
   sortPriority: number
+  // Coordination id: special_menu_completo_v1
+  completo: boolean
 }
 
 // Coordination id: menu_type_numeric_codes_v1
@@ -864,6 +866,7 @@ export function Home() {
           image9x16: previewImage,
           hasMedia: Boolean(previewImage),
           sortPriority,
+          completo: menu.completo === true,
         }
       })
       .sort((a, b) => a.sortPriority - b.sortPriority)
@@ -930,6 +933,13 @@ export function Home() {
                 const showMedia = card.hasMedia && !imageFailed
                 return (
                   <div key={card.key} class={card.variant === 'special' ? 'vc-menuCard special' : 'vc-menuCard'}>
+                    {/* Coordination id: special_menu_completo_v1 - diagonal
+                        ribbon on the special menu card while COMPLETO. */}
+                    {card.variant === 'special' && card.completo ? (
+                      <span class="vc-ribbon-completo vc-ribbon-completo--diagonal" data-testid={`home-menu-card-completo-ribbon-${card.key}`}>
+                        COMPLETO
+                      </span>
+                    ) : null}
                     <div class="vc-menuCard-media" style={{ display: showMedia ? undefined : 'none' }}>
                       <ResponsiveImage
                         alt={card.title}
