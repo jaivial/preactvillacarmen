@@ -358,18 +358,19 @@ export function ClientHeader() {
                   const label = item.label || t(item.labelKey || '')
                   return (
                     <li key={item.href} data-testid={`client-header-menu-sublink-item-${item.href}`}>
-                      {/* Coordination id: special_menu_completo_v1 */}
-                      {item.completo ? (
-                        <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-menu-sublink-completo-ribbon-${item.href}`}>
-                          COMPLETO
-                        </span>
-                      ) : null}
                       <Link
                         href={item.href}
                         className={isActive ? 'navBurgerLink navBurgerSubLink active' : 'navBurgerLink navBurgerSubLink'}
                         onClick={() => setMobileOpen(false)}
                       >
                         {label}
+                        {/* Coordination id: special_menu_completo_v1 - badge
+                            inline, right after the link text. */}
+                        {item.completo ? (
+                          <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-menu-sublink-completo-ribbon-${item.href}`}>
+                            COMPLETO
+                          </span>
+                        ) : null}
                       </Link>
                     </li>
                   )
@@ -382,12 +383,6 @@ export function ClientHeader() {
             const isActive = location.startsWith(item.href.split('#')[0])
             return (
               <li key={item.href} data-testid={`client-header-independent-section-item-${item.href}`}>
-                {/* Coordination id: special_menu_completo_v1 */}
-                {item.completo ? (
-                  <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-independent-section-completo-ribbon-${item.href}`}>
-                    COMPLETO
-                  </span>
-                ) : null}
                 <Link
                   href={item.href}
                   className={isActive ? 'navBurgerLink active' : 'navBurgerLink'}
@@ -396,6 +391,13 @@ export function ClientHeader() {
                   data-coordination-id="foodtype-page-visibility-v1"
                 >
                   {item.label || t(item.labelKey || '')}
+                  {/* Coordination id: special_menu_completo_v1 - badge inline,
+                      right after the link text. */}
+                  {item.completo ? (
+                    <span class="vc-ribbon-completo vc-ribbon-completo--nav" data-testid={`client-header-independent-section-completo-ribbon-${item.href}`}>
+                      COMPLETO
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             )

@@ -10,18 +10,23 @@ export function ClientLayout(props: { children: ComponentChildren }) {
   const [location] = useLocation()
   const [activeAd, setActiveAd] = useState<PublicAd | null>(null)
 
+  const [previewAdId, setPreviewAdId] = useState(0)
   const isHome = location === '/'
 
   // Coordination id: public_ad_seen_once_v1 - ads only on the home page, and
   // each ad at most once per session (closing it with the X marks it as seen).
   useEffect(() => {
     if (!isHome) {
+      setPreviewAdId(0)
       setActiveAd(null)
       return
     }
     let cancelled = false
     const query = new URLSearchParams(window.location.search)
-    const previewId = query.get('vc_preview') === '1' ? Number(query.get('vc_ad')) : 0
+    const requested = Number(query.get('vc_ad'))
+    const previewId = Number.isSafeInteger(requested) && requested > 0 ? requested : 0
+    setPreviewAdId(previewId)
+    // Preserve main vc_ad preview and read scheduled saved ads without live visibility changes.
     if (previewId > 0) {
       void fetchPreviewAd(previewId).then((ad) => { if (!cancelled) setActiveAd(ad) }).catch(() => { if (!cancelled) setActiveAd(null) })
     } else {
@@ -51,7 +56,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
       <ClientHeader />
       <main class={mainClass}>{props.children}</main>
       {isEventosPage ? null : <ClientFooter />}
-      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (new URLSearchParams(window.location.search).get("vc_preview") !== "1") markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
+      {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (!previewAdId) markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )
 }
