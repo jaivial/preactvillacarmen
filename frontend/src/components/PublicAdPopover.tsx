@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
 import type { PublicAd } from '../lib/publicAds'
 import { adCanvasDimsForWidth } from '../lib/publicAds'
@@ -16,6 +16,54 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
       document.body.classList.remove('vc-modal-open')
     }
   }, [props])
+
+  // Focus management (a11y): the dialog traps Tab/Shift+Tab while open and
+  // returns focus to whatever was focused before it opened. Invisible
+  // sentinels at both ends are the real exit for focus coming back out of
+  // the canvas iframes, whose inner documents fire no keydown here. An
+  // iframe as the last focusable is NEVER a wrap boundary: Tab on it must
+  // enter its interactive content, and the end sentinel catches the exit.
+  const modalRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const modal = modalRef.current
+    if (!modal) return
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const focusables = () =>
+      Array.from(modal.querySelectorAll<HTMLElement>('button, a[href], iframe')).filter((el) => !el.hasAttribute('disabled'))
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const items = focusables()
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+      const inside = active instanceof HTMLElement && modal.contains(active)
+      if (!inside) {
+        event.preventDefault()
+        ;(event.shiftKey ? last : first).focus()
+      } else if (!event.shiftKey && active === last && last.tagName !== 'IFRAME') {
+        event.preventDefault()
+        first.focus()
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previouslyFocused?.focus()
+    }
+  }, [])
+
+  // Keep focus inside the dialog across view changes (list <-> step detail):
+  // the previously focused button unmounts, so re-place it explicitly.
+  useEffect(() => {
+    const modal = modalRef.current
+    if (!modal) return
+    const target = modal.querySelector<HTMLElement>(stepId ? '.publicAdBack' : '.publicAdClose')
+    target?.focus()
+  }, [stepId])
 
   // Coordination id: ads_canvas_breakpoints_v1 - the popover renders the same
   // responsive variant a visitor's viewport maps to, and re-picks it when a
@@ -67,7 +115,8 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
     <div class="publicAdOverlay" role="presentation" style={overlayStyle} onClick={(event) => {
       if (event.currentTarget === event.target) props.onClose()
     }}>
-      <section class={`publicAdModal${canvas ? " publicAdModal--canvas" : ""}`} role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={{ ...modalStyle, ...detailStyle }}>
+      <section ref={modalRef} class={`publicAdModal${canvas ? " publicAdModal--canvas" : ""}`} role="dialog" aria-modal="true" aria-label={props.ad.name || 'Anuncio'} style={{ ...modalStyle, ...detailStyle }}>
+        <span tabindex={0} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} onFocus={() => { const items = modalRef.current ? Array.from(modalRef.current.querySelectorAll<HTMLElement>('button, a[href], iframe')).filter((el) => !el.hasAttribute('disabled')) : []; items[items.length - 1]?.focus() }} />
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
         {steps.length && !step ? (
           <div class="publicAdContent">
@@ -115,6 +164,7 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
         ) : null}
         </div>
         )}</>}
+        <span tabindex={0} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} onFocus={() => { const items = modalRef.current ? Array.from(modalRef.current.querySelectorAll<HTMLElement>('button, a[href], iframe')).filter((el) => !el.hasAttribute('disabled')) : []; items[0]?.focus() }} />
       </section>
     </div>
   )
