@@ -6462,6 +6462,15 @@ svg {
 .publicAdModal--canvas { padding: 0; }
 .publicAdModal--canvas .publicAdCanvasFrame { border-radius: inherit; }
 .publicAdClose { z-index: 4; }
+/* Canvas ads fill the modal with their own (often dark) background; the
+   default translucent-dark close chip inherits the modal's dark text color
+   and disappears over a dark canvas. Give it a light chip so it stays
+   legible over any canvas color. */
+.publicAdModal--canvas .publicAdClose {
+    background: rgba(255, 253, 248, 0.92);
+    color: #24342b;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
 
 button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: pointer; }
 
