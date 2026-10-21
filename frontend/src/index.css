@@ -6471,6 +6471,16 @@ svg {
     color: #24342b;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
+/* Explicit keyboard focus indicator (does not rely on UA default rings).
+   Double ring: the dark ring (#24342b, ~13:1) is readable over light
+   surfaces, and the light halo keeps the indicator visible over dark
+   canvases (~12:1 vs #1f3a2b). Both colors already exist in this
+   component/site palette. */
+.publicAdClose:focus-visible {
+    outline: 2px solid #24342b;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 253, 248, 0.95), 0 1px 4px rgba(0, 0, 0, 0.25);
+}
 
 button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: pointer; }
 
