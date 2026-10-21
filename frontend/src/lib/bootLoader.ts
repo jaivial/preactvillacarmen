@@ -12,6 +12,7 @@ type BootLoaderOptions = {
   trackAllImages?: boolean
   mediaSettledGraceMs?: number
   videoSettleMs?: number
+  imageSettleMs?: number
 }
 
 export const BOOT_LOADER_DONE_EVENT = 'vc:boot:done'
@@ -107,6 +108,9 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   // element, not on the <video>, and a stalled connection fires no events at
   // all. Bound how long a single video can hold the overlay.
   const videoSettleMs = options.videoSettleMs ?? 8000
+  // Same bound for images: a preload whose connection stalls (no load, no
+  // error) must not hold the overlay until the global maxWait.
+  const imageSettleMs = options.imageSettleMs ?? 10000
 
   const overlay = document.getElementById(overlayId) as HTMLDivElement | null
   if (!overlay) return
@@ -351,24 +355,37 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
 
           const pre = new Image()
           pre.decoding = 'async'
-          pre.src = url
 
+          let imgTimer = 0
+          const finishPreload = () => {
+            if (imgTimer) window.clearTimeout(imgTimer)
+            settle()
+          }
           const onPreload = () => {
-            if (typeof pre.decode === 'function') pre.decode().then(settle, settle)
-            else settle()
+            if (typeof pre.decode === 'function') pre.decode().then(finishPreload, finishPreload)
+            else finishPreload()
           }
 
-          if (pre.complete) {
-            onPreload()
-          } else {
-            pre.addEventListener('load', onPreload, { once: true })
-            pre.addEventListener('error', settle, { once: true })
-          }
+          pre.addEventListener('load', onPreload, { once: true })
+          pre.addEventListener('error', finishPreload, { once: true })
+          imgTimer = window.setTimeout(finishPreload, imageSettleMs)
+          pre.src = url
+          if (pre.complete) onPreload()
           continue
         }
 
-        img.addEventListener('load', onLoad, { once: true })
-        img.addEventListener('error', settle, { once: true })
+        let imgTimer = 0
+        const finishImg = () => {
+          if (imgTimer) window.clearTimeout(imgTimer)
+          settle()
+        }
+        const onLoadBounded = () => {
+          if (typeof img.decode === 'function') img.decode().then(finishImg, finishImg)
+          else finishImg()
+        }
+        img.addEventListener('load', onLoadBounded, { once: true })
+        img.addEventListener('error', finishImg, { once: true })
+        imgTimer = window.setTimeout(finishImg, imageSettleMs)
         continue
       }
 
