@@ -940,15 +940,20 @@ export function Home() {
                         COMPLETO
                       </span>
                     ) : null}
-                    <div class="vc-menuCard-media" style={{ display: showMedia ? undefined : 'none' }}>
-                      <ResponsiveImage
-                        alt={card.title}
-                        src16x9={card.image16x9}
-                        src9x16={card.image9x16}
-                        class="vc-menuCard-img"
-                        onError={() => handleImageError(card.key)}
-                      />
-                    </div>
+                    {/* Mount the media block only when there is an image to
+                        show: a hidden <img> with an empty src still fetches
+                        (mediaSrc('') resolves to the bare CDN root and 404s). */}
+                    {showMedia ? (
+                      <div class="vc-menuCard-media">
+                        <ResponsiveImage
+                          alt={card.title}
+                          src16x9={card.image16x9}
+                          src9x16={card.image9x16}
+                          class="vc-menuCard-img"
+                          onError={() => handleImageError(card.key)}
+                        />
+                      </div>
+                    ) : null}
                     <div class="vc-menuCard-top">
                       <h3 class="vc-menuCard-title">{card.title}</h3>
                       <p class="vc-menuCard-sub">{card.subtitle}</p>
