@@ -10,6 +10,9 @@ type BootLoaderOptions = {
   // below-the-fold content). For landing-like pages (home/eventos) we preload/await
   // all images so the first interaction is smooth.
   trackAllImages?: boolean
+  mediaSettledGraceMs?: number
+  videoSettleMs?: number
+  imageSettleMs?: number
 }
 
 export const BOOT_LOADER_DONE_EVENT = 'vc:boot:done'
@@ -95,6 +98,19 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   const maxWaitMs = options.maxWaitMs ?? (trackAllImages ? 45000 : 15000)
   const minShowMs = options.minShowMs ?? 100
   const completeRampMs = options.completeRampMs ?? 10
+  // Once every tracked media element has settled (loaded or errored), don't
+  // hold the overlay for window 'load': hung subresource connections (e.g. a
+  // stalled video fetch) can delay that event indefinitely while the page is
+  // already visually complete. Media settlement is the stronger signal; the
+  // window-load path below still finalizes earlier when it fires normally.
+  const mediaSettledGraceMs = options.mediaSettledGraceMs ?? 1200
+  // A <video> fed by <source> children reports load failures on the <source>
+  // element, not on the <video>, and a stalled connection fires no events at
+  // all. Bound how long a single video can hold the overlay.
+  const videoSettleMs = options.videoSettleMs ?? 8000
+  // Same bound for images: a preload whose connection stalls (no load, no
+  // error) must not hold the overlay until the global maxWait.
+  const imageSettleMs = options.imageSettleMs ?? 10000
 
   const overlay = document.getElementById(overlayId) as HTMLDivElement | null
   if (!overlay) return
@@ -127,6 +143,7 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   let raf = 0
   let maxWaitTimer = 0
   let trickleTimer = 0
+  let mediaSettledTimer = 0
   let finished = false
   const tracked = new Set<Element>()
   const loaded = new Set<Element>()
@@ -173,6 +190,7 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
 
     if (maxWaitTimer) window.clearTimeout(maxWaitTimer)
     if (trickleTimer) window.clearInterval(trickleTimer)
+    if (mediaSettledTimer) window.clearTimeout(mediaSettledTimer)
     if (raf) window.cancelAnimationFrame(raf)
     raf = 0
     void reason
@@ -284,8 +302,15 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
       done = Math.min(total, done + 1)
       if (total > 0) setDesired(done / total)
       if (done >= total) {
-        if (windowLoaded) finalize('media')
-        else console.log(`${debugPrefix} media settled, waiting for window load`, { done, total })
+        if (windowLoaded) {
+          finalize('media')
+        } else if (!mediaSettledTimer) {
+          console.log(`${debugPrefix} media settled, waiting for window load`, { done, total })
+          mediaSettledTimer = window.setTimeout(() => {
+            console.log(`${debugPrefix} media settled grace elapsed without window load`, { done, total })
+            finalize('media')
+          }, mediaSettledGraceMs)
+        }
       }
     }
 
@@ -293,6 +318,10 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
       if (tracked.has(el)) continue
       tracked.add(el)
       total += 1
+      if (mediaSettledTimer) {
+        window.clearTimeout(mediaSettledTimer)
+        mediaSettledTimer = 0
+      }
 
       let settled = false
       const settle = () => {
@@ -326,24 +355,37 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
 
           const pre = new Image()
           pre.decoding = 'async'
-          pre.src = url
 
+          let imgTimer = 0
+          const finishPreload = () => {
+            if (imgTimer) window.clearTimeout(imgTimer)
+            settle()
+          }
           const onPreload = () => {
-            if (typeof pre.decode === 'function') pre.decode().then(settle, settle)
-            else settle()
+            if (typeof pre.decode === 'function') pre.decode().then(finishPreload, finishPreload)
+            else finishPreload()
           }
 
-          if (pre.complete) {
-            onPreload()
-          } else {
-            pre.addEventListener('load', onPreload, { once: true })
-            pre.addEventListener('error', settle, { once: true })
-          }
+          pre.addEventListener('load', onPreload, { once: true })
+          pre.addEventListener('error', finishPreload, { once: true })
+          imgTimer = window.setTimeout(finishPreload, imageSettleMs)
+          pre.src = url
+          if (pre.complete) onPreload()
           continue
         }
 
-        img.addEventListener('load', onLoad, { once: true })
-        img.addEventListener('error', settle, { once: true })
+        let imgTimer = 0
+        const finishImg = () => {
+          if (imgTimer) window.clearTimeout(imgTimer)
+          settle()
+        }
+        const onLoadBounded = () => {
+          if (typeof img.decode === 'function') img.decode().then(finishImg, finishImg)
+          else finishImg()
+        }
+        img.addEventListener('load', onLoadBounded, { once: true })
+        img.addEventListener('error', finishImg, { once: true })
+        imgTimer = window.setTimeout(finishImg, imageSettleMs)
         continue
       }
 
@@ -353,9 +395,22 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
         continue
       }
 
-      video.addEventListener('loadeddata', settle, { once: true })
-      video.addEventListener('canplay', settle, { once: true })
-      video.addEventListener('error', settle, { once: true })
+      const sources = Array.from(video.querySelectorAll('source'))
+      let videoTimer = 0
+      const onVideoSettle = () => {
+        if (videoTimer) window.clearTimeout(videoTimer)
+        video.removeEventListener('loadeddata', onVideoSettle)
+        video.removeEventListener('canplay', onVideoSettle)
+        video.removeEventListener('error', onVideoSettle)
+        for (const s of sources) s.removeEventListener('error', onVideoSettle)
+        settle()
+      }
+      video.addEventListener('loadeddata', onVideoSettle)
+      video.addEventListener('canplay', onVideoSettle)
+      video.addEventListener('error', onVideoSettle)
+      // Resource errors on <source> children do not bubble to the <video>.
+      for (const s of sources) s.addEventListener('error', onVideoSettle)
+      videoTimer = window.setTimeout(onVideoSettle, videoSettleMs)
     }
   }
 
