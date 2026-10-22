@@ -121,7 +121,7 @@ export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
         <span tabindex={0} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }} onFocus={() => { const items = modalRef.current ? Array.from(modalRef.current.querySelectorAll<HTMLElement>('button, a[href], iframe')).filter((el) => !el.hasAttribute('disabled')) : []; items[items.length - 1]?.focus() }} />
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={props.onClose}>×</button>
         {steps.length && !step ? (
-          <div class="publicAdContent">
+          <div class="publicAdContent publicAdContent--steps">
             {steps.map((item) => <div key={item.id} style={{ backgroundColor: item.background_mode === 'color' ? item.background_color : undefined, backgroundImage: item.background_mode === 'image' && safeUrl(item.background_image) ? `url(${safeUrl(item.background_image)})` : undefined, padding: '16px', borderRadius: '12px' }}>
               {item.card_canvas ? (() => {
                 const cardDims = adCanvasDimsForWidth(item.card_canvas, viewportWidth)

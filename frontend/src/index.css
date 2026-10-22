@@ -117,6 +117,8 @@ body.vc-modal-open {
     color: #24342b;
     font: inherit;
     font-weight: 600;
+    /* ads popover: Volver button (pill, 16px) */
+    font-size: 16px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
     cursor: pointer;
 }
@@ -6603,3 +6605,6 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
     padding: 0.3rem 0.7rem;
     border-radius: 4px;
 }
+
+/* Step list: reserve a controls band so the close button never sits on a card. */
+.publicAdContent--steps { padding-top: 56px; }
