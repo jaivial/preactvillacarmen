@@ -36,7 +36,7 @@ Las consultas de marca son útiles para detectar canibalización de URLs, pero n
 
 El frontend emite `reservation_start`, `reservation_complete`, `phone_click` y `whatsapp_click`. La reserva completada solo se emite tras una respuesta válida; WhatsApp y teléfono son intenciones de contacto, no reservas.
 
-Cada evento incluye `landing_page`, `traffic_source`, `traffic_medium` y `acquisition_channel`. El contexto se captura una vez al cargar la aplicación y se conserva en memoria durante la navegación SPA, sin cookies ni almacenamiento nuevo. Un referente de buscador sin campaña de pago se clasifica como `organic_search`; UTMs explícitas se conservan para no reclamar como SEO tráfico de campañas.
+Cada evento incluye `landing_page`, `traffic_source`, `traffic_medium` y `acquisition_channel`. El contexto se captura una vez al cargar la aplicación y se conserva en memoria durante la navegación SPA, sin cookies ni almacenamiento nuevo. `landing_page` contiene solo la ruta: nunca query strings ni tokens de reservas; los parámetros UTM se envían por separado como fuente y medio. Un referente de buscador sin campaña de pago se clasifica como `organic_search`; UTMs explícitas se conservan para no reclamar como SEO tráfico de campañas.
 
 Configuración externa todavía necesaria:
 

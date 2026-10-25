@@ -15,7 +15,7 @@ const campaignMedium = initialLocation?.searchParams.get('utm_medium')?.toLowerC
 const trafficSource = campaignSource || referrerHost || 'direct'
 const searchReferrer = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia)\./.test(trafficSource) || /^(google|bing|duckduckgo|yahoo|ecosia)$/.test(trafficSource)
 const acquisition = {
-  landing_page: initialLocation ? `${initialLocation.pathname}${initialLocation.search}` : '',
+  landing_page: initialLocation?.pathname || '',
   traffic_source: trafficSource,
   traffic_medium: campaignMedium || (searchReferrer ? 'organic' : referrerHost ? 'referral' : 'none'),
   acquisition_channel: searchReferrer && (!campaignMedium || campaignMedium === 'organic') ? 'organic_search' : campaignMedium ? 'campaign' : referrerHost ? 'referral' : 'direct',
@@ -27,7 +27,7 @@ export function trackConversion(event: ConversionName, parameters: Record<string
   const payload = { event, ...acquisition, ...parameters }
   window.dataLayer = window.dataLayer || []
   window.dataLayer.push(payload)
-  window.gtag?.('event', event, parameters)
+  window.gtag?.('event', event, { ...acquisition, ...parameters })
 }
 
 const conversions: Record<string, ConversionName> = {
