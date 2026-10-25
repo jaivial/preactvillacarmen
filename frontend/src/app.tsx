@@ -1,4 +1,6 @@
 import { Route, Switch } from 'wouter-preact'
+import { RouteHead } from './components/RouteHead.tsx'
+import { NotFound } from './routes/client/NotFound.tsx'
 import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
 import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
@@ -29,6 +31,7 @@ import { Vinos } from './routes/client/Vinos.tsx'
 function ClientApp() {
   return (
     <ClientLayout>
+      <RouteHead />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/contacto" component={Contacto} />
@@ -79,7 +82,7 @@ function ClientApp() {
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
 
-        <Route component={() => <Placeholder title="404" />} />
+        <Route component={NotFound} />
       </Switch>
     </ClientLayout>
   )

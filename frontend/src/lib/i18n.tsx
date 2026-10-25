@@ -6,8 +6,6 @@ export type Lang = 'es' | 'en'
 
 type Dictionary = Record<string, { es: string; en: string }>
 
-const STORAGE_KEY = 'villacarmen_lang'
-
 const DICT: Dictionary = {
   'nav.home': { es: 'Inicio', en: 'Home' },
   'nav.weekendMenu': { es: 'Men\u00fa Fin de Semana', en: 'Weekend Menu' },
@@ -343,29 +341,14 @@ type I18nState = {
 
 const I18nContext = createContext<I18nState | null>(null)
 
-function normalizeLang(value: string | null | undefined): Lang | null {
-  if (!value) return null
-  const v = value.toLowerCase()
-  if (v === 'es' || v.startsWith('es-')) return 'es'
-  if (v === 'en' || v.startsWith('en-')) return 'en'
-  return null
-}
-
-export function I18nProvider(props: { children: ComponentChildren }) {
-  const [lang, setLang] = useState<Lang>(() => {
+export function I18nProvider(props: { children: ComponentChildren; initialLang?: Lang }) {
+  const [lang] = useState<Lang>(() => {
+    if (props.initialLang) return props.initialLang
     if (typeof window === 'undefined') return 'es'
-    const stored = normalizeLang(window.localStorage.getItem(STORAGE_KEY))
-    if (stored) return stored
-    const detected = normalizeLang(window.navigator.language)
-    return detected || 'es'
+    return window.location.pathname === '/en' || window.location.pathname.startsWith('/en/') ? 'en' : 'es'
   })
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, lang)
-    } catch {
-      // ignore
-    }
     document.documentElement.lang = lang
   }, [lang])
 
@@ -374,6 +357,13 @@ export function I18nProvider(props: { children: ComponentChildren }) {
       const entry = DICT[key]
       if (!entry) return key
       return entry[lang] || entry.es
+    }
+    const setLang = (next: Lang) => {
+      if (next === lang || typeof window === 'undefined') return
+      const path = window.location.pathname
+      const basePath = path === '/en' ? '/' : path.startsWith('/en/') ? path.slice(3) : path
+      const destination = next === 'en' ? `/en${basePath === '/' ? '' : basePath}` : basePath
+      window.location.assign(`${destination}${window.location.search}${window.location.hash}`)
     }
     return { lang, setLang, t }
   }, [lang])

@@ -14,6 +14,7 @@ import {
   MENU_TYPE_SPECIAL,
 } from '../../lib/menuTypeCodes'
 import { fetchMenuHome } from '../../lib/menuApi'
+import { prerenderData } from '../../lib/prerenderData'
 import { ScrollReveal } from '../../components/ScrollReveal'
 import type { HomeMenu, PublicMenuType } from '../../lib/types'
 
@@ -809,7 +810,7 @@ function EventsSection() {
 }
 
 export function Home() {
-  const [homeMenus, setHomeMenus] = useState<HomeMenu[] | null>(null)
+  const [homeMenus, setHomeMenus] = useState<HomeMenu[] | null>(() => prerenderData().homeMenus ?? null)
   const { t, lang } = useI18n()
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 

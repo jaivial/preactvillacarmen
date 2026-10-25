@@ -14,6 +14,8 @@ import {
   MENU_TYPE_SPECIAL,
 } from '../lib/menuTypeCodes'
 import { fetchMenuSidebar } from '../lib/menuApi'
+import { prerenderData } from '../lib/prerenderData'
+import { equivalentLanguagePath } from '../lib/routes'
 import { prefetchRoute } from '../lib/prefetch'
 import type { PublicVisibleSection, SidebarMenu } from '../lib/types'
 import type { MenuSidebarData } from '../lib/menuApi'
@@ -58,13 +60,22 @@ export function ClientHeader() {
   const [scrolled, setScrolled] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
-  const { lang, setLang, t } = useI18n()
-  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
+  const { lang, t } = useI18n()
+  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(() => prerenderData().sidebar?.menus || null)
   // Coordination id: menu_section_public_placement_v1
-  const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>([])
+  const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>(() => prerenderData().sidebar?.visible_sections || [])
   // One visibility record per food-type page that owns a public nav entry.
   // Coordination id: foodtype_page_visibility_v1
-  const [foodPages, setFoodPages] = useState<Record<FoodPageKind, FoodPageVisibility>>(DEFAULT_FOOD_PAGES)
+  const [foodPages, setFoodPages] = useState<Record<FoodPageKind, FoodPageVisibility>>(() => {
+    const sidebar = prerenderData().sidebar
+    if (!sidebar) return DEFAULT_FOOD_PAGES
+    return {
+      vinos: { active: sidebar.vinos_page_active, placement: sidebar.vinos_web_placement },
+      cafes: { active: sidebar.cafe_page_active, placement: sidebar.cafes_web_placement },
+      bebidas: { active: sidebar.bebidas_page_active, placement: sidebar.bebidas_web_placement },
+      postres: { active: sidebar.postres_page_active, placement: sidebar.postres_web_placement },
+    }
+  })
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
   const setVinosActive = useSetAtom(vinosPageActiveAtom)
@@ -437,21 +448,9 @@ export function ClientHeader() {
         <div class="navMenuBurger__bottom">
           <span class="navMenuBurger__langLabel">{t('nav.lang')}</span>
           <div class="navMenuBurger__lang">
-            <button
-              type="button"
-              class={lang === 'es' ? 'langBtn active' : 'langBtn'}
-              onClick={() => setLang('es')}
-            >
-              ES
-            </button>
-            <span class="langSep">/</span>
-            <button
-              type="button"
-              class={lang === 'en' ? 'langBtn active' : 'langBtn'}
-              onClick={() => setLang('en')}
-            >
-              EN
-            </button>
+            <a href={equivalentLanguagePath(location, 'es')} class={lang === 'es' ? 'langBtn active' : 'langBtn'} data-testid="client-header-language-es" onClick={() => setMobileOpen(false)}>ES</a>
+            <span class="langSep"/>
+            <a href={equivalentLanguagePath(location, 'en')} class={lang === 'en' ? 'langBtn active' : 'langBtn'} data-testid="client-header-language-en" onClick={() => setMobileOpen(false)}>EN</a>
           </div>
         </div>
       </div>
@@ -500,7 +499,7 @@ export function ClientHeader() {
           <div class="header__tools">
             {showHeaderActions ? (
               <div class="header__callAction">
-                <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
+                <a href={isHome ? '#menus' : lang === 'en' ? '/en#menus' : '/#menus'} class="link link--center">
                   {t('nav.menus')}
                 </a>
                 <Link href="/reservas" className="link link--center reservaBttn" onMouseEnter={() => prefetchRoute('/reservas')}>

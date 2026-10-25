@@ -5,6 +5,7 @@ import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Vino, VinosResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
+import { prerenderData } from '../../lib/prerenderData'
 
 type WineType = 'TINTO' | 'BLANCO' | 'CAVA'
 
@@ -19,7 +20,7 @@ export function Vinos() {
   const reduceMotion = useReducedMotion()
   const [tipo, setTipo] = useState<WineType>('TINTO')
   const [vinosByTipo, setVinosByTipo] = useState<Record<WineType, Vino[] | null | undefined>>(() => ({
-    TINTO: undefined,
+    TINTO: prerenderData().vinos?.TINTO,
     BLANCO: undefined,
     CAVA: undefined,
   }))
