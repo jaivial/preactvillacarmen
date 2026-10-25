@@ -643,6 +643,8 @@ export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = 
                 src={mediaSrc(paths[prev])}
                 alt=""
                 class="menuHeroShot is-prev"
+                width="1080"
+                height="1920"
                 loading="eager"
                 decoding="async"
                 onError={() => onError(prev)}
@@ -655,6 +657,9 @@ export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = 
                 src={mediaSrc(paths[active])}
                 alt=""
                 class={reduced ? 'menuHeroShot is-active is-reduced' : 'menuHeroShot is-active'}
+                width="1080"
+                height="1920"
+                fetchPriority="high"
                 loading="eager"
                 decoding="async"
                 onError={() => onError(active)}

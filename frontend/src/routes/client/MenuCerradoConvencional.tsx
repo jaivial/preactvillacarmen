@@ -5,8 +5,9 @@ import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './M
 import { formatMenuPrice, splitClosedConventionalSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
-export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
+export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
   const { t, lang } = useI18n()
+  const Heading = props.headingLevel || 'h1'
   const sectionData = useMemo(() => splitClosedConventionalSections(props.menu), [props.menu])
   const subtitle = useMemo(
     () => localizedArray(props.menu.menu_subtitle, props.menu.menu_subtitle_english, lang)[0] || t('menus.card.daily.subtitle'),
@@ -32,7 +33,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu }) {
     <div class="page menuPage menuPage--closedConventional">
       <section class="page-hero">
         <div class="container">
-          <h1 class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h1>
+          <Heading class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</Heading>
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>

@@ -6,9 +6,8 @@ type BootLoaderOptions = {
   maxWaitMs?: number
   minShowMs?: number
   completeRampMs?: number
-  // By default the loader tracks only media near the viewport (to avoid waiting for
-  // below-the-fold content). For landing-like pages (home/eventos) we preload/await
-  // all images so the first interaction is smooth.
+  // Track only critical media near the viewport. Below-fold images load as the
+  // visitor approaches them instead of competing with the LCP resource.
   trackAllImages?: boolean
   mediaSettledGraceMs?: number
   videoSettleMs?: number
@@ -92,8 +91,7 @@ export function startBootLoader(options: BootLoaderOptions = {}) {
   const percentId = options.percentId || 'vc-boot-pct'
   const rootId = options.rootId || 'app'
   const pathname = (window.location?.pathname || '/').toLowerCase()
-  const defaultTrackAll = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/eventos')
-  const trackAllImages = options.trackAllImages ?? defaultTrackAll
+  const trackAllImages = options.trackAllImages ?? false
 
   const maxWaitMs = options.maxWaitMs ?? (trackAllImages ? 45000 : 15000)
   const minShowMs = options.minShowMs ?? 100

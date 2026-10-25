@@ -465,6 +465,9 @@ export function Eventos() {
             <img
               src={EVENTS_HERO_9X16}
               alt=""
+              width="1080"
+              height="1920"
+              fetchPriority="high"
               loading="eager"
               decoding="async"
             />
@@ -479,6 +482,9 @@ export function Eventos() {
             class="evrHeroImage"
             src={EVENTS_HERO_16X9}
             alt={t("events.hero.alt")}
+            width="1920"
+            height="1080"
+            fetchPriority="high"
             loading="eager"
             decoding="async"
           />
@@ -497,6 +503,16 @@ export function Eventos() {
           <p>{t("events.intro.statement")}</p>
         </div>
       </section>
+
+      <nav class="evrWrap vc-event-hub" aria-label={t("events.hub.title")} data-testid="events-commercial-hub">
+        <h2>{t("events.hub.title")}</h2>
+        <p>{t("events.hub.body")}</p>
+        <div class="vc-event-hub-links">
+          <Link href="/bodas" data-testid="events-hub-weddings"><strong>{t("home.discovery.wedding")}</strong><span>{t("events.hub.link")}</span></Link>
+          <Link href="/comuniones" data-testid="events-hub-communions"><strong>{t("home.discovery.communion")}</strong><span>{t("events.hub.link")}</span></Link>
+          <Link href="/eventos-empresa" data-testid="events-hub-business"><strong>{t("home.discovery.business")}</strong><span>{t("events.hub.link")}</span></Link>
+        </div>
+      </nav>
 
       <section class="evrPortfolio">
         <div class="evrWrap">

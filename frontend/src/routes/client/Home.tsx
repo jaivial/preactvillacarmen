@@ -124,6 +124,9 @@ function ResponsiveImage(props: {
         src={mediaSrc(props.src16x9)}
         alt={props.alt}
         class={props.class}
+        width="1920"
+        height="1080"
+        fetchPriority="high"
         loading="eager"
         decoding="async"
         onError={handleError}
@@ -590,7 +593,7 @@ function BentoShowcase() {
                 src={mediaSrc(bentoImages[1])}
                 alt=""
                 class="vc-bentoImg"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </button>
@@ -607,7 +610,7 @@ function BentoShowcase() {
                 src={mediaSrc(bentoImages[2])}
                 alt=""
                 class="vc-bentoImg"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </button>
@@ -624,7 +627,7 @@ function BentoShowcase() {
                 src={mediaSrc(bentoImages[3])}
                 alt=""
                 class="vc-bentoImg"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </button>
@@ -641,7 +644,7 @@ function BentoShowcase() {
                 src={mediaSrc(bentoImages[4])}
                 alt=""
                 class="vc-bentoImg"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </button>
@@ -658,7 +661,7 @@ function BentoShowcase() {
                 src={mediaSrc(bentoImages[5])}
                 alt=""
                 class="vc-bentoImg"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </button>
@@ -779,7 +782,7 @@ function EventsSection() {
                 src={mediaSrc(path)}
                 alt=""
                 class={idx === active ? 'vc-events-shot on' : 'vc-events-shot'}
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             ))}
@@ -888,7 +891,10 @@ export function Home() {
         <div class="main">
           <div class="heroWordmark">
             <div class="subTitle">{t('home.hero.tagline')}</div>
-            <h1 class="title">{t('home.hero.title')}</h1>
+            <h1 class="title" data-testid="home-restaurant-heading">
+              {t('home.hero.title')}
+              <span class="heroIntent">{t('home.hero.intent')}</span>
+            </h1>
           </div>
           <div class="callAction">
             <a href="#menus" class="link link--center">
@@ -912,6 +918,21 @@ export function Home() {
           <p class="description">{t('home.intro.description')}</p>
         </div>
       </section>
+
+      <nav class="container vc-discovery" aria-label={t('home.discovery.title')} data-testid="home-commercial-navigation">
+        <h2>{t('home.discovery.title')}</h2>
+        <div class="vc-discovery-links">
+          <Link href="/arroces-y-paellas" data-testid="home-commercial-rice">{t('home.discovery.rice')}</Link>
+          <a href="#menus" data-testid="home-commercial-menus">{t('home.discovery.menus')}</a>
+          <Link href="/menusdegrupos" data-testid="home-commercial-groups">{t('home.discovery.groups')}</Link>
+          <Link href="/eventos" data-testid="home-commercial-weddings">{t('home.discovery.weddings')}</Link>
+          <Link href="/bodas" data-testid="home-commercial-bodas">{t('home.discovery.wedding')}</Link>
+          <Link href="/comuniones" data-testid="home-commercial-comuniones">{t('home.discovery.communion')}</Link>
+          <Link href="/eventos-empresa" data-testid="home-commercial-empresa">{t('home.discovery.business')}</Link>
+          <Link href="/contacto" data-testid="home-commercial-contact">{t('home.discovery.contact')}</Link>
+          <Link href="/reservas" data-testid="home-commercial-booking">{t('home.discovery.booking')}</Link>
+        </div>
+      </nav>
 
       <ScrollReveal
         initialSize={40}

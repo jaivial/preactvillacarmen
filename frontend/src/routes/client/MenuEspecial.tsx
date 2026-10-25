@@ -3,7 +3,7 @@ import type { PublicMenu } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
 import { SpecialMenuSimpleTemplate } from './special/SpecialMenuSimpleTemplate'
 
-export function MenuEspecial(props: { menu: PublicMenu }) {
+export function MenuEspecial(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
   const { t } = useI18n()
   const imageUrl = useMemo(() => {
     if (props.menu.show_menu_preview_image === true) {
@@ -21,5 +21,5 @@ export function MenuEspecial(props: { menu: PublicMenu }) {
     [props.menu.menu_subtitle, t],
   )
 
-  return <SpecialMenuSimpleTemplate menu={props.menu} subtitle={subtitle} imageUrl={imageUrl} />
+  return <SpecialMenuSimpleTemplate menu={props.menu} subtitle={subtitle} imageUrl={imageUrl} headingLevel={props.headingLevel} />
 }
