@@ -7,10 +7,24 @@ declare global {
   }
 }
 
+const initialLocation = typeof window === 'undefined' ? null : new URL(window.location.href)
+const initialReferrer = typeof document === 'undefined' ? '' : document.referrer
+const referrerHost = initialReferrer ? new URL(initialReferrer).hostname.replace(/^www\./, '') : ''
+const campaignSource = initialLocation?.searchParams.get('utm_source')?.toLowerCase() || ''
+const campaignMedium = initialLocation?.searchParams.get('utm_medium')?.toLowerCase() || ''
+const trafficSource = campaignSource || referrerHost || 'direct'
+const searchReferrer = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia)\./.test(trafficSource) || /^(google|bing|duckduckgo|yahoo|ecosia)$/.test(trafficSource)
+const acquisition = {
+  landing_page: initialLocation ? `${initialLocation.pathname}${initialLocation.search}` : '',
+  traffic_source: trafficSource,
+  traffic_medium: campaignMedium || (searchReferrer ? 'organic' : referrerHost ? 'referral' : 'none'),
+  acquisition_channel: searchReferrer && (!campaignMedium || campaignMedium === 'organic') ? 'organic_search' : campaignMedium ? 'campaign' : referrerHost ? 'referral' : 'direct',
+}
+
 /** Emit consent-independent business events; an installed tag manager owns storage and forwarding. */
 export function trackConversion(event: ConversionName, parameters: Record<string, string | number | boolean> = {}) {
   if (typeof window === 'undefined') return
-  const payload = { event, ...parameters }
+  const payload = { event, ...acquisition, ...parameters }
   window.dataLayer = window.dataLayer || []
   window.dataLayer.push(payload)
   window.gtag?.('event', event, parameters)
