@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { fetchMenuByID } from '../../lib/menuApi'
+import { initialMenu } from '../../lib/prerenderData'
 import { MenuTemplateFor } from './menuTemplateFor'
 import { MenuUnavailable } from './MenuUnavailable'
 import type { PublicMenu } from '../../lib/types'
@@ -23,7 +24,7 @@ function checkpoint(name: string, detail?: Record<string, unknown>) {
 
 export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
   const { t } = useI18n()
-  const [menu, setMenu] = useState<PublicMenu | null | undefined>(undefined)
+  const [menu, setMenu] = useState<PublicMenu | null | undefined>(() => initialMenu(Number(props.params.menuId)))
 
   const menuId = useMemo(() => {
     const parsed = Number(props.params.menuId || '')
@@ -36,7 +37,8 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
       return
     }
     let cancelled = false
-    setMenu(undefined)
+    const prerendered = initialMenu(menuId)
+    setMenu(prerendered)
     checkpoint('menu_catalog_fetch_started', { menu_id: menuId })
     fetchMenuByID(menuId)
       .then((m) => {

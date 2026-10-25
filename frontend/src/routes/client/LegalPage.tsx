@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'preact/hooks'
 import { apiGetJson } from '../../lib/api'
 import type { LegalPage as LegalPageData, LegalPageResponse, LegalPageSlug } from '../../lib/types'
+import { prerenderData } from '../../lib/prerenderData'
 
 export function LegalPage({ slug }: { slug: LegalPageSlug }) {
-  const [data, setData] = useState<LegalPageData | null>(null)
+  const [data, setData] = useState<LegalPageData | null>(() => prerenderData().legalPages?.[slug] || null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     let alive = true
-    setData(null)
+    setData(prerenderData().legalPages?.[slug] || null)
     setError(false)
     apiGetJson<LegalPageResponse>('/api/public/legal-page?slug=' + slug)
       .then((r) => {

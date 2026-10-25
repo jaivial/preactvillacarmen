@@ -159,6 +159,9 @@
   position: relative;
   z-index: 2;
   height: 100svh;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   color: #f4f4f1;
   text-shadow: 0 6px 30px rgba(0, 0, 0, 0.24);
 }

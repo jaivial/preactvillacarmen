@@ -3,6 +3,7 @@ import { Redirect } from 'wouter-preact'
 import type { Atom } from 'jotai'
 import { bebidasPageActiveAtom, cafePageActiveAtom, postresPageActiveAtom, vinosPageActiveAtom } from '../../lib/config'
 import { useI18n } from '../../lib/i18n'
+import { prerenderData } from '../../lib/prerenderData'
 
 /**
  * Middleware guard for every public food-type route.
@@ -15,18 +16,22 @@ import { useI18n } from '../../lib/i18n'
  *
  * Coordination id: foodtype_page_visibility_v1
  */
-const FOOD_PAGE_ATOMS: Record<string, Atom<boolean | null>> = {
+type FoodPageKind = 'cafes' | 'bebidas' | 'vinos' | 'postres'
+
+const FOOD_PAGE_ATOMS: Record<FoodPageKind, Atom<boolean | null>> = {
   cafes: cafePageActiveAtom,
   bebidas: bebidasPageActiveAtom,
   vinos: vinosPageActiveAtom,
   postres: postresPageActiveAtom,
 }
 
-export function FoodPageGuard({ kind, children }: { kind: keyof typeof FOOD_PAGE_ATOMS; children?: any }) {
+export function FoodPageGuard({ kind, children }: { kind: FoodPageKind; children?: any }) {
   const { t } = useI18n()
   const isActive = useAtomValue(FOOD_PAGE_ATOMS[kind])
+  const flags = { cafes: 'cafe_page_active', bebidas: 'bebidas_page_active', vinos: 'vinos_page_active', postres: 'postres_page_active' } as const
+  const active = isActive ?? prerenderData().sidebar?.[flags[kind]]
 
-  if (isActive === null) {
+  if (active === null || active === undefined) {
     return (
       <div class="page menuPage" data-testid={`food-page-guard-loading-${kind}`}>
         <section class="menuBody">
@@ -40,7 +45,7 @@ export function FoodPageGuard({ kind, children }: { kind: keyof typeof FOOD_PAGE
     )
   }
 
-  if (!isActive) {
+  if (!active) {
     console.log('[checkpoint] public_food_page_blocked', `kind=${kind}`)
     return <Redirect to="/" replace />
   }

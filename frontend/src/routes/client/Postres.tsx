@@ -3,10 +3,11 @@ import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Dish, PostresResponse } from '../../lib/types'
 import { DishCardGrid } from './MenuShared'
+import { prerenderData } from '../../lib/prerenderData'
 
 export function Postres() {
   const { t } = useI18n()
-  const [items, setItems] = useState<Dish[] | null | undefined>(undefined)
+  const [items, setItems] = useState<Dish[] | null | undefined>(() => prerenderData().postres)
 
   useEffect(() => {
     let cancelled = false

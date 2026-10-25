@@ -484,12 +484,12 @@ export function Eventos() {
           />
         </picture>
 
-        <div class="evrHeroWords" aria-hidden="true">
+        <h1 class="evrHeroWords">
           <span class="evrWord evrWord--1">{t("events.hero.word1")}</span>
           <span class="evrWord evrWord--2">{t("events.hero.word2")}</span>
           <span class="evrWord evrWord--3">{t("events.hero.word3")}</span>
           <span class="evrWord evrWord--4">{t("events.hero.word4")}</span>
-        </div>
+        </h1>
       </section>
 
       <section class="evrIntro">
