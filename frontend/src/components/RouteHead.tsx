@@ -3,7 +3,7 @@ import { useLocation } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { localized, localizedArray } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
-import { PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
+import { equivalentLanguagePath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
 
 export function catalogRoutes(): MenuRouteEntry[] {
   return Object.values(prerenderData().menus).filter((menu) => menu.active && menu.menu_public_active !== false).map((menu) => {
@@ -66,7 +66,7 @@ export function RouteHead() {
     })
     upsertMeta('link[rel="canonical"]', { rel: 'canonical', href: canonical })
     const alternates = metadata.localized && metadata.indexable
-      ? [['es', localizedPathForHead(location, 'es')], ['en', localizedPathForHead(location, 'en')], ['x-default', localizedPathForHead(location, 'es')]]
+      ? [['es', equivalentLanguagePath(metadata.canonicalPath, 'es')], ['en', equivalentLanguagePath(metadata.canonicalPath, 'en')], ['x-default', equivalentLanguagePath(metadata.canonicalPath, 'es')]]
       : []
     document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((element) => element.remove())
     for (const [hreflang, path] of alternates) {
@@ -78,13 +78,13 @@ export function RouteHead() {
 }
 
 export function renderHead(pathname: string): string {
-  const { lang, path } = languageForHead(pathname)
+  const { lang } = languageForHead(pathname)
   const metadata = routeMetadata(pathname, catalogRoutes())
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
   const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const localizedRoutes = metadata.localized && metadata.indexable
-  const esPath = localizedPathForHead(path, 'es')
-  const enPath = localizedPathForHead(path, 'en')
+  const esPath = equivalentLanguagePath(metadata.canonicalPath, 'es')
+  const enPath = equivalentLanguagePath(metadata.canonicalPath, 'en')
   const alternate = lang === 'es' ? 'en_GB' : 'es_ES'
   const tags = [
     `<title>${escape(metadata.title[lang])}</title>`,
