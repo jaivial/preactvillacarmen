@@ -1,43 +1,51 @@
 # SEO local: línea base y medición mensual
 
-Fecha de corte: 25 de octubre de 2026. Dominio canónico: `https://www.alqueriavillacarmen.com`.
+Corte: 25 de octubre de 2026. Dominio canónico: `https://www.alqueriavillacarmen.com`.
 
-## Estado de las fuentes
+## Fuentes y alcance
 
-- La propiedad correcta es `sc-domain:alqueriavillacarmen.com`, no una propiedad limitada a un subdominio o protocolo. La comprobación inicial devolvió `siteOwner`.
-- La exportación final de julio–octubre de 2026 quedó bloqueada por un `HTTP 401` de OAuth de Search Console. No se han inventado cifras ni se presenta una consulta incompleta como línea base.
-- No hay un contenedor de analítica configurado en el código anterior. Los eventos nuevos se publican en `dataLayer` y, si existe, mediante `gtag`; hace falta instalar/configurar el contenedor y sus destinos antes de afirmar que hay conversiones medidas.
-- Bing Webmaster Tools y Google Business Profile requieren acceso del negocio. Las altas, categorías, reseñas y citaciones se gestionan en el hito off-site; no se marcan como realizadas desde este repositorio.
+- Search Console: propiedad `sc-domain:alqueriavillacarmen.com`, acceso `siteOwner`; consultas web con datos finales de 2026-07-01 a 2026-10-22, agrupadas por `QUERY,PAGE,DEVICE`.
+- Las cifras siguientes son las filas observadas en las consultas por intención, no una proyección ni una comprobación manual de rankings. Un cero significa que la consulta filtrada no devolvió filas; no demuestra ausencia de demanda.
+- Los datos anteriores a este corte sirven como línea base inicial para comparar despliegues con el mismo periodo y estacionalidad. No se atribuye todavía un cambio a este trabajo.
+- Search Console mide captación, no reservas. No hay un contenedor de analítica instalado en este repositorio; los eventos quedan preparados con contexto de adquisición, pero falta configurar su destino y validar la recepción antes de publicar cifras de conversión.
+- Bing Webmaster Tools y Google Business Profile requieren acceso del negocio y se gestionan en el hito off-site.
 
-## Tabla keyword → URL → datos actuales
+## Keyword → URL observada → datos actuales → landing objetivo
 
-Completar las columnas de datos con la exportación conjunta `QUERY,PAGE` de Search Console, periodo móvil de tres meses y comparación con los tres meses anteriores. Mantener también segmentos por dispositivo y país; no usar posiciones manuales como único KPI.
+CTR y posición son los valores de cada fila keyword/URL/dispositivo, no promedios calculados entre intenciones distintas.
 
-| Intención / grupo de keywords | URL de aterrizaje | Clics | Impresiones | CTR | Posición media |
-| --- | --- | ---: | ---: | ---: | ---: |
-| restaurante en Catarroja / restaurante Catarroja | `/` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| arroces / paellas en Catarroja | `/` hasta publicar la landing del hito de contenido | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| menú del día Catarroja | `/menu/41/menu-del-dia-41` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| menú fin de semana Catarroja | `/menu/42/menu-fin-de-semana-42` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| menús de grupos Catarroja | `/menusdegrupos` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| bodas / comuniones / eventos Catarroja | `/eventos` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
-| contacto / cómo llegar / teléfono | `/contacto` | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth | Pendiente OAuth |
+| Intención / keyword real | URL observada | Dispositivo | Clics | Impresiones | CTR | Posición | Landing objetivo |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| cerca de catarroja | `/` | Móvil | 1 | 1 | 100 % | 2,00 | `/` |
+| villa carmen restaurante | `/` | Móvil | 11 | 32 | 34,38 % | 1,00 | `/` |
+| restaurante villa carmen | `/` | Móvil | 11 | 32 | 34,38 % | 1,00 | `/` |
+| arroces / paellas | Sin filas en el filtro `arroz|arroces|paella|paellas` | Todos | 0 observados | 0 observadas | — | — | `/arroces-y-paellas` |
+| menú de alqueria villa carmen | `/menu/41/menu-del-dia-41` | Móvil | 1 | 3 | 33,33 % | 2,00 | `/menu/41/menu-del-dia-41` |
+| restaurantes con menu fin de semana cerca de mi | `/` | Móvil | 1 | 1 | 100 % | 19,00 | `/menu/42/menu-fin-de-semana-42` |
+| menú de alqueria villa carmen | `/menudegrupos.php` | Móvil | 1 | 1 | 100 % | 2,00 | `/menusdegrupos` |
+| bodas catarroja | `/` | Escritorio | 0 | 5 | 0 % | 53,20 | `/bodas` |
+| bodas catarroja | `/` | Móvil | 0 | 3 | 0 % | 61,33 | `/bodas` |
+| bodas catarroja | `/` | Tableta | 0 | 2 | 0 % | 57,50 | `/bodas` |
+| restaurante comunion valencia | `/` | Móvil | 0 | 1 | 0 % | 6,00 | `/comuniones` |
+| restaurante para comuniones cerca de mi | `/` | Móvil | 0 | 1 | 0 % | 32,00 | `/comuniones` |
+| alquería villa carmen | `/contacto` | Móvil | 1 | 200 | 0,50 % | 2,04 | `/contacto` |
 
-La exportación debe conservar las keywords reales agrupadas bajo estas intenciones y cualquier URL distinta que reciba impresiones. Una keyword sin impresiones no se añade como si tuviera tráfico.
+Las consultas de marca son útiles para detectar canibalización de URLs, pero no se presentan como crecimiento de captación genérica. Las URLs legacy permanecen en la columna observada porque describen el tráfico histórico real; las redirecciones y canonicals del hito técnico gobiernan las URLs nuevas.
 
 ## Conversiones orgánicas separables
 
-El frontend emite `reservation_start`, `reservation_complete`, `phone_click` y `whatsapp_click`. Se disparan al entrar en reservas, tras una respuesta válida de reserva y al pulsar enlaces telefónicos o de WhatsApp respectivamente. Una salida a WhatsApp es intención de contacto, no una reserva confirmada.
+El frontend emite `reservation_start`, `reservation_complete`, `phone_click` y `whatsapp_click`. La reserva completada solo se emite tras una respuesta válida; WhatsApp y teléfono son intenciones de contacto, no reservas.
 
-Configuración pendiente en el contenedor de analítica:
+Cada evento incluye `landing_page`, `traffic_source`, `traffic_medium` y `acquisition_channel`. El contexto se captura una vez al cargar la aplicación y se conserva en memoria durante la navegación SPA, sin cookies ni almacenamiento nuevo. `landing_page` contiene solo la ruta: nunca query strings ni tokens de reservas; los parámetros UTM se envían por separado como fuente y medio. Un referente de buscador sin campaña de pago se clasifica como `organic_search`; UTMs explícitas se conservan para no reclamar como SEO tráfico de campañas.
 
-1. Cargar el contenedor solo conforme a la política de consentimiento aplicable; no duplicar los eventos si el contenedor ya escucha `dataLayer`.
-2. Registrar los cuatro eventos como conversiones separadas. No contar `reservation_start` como reserva completada ni atribuir una reserva por el solo clic de teléfono/WhatsApp.
-3. En el panel, segmentar por **Sesión: canal predeterminado = Organic Search**. Conservar también fuente/medio, landing page y dispositivo. Search Console mide captación orgánica; la herramienta de analítica mide las acciones posteriores.
-4. Validar en el entorno de despliegue que cada evento llega una sola vez antes de usar sus cifras como referencia.
+Configuración externa todavía necesaria:
+
+1. Instalar el contenedor conforme al consentimiento aplicable y evitar la doble escucha de `dataLayer`/`gtag`.
+2. Registrar los cuatro eventos y las dimensiones de adquisición; validar una sola recepción por acción.
+3. Segmentar por **Organic Search**, landing page y dispositivo, y cotejar fuente/medio. No usar `reservation_start`, llamadas o WhatsApp como reservas completadas.
 
 ## Panel mensual y comparación de despliegues
 
-Guardar cada mes: fecha de exportación, periodo y comparación, clics, impresiones, CTR y posición por keyword/URL/dispositivo; URLs indexadas y exclusiones; conversiones orgánicas por tipo; llamadas y WhatsApp por landing; y notas de cambios publicados. Comparar cada despliegue con el mismo periodo y estacionalidad, nunca con una comprobación puntual de rankings.
+Guardar cada mes: fecha, periodo y comparación, clics, impresiones, CTR y posición por keyword/URL/dispositivo; URLs indexadas y exclusiones; conversiones orgánicas por tipo; llamadas y WhatsApp por landing; y cambios publicados. Comparar con el mismo periodo y estacionalidad, nunca solo con rankings puntuales.
 
-Antes del primer informe con cifras se debe renovar el acceso OAuth a Search Console, exportar los datos y sustituir las celdas pendientes por una tabla generada desde esa exportación.
+La línea base anterior deja constancia de los datos realmente consultados. La exportación cruda exhaustiva y la activación del destino de analítica no se dan por completadas hasta disponer de esas evidencias externas.
