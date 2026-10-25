@@ -34,11 +34,11 @@ const sidebar = {
 const menus = {}
 await Promise.all(sidebar.menus.map(async (item) => {
   const response = await getJson(`/api/menus/${item.id}`)
-  const menu = ssr.normalizePublicMenu(response.menu)
+  const menu = { ...ssr.normalizePublicMenu(response.menu), slug: response.menu.slug || item.slug || '' }
   if (menu.active && menu.menu_public_active !== false) menus[String(menu.id)] = menu
 }))
 const homeMenus = homeResponse.menus || []
-const groupMenus = groupResponse.menus || []
+const groupMenus = (groupResponse.menus || []).map((menu) => ({ ...menu, slug: menus[String(menu.id)]?.slug || menu.slug }))
 const postres = postresResponse.postres || []
 const cafes = cafesResponse.items || []
 const bebidas = bebidasResponse.items || []
@@ -69,7 +69,7 @@ const foodActive = { '/postres': sidebar.postres_page_active, '/vinos': sidebar.
 const routes = ssr.PUBLIC_ROUTES.filter((route) => foodActive[route.path] !== false)
 const editorialPaths = routes.filter((route) => route.prerender).flatMap((route) => route.localized ? [route.path, `/en${route.path === '/' ? '' : route.path}`] : [route.path])
 const menuPaths = Object.values(menus).flatMap((menu) => {
-  const path = `/menu/${menu.id}${menu.slug ? `/${encodeURIComponent(menu.slug)}` : ''}`
+  const path = ssr.menuPath(menu)
   return [path, `/en${path}`]
 })
 const paths = [...new Set([...editorialPaths, ...menuPaths])]

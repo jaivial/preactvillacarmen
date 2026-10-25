@@ -5445,7 +5445,7 @@ svg {
     box-shadow: 0 22px 56px rgba(0, 0, 0, 0.16);
 }
 
-.headeravisolegal h1 {
+.headeravisolegal .legal-wordmark {
     margin: 0;
     font-family: var(--font-serif);
     font-weight: 300;
