@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { ClientFooter } from '../../components/ClientFooter'
 import { ClientHeader } from '../../components/ClientHeader'
+import { Breadcrumbs } from '../../components/Breadcrumbs'
 import { useLocation } from 'wouter-preact'
 import { PublicAdPopover } from '../../components/PublicAdPopover'
 import { fetchPublicAds, fetchPreviewAd, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
@@ -44,7 +45,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
 
   const isTopPage = isHome
   const isWinePage = location.startsWith('/vinos')
-  const isEventosPage = location.startsWith('/eventos')
+  const isEventosPage = location === '/eventos'
 
   let mainClass = 'client-main'
   if (isTopPage) mainClass += ' main--topPage'
@@ -54,7 +55,10 @@ export function ClientLayout(props: { children: ComponentChildren }) {
   return (
     <div class="client-shell">
       <ClientHeader />
-      <main class={mainClass}>{props.children}</main>
+      <main class={mainClass}>
+        {!isHome ? <Breadcrumbs /> : null}
+        {props.children}
+      </main>
       {isEventosPage ? null : <ClientFooter />}
       {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (!previewAdId) markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>

@@ -93,7 +93,7 @@ for (const path of paths) {
   const legalSlug = legalSlugs[bare]
   const pageData = {
     ...baseData,
-    menus: menuMatch && menus[menuMatch[1]] ? { [menuMatch[1]]: menus[menuMatch[1]] } : isGroup ? menus : {},
+    menus: menuMatch && menus[menuMatch[1]] ? { [menuMatch[1]]: menus[menuMatch[1]] } : isGroup || bare === '/arroces-y-paellas' ? menus : {},
     homeMenus: bare === '/' ? homeMenus : undefined,
     groupMenus: isGroup ? groupMenus : undefined,
     postres: bare === '/postres' ? postres : undefined,

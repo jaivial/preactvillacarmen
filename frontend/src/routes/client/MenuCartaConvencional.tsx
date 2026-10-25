@@ -6,8 +6,9 @@ import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider, MenuImportantBo
 import { getMenuViewSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
-export function MenuCartaConvencional(props: { menu: PublicMenu }) {
+export function MenuCartaConvencional(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
   const { t, lang } = useI18n()
+  const Heading = props.headingLevel || 'h1'
   const subtitle = useMemo(
     () => localizedArray(props.menu.menu_subtitle, props.menu.menu_subtitle_english, lang)[0] || 'Carta convencional',
     [lang, props.menu.menu_subtitle, props.menu.menu_subtitle_english],
@@ -28,7 +29,7 @@ export function MenuCartaConvencional(props: { menu: PublicMenu }) {
     <div class="page menuPage">
       <section class="page-hero">
         <div class="container">
-          <h1 class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h1>
+          <Heading class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</Heading>
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>

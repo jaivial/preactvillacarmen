@@ -4,6 +4,7 @@ import { useI18n } from '../lib/i18n'
 import { localized, localizedArray } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
 import { equivalentLanguagePath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
+import { structuredData } from '../lib/structuredData'
 
 export function catalogRoutes(): MenuRouteEntry[] {
   return Object.values(prerenderData().menus).filter((menu) => menu.active && menu.menu_public_active !== false).map((menu) => {
@@ -39,6 +40,7 @@ export function RouteHead() {
   const pathname = lang === 'en' && !location.startsWith('/en') ? `/en${location === '/' ? '' : location}` : location
   const metadata = routeMetadata(pathname, catalogRoutes())
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
+  const jsonLd = JSON.stringify(structuredData(pathname, catalogRoutes()))
 
   useEffect(() => {
     document.title = metadata.title[lang]
@@ -65,6 +67,17 @@ export function RouteHead() {
       upsertMeta(`${property ? 'meta[property' : 'meta[name'}="${name}"]`, { [property ? 'property' : 'name']: name, content })
     })
     upsertMeta('link[rel="canonical"]', { rel: 'canonical', href: canonical })
+    let schema = document.head.querySelector<HTMLScriptElement>('script[data-public-schema]')
+    if (!metadata.indexable) schema?.remove()
+    else {
+      if (!schema) {
+        schema = document.createElement('script')
+        schema.type = 'application/ld+json'
+        schema.dataset.publicSchema = 'true'
+        document.head.appendChild(schema)
+      }
+      schema.text = jsonLd
+    }
     const alternates = metadata.localized && metadata.indexable
       ? [['es', equivalentLanguagePath(metadata.canonicalPath, 'es')], ['en', equivalentLanguagePath(metadata.canonicalPath, 'en')], ['x-default', equivalentLanguagePath(metadata.canonicalPath, 'es')]]
       : []
@@ -72,7 +85,7 @@ export function RouteHead() {
     for (const [hreflang, path] of alternates) {
       upsertMeta(`link[rel="alternate"][hreflang="${hreflang}"]`, { rel: 'alternate', hreflang, href: new URL(path, SITE_ORIGIN).href })
     }
-  }, [canonical, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
+  }, [canonical, jsonLd, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
 
   return null
 }
@@ -105,6 +118,9 @@ export function renderHead(pathname: string): string {
     `<meta name="twitter:description" content="${escape(metadata.description[lang])}" />`,
     `<meta name="twitter:image" content="${SOCIAL_IMAGE}" />`,
   ]
+  for (const data of structuredData(pathname, catalogRoutes())) {
+    tags.push(`<script type="application/ld+json" data-public-schema="true">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`)
+  }
   if (localizedRoutes) {
     tags.push(
       `<link rel="alternate" hreflang="es" href="${new URL(esPath, SITE_ORIGIN).href}" />`,

@@ -19,7 +19,9 @@ export function SpecialMenuSimpleTemplate(props: {
   menu: PublicMenu
   subtitle: string
   imageUrl: string
+  headingLevel?: 'h1' | 'h2'
 }) {
+  const Heading = props.headingLevel || 'h1'
   const sections = Array.isArray(props.menu.special_menu_sections)
     ? props.menu.special_menu_sections
     : []
@@ -31,7 +33,7 @@ export function SpecialMenuSimpleTemplate(props: {
     <div class="page menuPage menuPage--special" data-testid="public-special-menu-page">
       <section class="page-hero" data-testid="public-special-menu-hero">
         <div class="container" data-testid="public-special-menu-hero-container">
-          <h1 class="page-title" data-testid="public-special-menu-title">{props.menu.menu_title}</h1>
+          <Heading class="page-title" data-testid="public-special-menu-title">{props.menu.menu_title}</Heading>
           <p class="page-subtitle" data-testid="public-special-menu-subtitle">{props.subtitle}</p>
           {/* Coordination id: special_menu_completo_v1 - a COMPLETO menu
               hides the prereserva notice and the booking button even when

@@ -82,7 +82,7 @@ export function ClientHeader() {
   const setPostresActive = useSetAtom(postresPageActiveAtom)
 
   const isHome = location === '/'
-  const isEventosPage = location.startsWith('/eventos')
+  const isEventosPage = location === '/eventos'
   const allowTransparentHeader = isHome || isEventosPage
   const solidHeader = !allowTransparentHeader || scrolled
   const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana') || location.startsWith('/menu/')
@@ -204,6 +204,8 @@ export function ClientHeader() {
     // web placement, either inside the menus accordion or as a standalone item.
     return [
       { href: '/', labelKey: 'nav.home' },
+      { href: '/eventos', labelKey: 'nav.weddingsEvents' },
+      { href: '/arroces-y-paellas', labelKey: 'home.discovery.rice' },
       { href: '/reservas', labelKey: 'nav.reservations' },
       // /regala ocultado del menú (nav.gift) — página sigue accesible por URL.
       { href: '/contacto', labelKey: 'nav.contact' },
@@ -327,8 +329,8 @@ export function ClientHeader() {
       <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
         <ul class="navMenuBurger__links" aria-label="Principal">
           {items.map((item) => {
-            if (item.href !== '/') return null
-            const isActive = location === '/'
+            if (item.href !== '/' && item.href !== '/eventos' && item.href !== '/arroces-y-paellas') return null
+            const isActive = item.href === '/' ? location === '/' : location.startsWith(item.href)
             return (
               <li>
                 <Link
@@ -415,7 +417,7 @@ export function ClientHeader() {
           })}
 
           {items.map((item) => {
-            if (item.href === '/') return null
+            if (item.href === '/' || item.href === '/eventos' || item.href === '/arroces-y-paellas') return null
             const isActive = location.startsWith(item.href)
             return (
               <li>
@@ -432,17 +434,6 @@ export function ClientHeader() {
             )
           })}
 
-          <li>
-            <Link
-              href="/eventos"
-              className={isEventosPage ? 'navBurgerLink active' : 'navBurgerLink'}
-              onClick={() => setMobileOpen(false)}
-              onMouseEnter={() => prefetchRoute('/eventos')}
-              onFocus={() => prefetchRoute('/eventos')}
-            >
-              {t('nav.weddingsEvents')}
-            </Link>
-          </li>
         </ul>
 
         <div class="navMenuBurger__bottom">
@@ -490,6 +481,8 @@ export function ClientHeader() {
                 class={logoClass}
                 src={logoSrc}
                 alt={t('home.hero.title')}
+                width="185"
+                height="85"
                 decoding="async"
                 loading="eager"
               />

@@ -27,20 +27,20 @@ import { MenusDeGruposConvencional } from './MenusDeGruposConvencional'
 // The switch runs on the numeric `menu_type` code resolved through the shared
 // map, so a legacy string from the backend still picks the same template and
 // an unknown code (0) keeps the closed conventional default.
-export function MenuTemplateFor(props: { menu: PublicMenu }) {
+export function MenuTemplateFor(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
   const menu = props.menu
 
   switch (normalizeMenuType(menu.menu_type)) {
     case MENU_TYPE_A_LA_CARTE:
-      return <MenuCartaConvencional menu={menu} />
+      return <MenuCartaConvencional menu={menu} headingLevel={props.headingLevel} />
     case MENU_TYPE_SPECIAL:
-      return <MenuEspecial menu={menu} />
+      return <MenuEspecial menu={menu} headingLevel={props.headingLevel} />
     case MENU_TYPE_CLOSED_GROUP:
-      return <MenusDeGruposConvencional menu={menu} />
+      return <MenusDeGruposConvencional menu={menu} headingLevel={props.headingLevel} />
     case MENU_TYPE_A_LA_CARTE_GROUP:
-      return <MenusDeGruposCarta menu={menu} />
+      return <MenusDeGruposCarta menu={menu} headingLevel={props.headingLevel} />
     default:
       // MENU_TYPE_CLOSED_CONVENTIONAL (1) and any unknown code (0).
-      return <MenuCerradoConvencional menu={menu} />
+      return <MenuCerradoConvencional menu={menu} headingLevel={props.headingLevel} />
   }
 }

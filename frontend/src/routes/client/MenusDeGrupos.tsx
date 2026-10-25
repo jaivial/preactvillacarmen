@@ -5,6 +5,7 @@ import { fetchMenuByID } from '../../lib/menuApi'
 import type { GroupMenuDisplay, GroupMenusDisplayResponse, PublicMenu } from '../../lib/types'
 import { initialMenu, prerenderData } from '../../lib/prerenderData'
 import { MenuTemplateFor } from './menuTemplateFor'
+import { GroupLanding } from './GroupLanding'
 
 function checkpoint(name: string, detail?: Record<string, unknown>) {
   if (!import.meta.env.DEV) return
@@ -162,6 +163,8 @@ export function MenusDeGrupos() {
     if (current) checkpoint('menusdegrupos_menu_rendered', { menu_id: current.id })
   }, [current])
 
+  const landing = <GroupLanding menus={groupMenus} />
+
   const tabs = shouldShowTabs && menus ? (
     <section class="menuBody menuBody--groupPicker" data-testid="menusdegrupos-picker">
       <div class="container">
@@ -188,6 +191,7 @@ export function MenusDeGrupos() {
   if (groupMenus === undefined || (activeMenu && !current && !failed[activeMenu.id])) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         {tabs}
         <section class="menuBody">
           <div class="container">
@@ -201,6 +205,7 @@ export function MenusDeGrupos() {
   if (groupMenus === null || (activeMenu && failed[activeMenu.id])) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         {tabs}
         <section class="menuBody">
           <div class="container">
@@ -214,6 +219,7 @@ export function MenusDeGrupos() {
   if (!menus || menus.length === 0) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         <section class="menuBody">
           <div class="container">
             <div class="menuState" data-testid="menusdegrupos-state-empty">{t('groupMenus.empty')}</div>
@@ -225,8 +231,9 @@ export function MenusDeGrupos() {
 
   return (
     <div class="page menuPage" data-testid="menusdegrupos-page">
+      {landing}
       {tabs}
-      {current ? <MenuTemplateFor menu={current} /> : null}
+      {current ? <MenuTemplateFor menu={current} headingLevel="h2" /> : null}
     </div>
   )
 }

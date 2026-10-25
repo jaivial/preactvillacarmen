@@ -60,7 +60,7 @@ describe('fetchMenuByID', () => {
     const result = await fetchMenuByID(42)
 
     expect(mockGetJson).toHaveBeenCalledTimes(1)
-    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/42')
+    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/42', { noStore: true })
     expect(result.id).toBe(42)
   })
 
