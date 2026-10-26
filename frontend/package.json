@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:seo": "node scripts/check-seo.mjs",
+    "test:seo": "npm run build && npm run check:seo"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.8",

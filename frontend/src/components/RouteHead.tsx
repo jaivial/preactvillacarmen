@@ -3,23 +3,22 @@ import { useLocation } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { localized, localizedArray } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
-import { equivalentLanguagePath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
+import { equivalentLanguagePath, menuPath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
 import { structuredData } from '../lib/structuredData'
 
 export function catalogRoutes(): MenuRouteEntry[] {
   return Object.values(prerenderData().menus).filter((menu) => menu.active && menu.menu_public_active !== false).map((menu) => {
-    const slug = String(menu.slug || '').trim()
     return {
       id: menu.id,
-      slug,
-      path: `/menu/${menu.id}${slug ? `/${encodeURIComponent(slug)}` : ''}`,
+      slug: menu.slug || '',
+      path: menuPath(menu),
       title: {
         es: `${menu.menu_title} | Alquería Villa Carmen`,
         en: `${localized(menu.menu_title, menu.menu_title_english, 'en')} | Alqueria Villa Carmen`,
       },
       description: {
-        es: localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, 'es').join('. ') || `${menu.menu_title} en Alquería Villa Carmen, Catarroja.`,
-        en: localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, 'en').join('. ') || `${localized(menu.menu_title, menu.menu_title_english, 'en')} at Alqueria Villa Carmen, Catarroja.`,
+        es: `${menu.menu_title}: ${localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, 'es').filter((line) => line.trim()).join('. ') || 'consulta platos, precios y condiciones'} en Alquería Villa Carmen, Catarroja.`,
+        en: `${localized(menu.menu_title, menu.menu_title_english, 'en')}: ${menu.menu_subtitle_english?.filter((line) => line.trim()).join('. ') || 'view dishes, prices and booking conditions'} at Alqueria Villa Carmen in Catarroja.`,
       },
     }
   })

@@ -21,4 +21,4 @@ export function renderPage(path: string, data: PrerenderData): string {
 
 export { normalizePublicMenu } from './lib/backendAdapters'
 export { renderHead } from './components/RouteHead'
-export { PUBLIC_ROUTES, SITE_ORIGIN, GONE_PATHS } from './lib/routes'
+export { PUBLIC_ROUTES, SITE_ORIGIN, GONE_PATHS, menuPath } from './lib/routes'

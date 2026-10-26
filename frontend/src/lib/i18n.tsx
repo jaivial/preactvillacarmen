@@ -342,6 +342,8 @@ const DICT: Dictionary = {
   'wines.error': { es: 'No se pudo cargar la carta de vinos.', en: 'Could not load wine list.' },
   'wines.empty': { es: 'No hay vinos disponibles.', en: 'No wines available.' },
 
+  'resource.riceGuide': { es: 'Guía de arroces', en: 'Rice guide' },
+  'resource.celebrationChecklist': { es: 'Checklist de celebraciones', en: 'Celebration checklist' },
   'footer.contact': { es: 'Contacto', en: 'Contact' },
   'footer.social': { es: 'Redes', en: 'Social' },
   'footer.openMaps': { es: 'Abrir en Google Maps', en: 'Open in Google Maps' },

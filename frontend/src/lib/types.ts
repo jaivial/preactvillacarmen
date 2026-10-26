@@ -36,6 +36,7 @@ export type PostresResponse = {
 
 export type GroupMenuDisplay = {
   id: number
+  slug?: string | null
   menu_title: string
   menu_title_english?: string
   price: number
