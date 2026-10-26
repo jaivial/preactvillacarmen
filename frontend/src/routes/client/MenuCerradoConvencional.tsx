@@ -2,7 +2,7 @@ import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
-import { formatMenuPrice, splitClosedConventionalSections } from './menuPublicHelpers'
+import { formatMenuPrice, publicMenuH1, splitClosedConventionalSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
 export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
@@ -33,7 +33,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
     <div class="page menuPage menuPage--closedConventional">
       <section class="page-hero">
         <div class="container">
-          <Heading class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</Heading>
+          <Heading class="page-title">{publicMenuH1(props.menu, lang)}</Heading>
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>

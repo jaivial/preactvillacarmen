@@ -33,7 +33,9 @@ function isClosedConventionalMenu(menuType: PublicMenuType | string | number | n
   return normalizeMenuType(menuType) === MENU_TYPE_CLOSED_CONVENTIONAL
 }
 
-export function buildPublicMenuHref(menu: Pick<PublicMenu, 'id' | 'slug'>): string {
+export function buildPublicMenuHref(menu: Pick<PublicMenu, 'id' | 'slug' | 'seo_slug'>): string {
+  const seoSlug = String(menu.seo_slug || '').trim()
+  if (seoSlug) return `/menu/${encodeURIComponent(seoSlug)}`
   const slug = String(menu.slug || '').trim()
   if (slug) return `/menu/${encodeURIComponent(String(menu.id))}/${encodeURIComponent(slug)}`
   return `/menu/${encodeURIComponent(String(menu.id))}`

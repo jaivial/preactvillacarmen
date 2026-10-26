@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import { useLocation } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { localized, localizedArray } from '../lib/i18n'
@@ -11,14 +11,15 @@ export function catalogRoutes(): MenuRouteEntry[] {
     return {
       id: menu.id,
       slug: menu.slug || '',
+      seo_slug: menu.seo_slug,
       path: menuPath(menu),
       title: {
-        es: `${menu.menu_title} | Alquería Villa Carmen`,
-        en: `${localized(menu.menu_title, menu.menu_title_english, 'en')} | Alqueria Villa Carmen`,
+        es: menu.seo_title?.trim() || `${menu.menu_title} | Alquería Villa Carmen`,
+        en: menu.seo_title_english?.trim() || `${localized(menu.menu_title, menu.menu_title_english, 'en')} | Alqueria Villa Carmen`,
       },
       description: {
-        es: `${menu.menu_title}: ${localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, 'es').filter((line) => line.trim()).join('. ') || 'consulta platos, precios y condiciones'} en Alquería Villa Carmen, Catarroja.`,
-        en: `${localized(menu.menu_title, menu.menu_title_english, 'en')}: ${menu.menu_subtitle_english?.filter((line) => line.trim()).join('. ') || 'view dishes, prices and booking conditions'} at Alqueria Villa Carmen in Catarroja.`,
+        es: menu.seo_description?.trim() || `${menu.menu_title}: ${localizedArray(menu.menu_subtitle, menu.menu_subtitle_english, 'es').filter((line) => line.trim()).join('. ') || 'consulta platos, precios y condiciones'} en Alquería Villa Carmen, Catarroja.`,
+        en: menu.seo_description_english?.trim() || `${localized(menu.menu_title, menu.menu_title_english, 'en')}: ${menu.menu_subtitle_english?.filter((line) => line.trim()).join('. ') || 'view dishes, prices and booking conditions'} at Alqueria Villa Carmen in Catarroja.`,
       },
     }
   })
@@ -35,6 +36,12 @@ function upsertMeta(selector: string, attributes: Record<string, string>) {
 
 export function RouteHead() {
   const [location] = useLocation()
+  const [catalogVersion, setCatalogVersion] = useState(0)
+  useEffect(() => {
+    const update = () => setCatalogVersion((value) => value + 1)
+    window.addEventListener('villacarmen:menus-updated', update)
+    return () => window.removeEventListener('villacarmen:menus-updated', update)
+  }, [])
   const { lang } = useI18n()
   const pathname = lang === 'en' && !location.startsWith('/en') ? `/en${location === '/' ? '' : location}` : location
   const metadata = routeMetadata(pathname, catalogRoutes())
@@ -84,7 +91,7 @@ export function RouteHead() {
     for (const [hreflang, path] of alternates) {
       upsertMeta(`link[rel="alternate"][hreflang="${hreflang}"]`, { rel: 'alternate', hreflang, href: new URL(path, SITE_ORIGIN).href })
     }
-  }, [canonical, jsonLd, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
+  }, [canonical, catalogVersion, jsonLd, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
 
   return null
 }

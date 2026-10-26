@@ -78,21 +78,24 @@ export function equivalentLanguagePath(pathname: string, lang: Language): string
   return localizedPath(current.path, lang)
 }
 
-export function menuPath(menu: { id: number; slug?: string | null }): string {
+export function menuPath(menu: { id: number; slug?: string | null; seo_slug?: string | null }): string {
+  const seoSlug = String(menu.seo_slug || '').trim()
+  if (seoSlug) return `/menu/${encodeURIComponent(seoSlug)}`
   const slug = String(menu.slug || '').trim()
   return `/menu/${encodeURIComponent(String(menu.id))}${slug ? `/${encodeURIComponent(slug)}` : ''}`
 }
 
-export type MenuRouteEntry = { id: number; slug: string; title: Record<Language, string>; description: Record<Language, string>; path: string }
+export type MenuRouteEntry = { id: number; slug: string; seo_slug?: string; title: Record<Language, string>; description: Record<Language, string>; path: string }
 export type RouteMetadataInput = RouteMetadata | MenuRouteEntry
 
 export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = []): RouteMetadata & { canonicalPath: string } {
   const { lang, path } = stripLanguagePrefix(pathname)
   const normalized = path.length > 1 ? path.replace(/\/+$/, '') : path
-  const menuMatch = normalized.match(/^\/menu\/(\d+)(?:\/([^/]+))?$/)
+  const menuMatch = normalized.match(/^\/menu\/([^/]+)(?:\/([^/]+))?$/)
   if (menuMatch) {
-    const id = Number(menuMatch[1])
-    const menu = menus.find((item) => item.id === id)
+    let routeKey = menuMatch[1]
+    try { routeKey = decodeURIComponent(routeKey) } catch { /* Invalid keys fall through to 404. */ }
+    const menu = menus.find((item) => /^\d+$/.test(routeKey) ? item.id === Number(routeKey) : item.seo_slug === routeKey)
     if (menu) {
       return {
         path: menu.path,

@@ -34,7 +34,7 @@ export type PostresResponse = {
   postres: Dish[]
 }
 
-export type GroupMenuDisplay = {
+export type GroupMenuDisplay = MenuPublicSEO & {
   id: number
   slug?: string | null
   menu_title: string
@@ -138,7 +138,19 @@ export type PublicMenuSettings = {
   important_info_english?: string[]
 }
 
-export type PublicMenu = {
+// Coordination id: menu_public_seo_v1
+// Optional editor-controlled SEO; empty values retain the existing public fallbacks.
+export type MenuPublicSEO = {
+  seo_slug?: string
+  seo_title?: string
+  seo_title_english?: string
+  seo_description?: string
+  seo_description_english?: string
+  seo_h1?: string
+  seo_h1_english?: string
+}
+
+export type PublicMenu = MenuPublicSEO & {
   id: number
   slug: string
   menu_title: string
@@ -406,7 +418,7 @@ export type InsertBookingResponse = {
 }
 
 // Lightweight menu data for the sidebar burger nav.
-export type SidebarMenu = {
+export type SidebarMenu = MenuPublicSEO & {
   id: number
   slug: string
   menu_title: string
@@ -420,7 +432,7 @@ export type SidebarMenu = {
 }
 
 // Lightweight menu data for the homepage cards section.
-export type HomeMenu = {
+export type HomeMenu = MenuPublicSEO & {
   id: number
   slug: string
   menu_title: string
