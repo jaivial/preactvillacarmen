@@ -35,6 +35,12 @@ const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
 const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => localPath(m[1]))
 check(new Set(sitemapPaths).size === sitemapPaths.length, 'sitemap.xml: duplicate URLs')
 const sitemapSet = new Set(sitemapPaths)
+for (const [source, target] of [['/datos-busquedas-restaurante', '/'], ['/en/datos-busquedas-restaurante', '/en']]) {
+  check(routeManifest.redirects[source] === target, `${source}: private Search Console report must redirect to ${target}`)
+  check(!pages.has(source), `${source}: retired public report HTML is still generated`)
+  check(!sitemapSet.has(source), `${source}: retired public report is still in sitemap`)
+}
+check(!files.includes(join(dist, 'downloads/villa-carmen-search-demand-2026-04-23_2026-10-22.csv')), 'private Search Console CSV is still publicly downloadable')
 const titles = new Map()
 const descriptions = new Map()
 const alternateOwners = new Map()
