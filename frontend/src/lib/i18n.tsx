@@ -343,6 +343,8 @@ const DICT: Dictionary = {
   'wines.empty': { es: 'No hay vinos disponibles.', en: 'No wines available.' },
 
   'resource.riceGuide': { es: 'Guía de arroces', en: 'Rice guide' },
+  'resource.searchData': { es: 'Datos de búsquedas', en: 'Search-demand data' },
+  'resource.downloads': { es: 'Descargas', en: 'Downloads' },
   'resource.celebrationChecklist': { es: 'Checklist de celebraciones', en: 'Celebration checklist' },
   'footer.contact': { es: 'Contacto', en: 'Contact' },
   'footer.social': { es: 'Redes', en: 'Social' },

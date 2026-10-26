@@ -41,7 +41,8 @@ const alternateOwners = new Map()
 for (const [path, { html }] of pages) {
   if (path === '/gone') continue
   const lang = html.match(/<html\b[^>]*\blang="([^"]+)"/i)?.[1]
-  check(lang === (path === '/en' || path.startsWith('/en/') ? 'en' : 'es'), `${path}: wrong html lang (${lang})`)
+  const validLanguage = path.startsWith('/downloads/') ? lang === 'es' || lang === 'en' : lang === (path === '/en' || path.startsWith('/en/') ? 'en' : 'es')
+  check(validLanguage, `${path}: wrong html lang (${lang})`)
   const titleCount = one(html, /<title\b/gi)
   const title = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() || ''
   const descriptionTags = tags(html, 'meta').filter((a) => a.name === 'description')
