@@ -3,7 +3,7 @@ import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { menuBeverageNote } from '../../lib/menuBeverageNote'
 import { AllergensLegend, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
-import { getMenuViewSections } from './menuPublicHelpers'
+import { getMenuViewSections, publicMenuH1 } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
 export function MenusDeGruposCarta(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
@@ -24,7 +24,7 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu; headingLevel?: 'h1
     <div class="page menuPage">
       <section class="page-hero">
         <div class="container">
-          <Heading class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</Heading>
+          <Heading class="page-title">{publicMenuH1(props.menu, lang)}</Heading>
           <p class="page-subtitle">{subtitles[0] || 'Menu de grupos a la carta'}</p>
         </div>
       </section>

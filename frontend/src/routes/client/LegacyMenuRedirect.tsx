@@ -12,6 +12,7 @@ function sidebarToSidebarLike(menus: SidebarMenu[]) {
   return menus.map((m) => ({
     id: m.id,
     slug: m.slug,
+    seo_slug: m.seo_slug,
     menu_title: m.menu_title,
     menu_type: m.menu_type,
     active: m.active,

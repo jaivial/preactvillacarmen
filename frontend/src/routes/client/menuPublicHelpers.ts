@@ -1,5 +1,10 @@
 import type { Dish, PublicMenu, PublicMenuSection } from '../../lib/types'
 
+export function publicMenuH1(menu: PublicMenu, lang: 'es' | 'en'): string {
+  return String((lang === 'en' ? menu.seo_h1_english : menu.seo_h1) || '').trim()
+    || String((lang === 'en' ? menu.menu_title_english : menu.menu_title) || menu.menu_title).trim()
+}
+
 export type PublicMenuViewSection = {
   id: number
   kind: string

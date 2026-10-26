@@ -38,7 +38,11 @@ await Promise.all(sidebar.menus.map(async (item) => {
   if (menu.active && menu.menu_public_active !== false) menus[String(menu.id)] = menu
 }))
 const homeMenus = homeResponse.menus || []
-const groupMenus = (groupResponse.menus || []).map((menu) => ({ ...menu, slug: menus[String(menu.id)]?.slug || menu.slug }))
+const groupMenus = (groupResponse.menus || []).map((menu) => ({
+  ...menu,
+  slug: menus[String(menu.id)]?.slug || menu.slug,
+  seo_slug: menus[String(menu.id)]?.seo_slug || menu.seo_slug,
+}))
 const postres = postresResponse.postres || []
 const cafes = cafesResponse.items || []
 const bebidas = bebidasResponse.items || []
@@ -52,13 +56,14 @@ const legacyMenus = {
   FINDE: conventionalMenus.find((menu) => String(menu.legacy_source_table || '').toUpperCase() === 'FINDE') || conventionalMenus.find((menu) => menu.slug === 'menu-fin-de-semana-42'),
 }
 for (const menu of Object.values(menus)) {
-  const target = `/menu/${menu.id}${menu.slug ? `/${encodeURIComponent(menu.slug)}` : ''}`
-  // The ID is stable; a present-but-wrong or missing slug is a duplicate.
-  if (menu.slug) redirects[`/menu/${menu.id}`] = target
+  const target = ssr.menuPath(menu)
+  // The ID is stable; preserve both legacy forms when an SEO slug is set.
+  if (menu.slug || menu.seo_slug) redirects[`/menu/${menu.id}`] = target
+  if (menu.slug && menu.seo_slug) redirects[`/menu/${menu.id}/${encodeURIComponent(menu.slug)}`] = target
 }
 for (const [source, menu] of Object.entries(legacyMenus)) {
   if (!menu) continue
-  const target = `/menu/${menu.id}${menu.slug ? `/${encodeURIComponent(menu.slug)}` : ''}`
+  const target = ssr.menuPath(menu)
   const path = source === 'DIA' ? '/menudeldia' : '/menufindesemana'
   redirects[path] = target
   redirects[`${path}.php`] = target
@@ -88,12 +93,12 @@ const htmlFor = (path, body, head, pageData) => {
 
 for (const path of paths) {
   const bare = barePath(path)
-  const menuMatch = bare.match(/^\/menu\/(\d+)/)
+  const menu = Object.values(menus).find((item) => ssr.menuPath(item) === bare)
   const isGroup = bare === '/menusdegrupos'
   const legalSlug = legalSlugs[bare]
   const pageData = {
     ...baseData,
-    menus: menuMatch && menus[menuMatch[1]] ? { [menuMatch[1]]: menus[menuMatch[1]] } : isGroup || bare === '/arroces-y-paellas' ? menus : {},
+    menus: menu ? { [menu.id]: menu } : isGroup || bare === '/arroces-y-paellas' ? menus : {},
     homeMenus: bare === '/' ? homeMenus : undefined,
     groupMenus: isGroup ? groupMenus : undefined,
     postres: bare === '/postres' ? postres : undefined,
@@ -143,5 +148,5 @@ const urlEntries = indexablePaths.map((path) => {
 }).join('\n')
 await writeFile(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urlEntries}\n</urlset>\n`)
 await writeFile(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${ssr.SITE_ORIGIN}/sitemap.xml\n`)
-await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ redirects: withEnglish, gonePaths: [...ssr.GONE_PATHS, ...ssr.GONE_PATHS.map((path) => `/en${path}`)], menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, `/menu/${menu.id}${menu.slug ? `/${encodeURIComponent(menu.slug)}` : ''}`])), appPaths }, null, 2))
+await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ redirects: withEnglish, gonePaths: [...ssr.GONE_PATHS, ...ssr.GONE_PATHS.map((path) => `/en${path}`)], menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
 console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexablePaths.length} sitemap URLs`)

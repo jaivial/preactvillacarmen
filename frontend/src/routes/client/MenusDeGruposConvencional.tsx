@@ -2,7 +2,7 @@ import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { AllergensLegend, formatEuro, GroupStyleDishSection, MenuHeroSlider } from './MenuShared'
-import { getMenuViewSections } from './menuPublicHelpers'
+import { getMenuViewSections, publicMenuH1 } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
 
 function beverageText(menu: PublicMenu, t: (key: string) => string): string[] {
@@ -59,7 +59,7 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu; headingLeve
     <div class="page menuPage">
       <section class="page-hero">
         <div class="container">
-          <Heading class="page-title">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</Heading>
+          <Heading class="page-title">{publicMenuH1(props.menu, lang)}</Heading>
           <p class="page-subtitle">{pageSubtitle}</p>
         </div>
       </section>

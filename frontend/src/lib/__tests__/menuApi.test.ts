@@ -74,6 +74,18 @@ describe('fetchMenuByID', () => {
   })
 })
 
+describe('fetchMenuBySlug', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('uses the public SEO slug endpoint and escapes the path segment', async () => {
+    mockGetJson.mockResolvedValueOnce({ success: true, menu: { id: 42, seo_slug: 'menu-arrocero' } })
+    const { fetchMenuBySlug } = await import('../menuApi')
+    const menu = await fetchMenuBySlug('menu-arrocero')
+    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/by-slug/menu-arrocero', { noStore: true })
+    expect(menu.seo_slug).toBe('menu-arrocero')
+  })
+})
+
 describe('fetchMenuSidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
