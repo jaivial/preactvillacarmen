@@ -17,19 +17,6 @@ export function ClientFooter() {
           <address class="footer-small footer-address">
             {OPENING_HOURS.map((entry) => <span key={entry.days.join('-')}>{entry[lang]}</span>)}
           </address>
-          <nav class="footer-nav" aria-label={t('footer.contact')}>
-            <Link href="/eventos">{t('nav.weddingsEvents')}</Link>
-            <Link href="/arroces-y-paellas">{t('home.discovery.rice')}</Link>
-            <Link href="/bodas">{t('home.discovery.wedding')}</Link>
-            <Link href="/comuniones">{t('home.discovery.communion')}</Link>
-            <Link href="/eventos-empresa">{t('home.discovery.business')}</Link>
-            <Link href="/guia-arroces-valencianos">{t('resource.riceGuide')}</Link>
-            <Link href="/checklist-celebraciones">{t('resource.celebrationChecklist')}</Link>
-            <Link href="/datos-busquedas-restaurante">{t('resource.searchData')}</Link>
-            <Link href="/menusdegrupos">{t('nav.groupMenus')}</Link>
-            <Link href="/contacto">{t('nav.contact')}</Link>
-            <Link href="/reservas">{t('nav.reserve')}</Link>
-          </nav>
           <a class="footer-link" href={`tel:${RESTAURANT.phone}`}>{RESTAURANT.phone}</a>
           <a
             class="footer-maps"
@@ -85,6 +72,12 @@ export function ClientFooter() {
           </div>
         </div>
       </div>
+      <nav class="container footer-nav" aria-label={lang === 'es' ? 'Explorar Villa Carmen' : 'Explore Villa Carmen'}>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Descubre' : 'Discover'}</p><Link href="/arroces-y-paellas">{t('home.discovery.rice')}</Link><Link href="/menusdegrupos">{t('nav.groupMenus')}</Link><Link href="/eventos">{t('nav.weddingsEvents')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Celebraciones' : 'Celebrations'}</p><Link href="/bodas">{t('home.discovery.wedding')}</Link><Link href="/comuniones">{t('home.discovery.communion')}</Link><Link href="/eventos-empresa">{t('home.discovery.business')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Guías y recursos' : 'Guides and resources'}</p><Link href="/guia-arroces-valencianos">{t('resource.riceGuide')}</Link><Link href="/checklist-celebraciones">{t('resource.celebrationChecklist')}</Link><Link href="/datos-busquedas-restaurante">{t('resource.searchData')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Tu visita' : 'Your visit'}</p><Link href="/contacto">{t('nav.contact')}</Link><Link href="/reservas">{t('nav.reserve')}</Link></div>
+      </nav>
       <div class="container footer-bottom">
         <span>© {new Date().getFullYear()} Alqueria Villa Carmen</span>
       </div>

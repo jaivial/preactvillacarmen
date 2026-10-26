@@ -16,6 +16,7 @@ import {
 import { fetchMenuHome } from '../../lib/menuApi'
 import { prerenderData } from '../../lib/prerenderData'
 import { ScrollReveal } from '../../components/ScrollReveal'
+import { DiscoveryCard } from '../../components/DiscoveryCard'
 import type { HomeMenu, PublicMenuType } from '../../lib/types'
 
 const HERO_VIDEO_URLS: Record<'16:9' | '9:16', string[]> = {
@@ -38,6 +39,15 @@ const HERO_VIDEO_COUNT = HERO_VIDEO_URLS['16:9'].length
 const HERO_FADE_MS = 1200
 const HERO_PRE_TRANSITION_MS = 700
 
+const HOME_DISCOVERY_CARDS = [
+ { href: '/arroces-y-paellas', label: 'home.discovery.rice', id: 'home-commercial-rice', image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp', alt: { es: 'Arroz en paellera preparado en Alquería Villa Carmen', en: 'Rice in a paella pan at Alqueria Villa Carmen' }, copy: { es: 'Conoce nuestros arroces y las condiciones de cada propuesta.', en: 'Explore our rice dishes and the conditions of each menu.' } },
+ { href: '#menus', label: 'home.discovery.menus', id: 'home-commercial-menus', image: 'https://villacarmenmedia.b-cdn.net/images/comida/16%3A9/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_19%20%281%29.webp', alt: { es: 'Plato de cocina mediterránea de Alquería Villa Carmen', en: 'A Mediterranean dish at Alqueria Villa Carmen' }, copy: { es: 'Consulta la carta y los menús publicados.', en: 'Browse the published dishes and menus.' } },
+ { href: '/menusdegrupos', label: 'home.discovery.groups', id: 'home-commercial-groups', image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', alt: { es: 'Salón preparado para una comida de grupo en Villa Carmen', en: 'A room prepared for a group meal at Villa Carmen' }, copy: { es: 'Compara propuestas, precios y mínimos para tu grupo.', en: 'Compare menus, prices and minimum party sizes.' } },
+ { href: '/eventos', label: 'home.discovery.weddings', id: 'home-commercial-weddings', image: 'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_1.webp', alt: { es: 'Celebración en los espacios de Alquería Villa Carmen', en: 'A celebration at Alqueria Villa Carmen' }, copy: { es: 'Descubre los espacios para una celebración a vuestra medida.', en: 'Discover spaces for a celebration that feels like yours.' } },
+ { href: '/bodas', label: 'home.discovery.wedding', id: 'home-commercial-bodas', image: 'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_2.webp', alt: { es: 'Montaje de boda en Alquería Villa Carmen', en: 'A wedding setting at Alqueria Villa Carmen' }, copy: { es: 'Salones, jardines y una propuesta coordinada para vuestro día.', en: 'Rooms, gardens and a coordinated proposal for your day.' } },
+ { href: '/comuniones', label: 'home.discovery.communion', id: 'home-commercial-comuniones', image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp', alt: { es: 'Salón luminoso para una celebración familiar en Villa Carmen', en: 'A light-filled room for a family celebration at Villa Carmen' }, copy: { es: 'Prepara una comida familiar con menú y espacio confirmados.', en: 'Plan a family meal with menu and space confirmed.' } },
+ { href: '/eventos-empresa', label: 'home.discovery.business', id: 'home-commercial-empresa', image: 'https://villacarmenmedia.b-cdn.net/images/fachada/16%3A9/fachada16-9_1.webp', alt: { es: 'Fachada de Alquería Villa Carmen en Catarroja', en: 'The facade of Alqueria Villa Carmen in Catarroja' }, copy: { es: 'Organiza la comida de tu equipo con una propuesta clara.', en: 'Plan your team meal with a clear proposal.' } },
+] as const
 const IO_THRESHOLDS = Array.from({ length: 101 }, (_, i) => i / 100)
 
 type MenuCard = {
@@ -921,17 +931,8 @@ export function Home() {
 
       <nav class="container vc-discovery" aria-label={t('home.discovery.title')} data-testid="home-commercial-navigation">
         <h2>{t('home.discovery.title')}</h2>
-        <div class="vc-discovery-links">
-          <Link href="/arroces-y-paellas" data-testid="home-commercial-rice">{t('home.discovery.rice')}</Link>
-          <a href="#menus" data-testid="home-commercial-menus">{t('home.discovery.menus')}</a>
-          <Link href="/menusdegrupos" data-testid="home-commercial-groups">{t('home.discovery.groups')}</Link>
-          <Link href="/eventos" data-testid="home-commercial-weddings">{t('home.discovery.weddings')}</Link>
-          <Link href="/bodas" data-testid="home-commercial-bodas">{t('home.discovery.wedding')}</Link>
-          <Link href="/comuniones" data-testid="home-commercial-comuniones">{t('home.discovery.communion')}</Link>
-          <Link href="/eventos-empresa" data-testid="home-commercial-empresa">{t('home.discovery.business')}</Link>
-          <Link href="/contacto" data-testid="home-commercial-contact">{t('home.discovery.contact')}</Link>
-          <Link href="/reservas" data-testid="home-commercial-booking">{t('home.discovery.booking')}</Link>
-        </div>
+        <div class="vc-discovery-links">{HOME_DISCOVERY_CARDS.map((card) => <DiscoveryCard key={card.href} href={card.href} title={t(card.label)} description={card.copy[lang]} image={card.image} imageAlt={card.alt[lang]} action={t('home.discovery.explore')} testId={card.id} />)}</div>
+        <div class="vc-discovery-actions"><Link href="/contacto" className="btn" data-testid="home-commercial-contact">{t('home.discovery.contact')}</Link><Link href="/reservas" className="btn primary" data-testid="home-commercial-booking">{t('home.discovery.booking')}</Link></div>
       </nav>
 
       <ScrollReveal
