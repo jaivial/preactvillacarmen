@@ -72,6 +72,7 @@ const DICT: Dictionary = {
     es: 'Restaurante en Catarroja, Valencia, con cocina mediterr\u00e1nea, arroces, men\u00fas y espacios para celebraciones. Ven a comer entre jardines o consulta nuestros men\u00fas para compartir en grupo.',
     en: 'A restaurant in Catarroja, Valencia, serving Mediterranean cuisine, rice dishes and menus, with spaces for celebrations. Dine among the gardens or explore our menus for sharing with a group.',
   },
+  'home.discovery.explore': { es: 'Descubrir', en: 'Explore' },
   'home.discovery.title': { es: 'Elige c\u00f3mo disfrutar de Villa Carmen', en: 'Choose your Villa Carmen experience' },
   'home.discovery.rice': { es: 'Arroces y paellas', en: 'Rice dishes and paellas' },
   'home.discovery.menus': { es: 'Carta y men\u00fas', en: 'Menus and \u00e0 la carte' },

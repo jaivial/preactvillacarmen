@@ -46,6 +46,8 @@ const FOOD_PAGE_NAV: { kind: FoodPageKind; href: string; labelKey: string }[] = 
   { kind: 'postres', href: '/postres', labelKey: 'nav.desserts' },
 ]
 
+const MOBILE_EDITORIAL_HREFS = new Set(['/', '/eventos', '/arroces-y-paellas', '/bodas', '/comuniones', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones'])
+
 const DEFAULT_FOOD_PAGES: Record<FoodPageKind, FoodPageVisibility> = {
   vinos: { active: true, placement: 'inside_menus' },
   cafes: { active: true, placement: 'inside_menus' },
@@ -329,7 +331,7 @@ export function ClientHeader() {
       <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
         <ul class="navMenuBurger__links" aria-label="Principal">
           {items.map((item) => {
-            if (item.href !== '/' && item.href !== '/eventos' && item.href !== '/arroces-y-paellas') return null
+            if (!MOBILE_EDITORIAL_HREFS.has(item.href)) return null
             const isActive = item.href === '/' ? location === '/' : location.startsWith(item.href)
             return (
               <li>
@@ -417,7 +419,7 @@ export function ClientHeader() {
           })}
 
           {items.map((item) => {
-            if (item.href === '/' || item.href === '/eventos' || item.href === '/arroces-y-paellas') return null
+            if (MOBILE_EDITORIAL_HREFS.has(item.href)) return null
             const isActive = location.startsWith(item.href)
             return (
               <li>

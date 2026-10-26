@@ -9,7 +9,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
       intro: 'Una guía para reconocer distintas texturas del arroz, preparar una comida de grupo y elegir con información. Incluye una checklist reutilizable y enlaces a la oferta actual de Villa Carmen.',
       image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
       imageAlt: 'Arroz en paellera preparado en Alquería Villa Carmen', imageWidth: 1024, imageHeight: 1024,
-      imageCaption: 'Fotografía del archivo propio de Villa Carmen, servida desde su CDN. Autor no identificado en el archivo; no es una imagen de stock.',
+      imageCaption: 'Fotografía propia de Alquería Villa Carmen: arroz servido en paellera.',
       sections: [
         { heading: 'Seco o meloso: empieza por la textura', body: 'En un arroz seco los granos quedan sueltos y el líquido se ha reducido; en uno meloso se aprecia caldo y una textura más cremosa. No son categorías de calidad: son formas distintas de preparar y servir. Pregunta por la propuesta disponible y por cómo se sirve antes de elegir.' },
         { heading: 'Qué tener en cuenta al pedir paella valenciana', body: 'La paella valenciana es una receta concreta, no un nombre genérico para cualquier arroz. La disponibilidad, los ingredientes y la necesidad de encargo deben confirmarse en la carta o el menú vigente. Si tienes alergias o necesitas una adaptación, consúltalo antes de reservar.', items: ['Revisa si la preparación requiere encargo.', 'Confirma para cuántas personas se ofrece y si se pide por mesa completa.', 'Consulta ingredientes, suplementos y alérgenos con el equipo.'] },
@@ -28,7 +28,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
       intro: 'A practical guide to rice textures, group dining and making an informed choice. Save the reusable checklist and follow the links to Villa Carmen’s current offering.',
       image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
       imageAlt: 'Rice in a paella pan prepared at Alqueria Villa Carmen', imageWidth: 1024, imageHeight: 1024,
-      imageCaption: 'Photograph from Villa Carmen’s own media archive, served from its CDN. No author is identified in the file; this is not a stock image.',
+      imageCaption: 'Villa Carmen’s own photograph: rice served in a paella pan at Alqueria Villa Carmen.',
       sections: [
         { heading: 'Dry or creamy: start with texture', body: 'In a dry rice dish the grains are separate and the liquid has reduced; a creamy, brothy rice retains more liquid. Neither texture is a mark of quality by itself: they are different preparations. Ask what is currently available and how it is served.' },
         { heading: 'What to check when ordering Valencian paella', body: 'Valencian paella is a specific recipe, not a generic name for every rice dish. Confirm current availability, ingredients and advance-order requirements on the active menu. Discuss allergies or adaptations before booking.', items: ['Check whether the dish must be ordered in advance.', 'Confirm serving numbers and whole-table requirements.', 'Ask about ingredients, supplements and allergens.'] },
@@ -49,8 +49,8 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
       intro: 'Organiza la primera conversación con el restaurante y los proveedores con una lista clara. Está pensada para bodas, comuniones, comidas familiares y eventos de empresa en Catarroja.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
       imageAlt: 'Salón de Alquería Villa Carmen preparado para una celebración', imageWidth: 3000, imageHeight: 2000,
-      imageCaption: 'Fotografía del archivo propio de Villa Carmen, servida desde su CDN. Autor no identificado en el archivo. Las fotos de celebraciones privadas requieren permiso y crédito.',
-      downloads: [{ href: '/downloads/villa-carmen-checklist-celebraciones-es.html', filename: 'villa-carmen-checklist-celebraciones.html', label: 'Descargar checklist en HTML (imprimible)' }],
+      imageCaption: 'Fotografía propia de Alquería Villa Carmen: uno de sus salones para celebraciones.',
+      downloads: [{ href: '/downloads/villa-carmen-checklist-celebraciones-es.html', filename: 'villa-carmen-checklist-celebraciones.html', label: 'Descargar checklist para imprimir' }],
       sections: [
         { heading: '1. Define el plan antes de pedir propuesta', checklist: true, items: ['Fecha preferida y alternativas, franja horaria y tipo de celebración.', 'Número estimado de adultos y niños; no confundas estimación con aforo confirmado.', 'Espacios que te interesan y alternativa ante lluvia o cambios de montaje.', 'Objetivos del evento, ambiente y prioridades de los asistentes.'] },
         { heading: '2. Revisa menú y necesidades de los asistentes', checklist: true, items: ['Platos, bebidas, café, suplementos y condiciones por escrito.', 'Alergias, intolerancias y adaptaciones consultadas con el equipo.', 'Mínimo de comensales, elección de platos y fecha límite para confirmarlos.', 'Opciones para niños si están disponibles en la propuesta actual.'] },
@@ -69,8 +69,8 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
       intro: 'Prepare your first conversation with the restaurant and suppliers using one clear list. It is designed for weddings, communions, family meals and company events in Catarroja.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
       imageAlt: 'A room at Alqueria Villa Carmen prepared for a celebration', imageWidth: 3000, imageHeight: 2000,
-      imageCaption: 'Photograph from Villa Carmen’s own media archive, served from its CDN. No author is identified in the file. Private-event photographs require permission and credit.',
-      downloads: [{ href: '/downloads/villa-carmen-checklist-celebraciones-en.html', filename: 'villa-carmen-celebration-checklist.html', label: 'Download the printable HTML checklist' }],
+      imageCaption: 'Villa Carmen’s own photograph: one of the celebration rooms at Alqueria Villa Carmen.',
+      downloads: [{ href: '/downloads/villa-carmen-checklist-celebraciones-en.html', filename: 'villa-carmen-celebration-checklist.html', label: 'Download the checklist to print' }],
       sections: [
         { heading: '1. Define the plan before requesting a proposal', checklist: true, items: ['Preferred and alternative dates, time of day and celebration type.', 'Estimated adults and children; an estimate is not a confirmed capacity.', 'Preferred spaces and a wet-weather or layout alternative.', 'Event goals, atmosphere and guest priorities.'] },
         { heading: '2. Review the menu and guest requirements', checklist: true, items: ['Dishes, drinks, coffee, supplements and written conditions.', 'Allergies, intolerances and adaptations discussed with the team.', 'Minimum party size, dish choices and confirmation deadline.', 'Children’s options where included in the current proposal.'] },

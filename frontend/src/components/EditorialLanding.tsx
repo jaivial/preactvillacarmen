@@ -23,7 +23,7 @@ export function EditorialLanding({ content, children, id }: {
 }) {
   const { t } = useI18n()
   return (
-    <article class="page editorial-page" data-testid={`editorial-page-${id}`}>
+    <article class={id.includes('checklist') ? 'page editorial-page editorial-page--checklist' : 'page editorial-page'} data-testid={`editorial-page-${id}`}>
       <header class="page-hero container">
         <p class="editorial-kicker">{content.kicker}</p>
         <h1 class="page-title">{content.title}</h1>
@@ -35,8 +35,9 @@ export function EditorialLanding({ content, children, id }: {
       </figure> : null}
       <div class="container editorial-sections">
         {content.sections.map((section, index) => (
-          <section key={`${id}-${index}`}>
-            <h2>{section.heading}</h2>
+          <section key={`${id}-${index}`} class={section.checklist ? 'editorial-section editorial-section--checklist' : 'editorial-section'}>
+            {section.checklist ? <span class="editorial-section-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span> : null}
+            <h2>{section.checklist ? section.heading.replace(/^\d+\.\s*/, '') : section.heading}</h2>
             {section.body ? <p>{section.body}</p> : null}
             {section.items ? <ul class={section.checklist ? 'editorial-checklist' : undefined}>{section.items.map((item) => <li key={item}>{section.checklist ? <label><input type="checkbox" /> <span>{item}</span></label> : item}</li>)}</ul> : null}
           </section>
@@ -50,7 +51,7 @@ export function EditorialLanding({ content, children, id }: {
         <h2>{t('editorial.faq')}</h2>
         {content.faq.map((item) => (
           <details key={item.question}>
-            <summary>{item.question}</summary>
+            <summary><span>{item.question}</span><span class="editorial-faq-icon" aria-hidden="true" /></summary>
             <p>{item.answer}</p>
           </details>
         ))}
