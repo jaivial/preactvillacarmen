@@ -25,6 +25,7 @@ export function ClientFooter() {
             <Link href="/eventos-empresa">{t('home.discovery.business')}</Link>
             <Link href="/guia-arroces-valencianos">{t('resource.riceGuide')}</Link>
             <Link href="/checklist-celebraciones">{t('resource.celebrationChecklist')}</Link>
+            <Link href="/datos-busquedas-restaurante">{t('resource.searchData')}</Link>
             <Link href="/menusdegrupos">{t('nav.groupMenus')}</Link>
             <Link href="/contacto">{t('nav.contact')}</Link>
             <Link href="/reservas">{t('nav.reserve')}</Link>

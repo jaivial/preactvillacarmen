@@ -13,6 +13,7 @@ import { Eventos } from './routes/client/Eventos.tsx'
 import { CelebrationLanding } from './routes/client/CelebrationLanding.tsx'
 import { ArrocesYPaellas } from './routes/client/ArrocesYPaellas.tsx'
 import { EditorialResource } from './routes/client/EditorialResource.tsx'
+import { SearchDataResource } from './routes/client/SearchDataResource.tsx'
 import { Home } from './routes/client/Home.tsx'
 import { LegacyMenuRedirect } from './routes/client/LegacyMenuRedirect.tsx'
 import { MenuCatalogRoute } from './routes/client/MenuCatalogRoute.tsx'
@@ -42,6 +43,7 @@ function ClientApp() {
         <Route path="/arroces-y-paellas" component={ArrocesYPaellas} />
         <Route path="/guia-arroces-valencianos" component={EditorialResource} />
         <Route path="/checklist-celebraciones" component={EditorialResource} />
+        <Route path="/datos-busquedas-restaurante" component={SearchDataResource} />
         <Route path="/eventos" component={Eventos} />
         <Route path="/bodas" component={CelebrationLanding} />
         <Route path="/comuniones" component={CelebrationLanding} />

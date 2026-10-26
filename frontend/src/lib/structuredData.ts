@@ -57,6 +57,14 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
   }
   const breadcrumbs = breadcrumbItems(pathname, lang, menus)
   const graph: Record<string, unknown>[] = [restaurant]
+  if (path === '/datos-busquedas-restaurante') graph.push({
+    '@type': 'Dataset', '@id': `${canonical}#dataset`,
+    name: metadata.title[lang], description: metadata.description[lang], url: canonical,
+    creator: { '@id': `${SITE_ORIGIN}/#restaurant` }, license: `${SITE_ORIGIN}/avisolegal`,
+    temporalCoverage: '2026-04-23/2026-10-22', dateModified: '2026-10-26',
+    variableMeasured: ['Search Console clicks', 'Search Console impressions', 'Click-through rate', 'Impression-weighted average position', 'Device', 'Editorial query-intent category'],
+    distribution: { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${SITE_ORIGIN}/downloads/villa-carmen-search-demand-2026-04-23_2026-10-22.csv` },
+  })
   if (path !== '/') graph.push({
     '@type': 'BreadcrumbList',
     '@id': `${canonical}#breadcrumb`,
