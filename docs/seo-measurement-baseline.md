@@ -10,6 +10,20 @@ Corte: 25 de octubre de 2026. Dominio canónico: `https://www.alqueriavillacarme
 - Search Console mide captación, no reservas. No hay un contenedor de analítica instalado en este repositorio; los eventos quedan preparados con contexto de adquisición, pero falta configurar su destino y validar la recepción antes de publicar cifras de conversión.
 - Bing Webmaster Tools y Google Business Profile requieren acceso del negocio y se gestionan en el hito off-site.
 
+## Exportación Search Console de seis meses (2026-10-26)
+
+La exportación se completó mediante Google Search Console MCP sobre `sc-domain:alqueriavillacarmen.com`, con acceso `siteOwner`. La petición usó `searchType=WEB`, datos `FINAL`, periodo **2026-04-23 a 2026-10-22**, dimensiones `QUERY,PAGE,DEVICE`, `aggregationType=AUTO`, `startRow=0` y `rowLimit=25000`.
+
+- Evidencia cruda: [`data/search-console-2026-04-23_2026-10-22-query-page-device.csv`](data/search-console-2026-04-23_2026-10-22-query-page-device.csv).
+- Petición y validación: [`data/search-console-2026-04-23_2026-10-22-metadata.json`](data/search-console-2026-04-23_2026-10-22-metadata.json).
+- Resultado: **471 filas únicas**, 285 clics y 5.201 impresiones en el ámbito devuelto. Al ser 471 < 25.000, una petición cubre el resultado y no requiere paginación.
+- Los totales pertenecen a las filas devueltas por Search Console para esta consulta, no a todo el negocio ni a conversiones. CTR y posición deben leerse por fila, no promediarse sin ponderar.
+- La agregación de respuesta fue `byPage`. Las combinaciones consulta/URL/dispositivo son únicas en el CSV; no se suman como si fueran usuarios únicos.
+- Un filtro local posterior `arroz|paella` sobre las 471 filas devolvió **0 filas**. Esto describe los datos recibidos en este periodo, no la ausencia de demanda.
+- La tabla inicial de julio–octubre se conserva abajo como línea base observada anteriormente; el CSV de seis meses es la fuente para las siguientes comparaciones mensuales.
+
+Nota de conectividad: el nuevo inicio de sesión actualizó el conector `google-search-console` en `mini-tui/mcp.json`, pero la herramienta alojada conservó temporalmente una credencial antigua y devolvió HTTP 401. El token nuevo contra el mismo endpoint MCP respondió HTTP 200 en `sites_list` y `query`. No se guardan tokens ni secretos en este repositorio.
+
 ## Keyword → URL observada → datos actuales → landing objetivo
 
 CTR y posición son los valores de cada fila keyword/URL/dispositivo, no promedios calculados entre intenciones distintas.
