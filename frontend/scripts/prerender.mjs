@@ -49,7 +49,7 @@ const bebidas = bebidasResponse.items || []
 const vinos = { TINTO: tintoResponse.vinos || [] }
 const legalPages = Object.fromEntries(legalResponses.map((page) => [page.slug, page]))
 
-const redirects = { '/index.php': '/', '/reservas.php': '/reservas', '/avisolegal.html': '/avisolegal', '/protecciondatos.html': '/protecciondatos', '/booking_policies.php': '/booking-policies', '/reservas-especiales-politica.html': '/reservas-especiales-politica', '/menudegrupos': '/menusdegrupos', '/menudegrupos.php': '/menusdegrupos', '/menusdegrupos.php': '/menusdegrupos' }
+const redirects = { '/index.php': '/', '/reservas.php': '/reservas', '/avisolegal.html': '/avisolegal', '/protecciondatos.html': '/protecciondatos', '/booking_policies.php': '/booking-policies', '/reservas-especiales-politica.html': '/reservas-especiales-politica', '/menudegrupos': '/menusdegrupos', '/menudegrupos.php': '/menusdegrupos', '/menusdegrupos.php': '/menusdegrupos', '/datos-busquedas-restaurante': '/' }
 const conventionalMenus = Object.values(menus).filter((menu) => menu.menu_type === 1 && menu.active)
 const legacyMenus = {
   DIA: conventionalMenus.find((menu) => String(menu.legacy_source_table || '').toUpperCase() === 'DIA') || conventionalMenus.find((menu) => menu.slug === 'menu-del-dia-41'),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { breadcrumbItems, structuredData } from '../structuredData'
+import { PUBLIC_ROUTES } from '../routes'
 
 const reservation = structuredData('/reservas')
 const weddingData = structuredData('/en/bodas')
@@ -21,6 +22,12 @@ describe('public structured data', () => {
       'https://www.alqueriavillacarmen.com/en/eventos',
       'https://www.alqueriavillacarmen.com/en/bodas',
     ])
+  })
+
+  it('does not publish the Search Console report moved to private analytics', () => {
+    expect(PUBLIC_ROUTES.some((route) => route.path === '/datos-busquedas-restaurante')).toBe(false)
+    expect(structuredData('/datos-busquedas-restaurante')).toEqual([])
+    expect(structuredData('/en/datos-busquedas-restaurante')).toEqual([])
   })
 
   it('provides the restaurant entity and breadcrumb list in one parseable graph', () => {
