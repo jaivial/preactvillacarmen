@@ -1,0 +1,26 @@
+{
+  "source": "Google Search Console MCP",
+  "property": "sc-domain:alqueriavillacarmen.com",
+  "request": {
+    "siteUrl": "sc-domain:alqueriavillacarmen.com",
+    "startDate": "2026-04-23",
+    "endDate": "2026-10-22",
+    "searchType": "WEB",
+    "dimensions": [
+      "QUERY",
+      "PAGE",
+      "DEVICE"
+    ],
+    "rowLimit": 25000,
+    "startRow": 0,
+    "dataState": "FINAL",
+    "aggregationType": "AUTO"
+  },
+  "exported_at": "2026-10-26",
+  "row_count": 471,
+  "unique_query_page_device_rows": 471,
+  "clicks": 285,
+  "impressions": 5201,
+  "response_aggregation_type": "byPage",
+  "pagination_required": false
+}
