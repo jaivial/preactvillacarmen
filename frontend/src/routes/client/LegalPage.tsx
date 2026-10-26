@@ -3,10 +3,10 @@ import { apiGetJson } from '../../lib/api'
 import type { LegalPage as LegalPageData, LegalPageResponse, LegalPageSlug } from '../../lib/types'
 import { prerenderData } from '../../lib/prerenderData'
 import { useI18n } from '../../lib/i18n'
+import { RESTAURANT } from '../../lib/restaurant'
 
-const legalTitles: Record<'es' | 'en', Record<LegalPageSlug, string>> = {
-  es: { 'aviso-legal': 'Aviso legal', 'booking-policies': 'Política de reservas', 'proteccion-datos': 'Política de privacidad', 'special-booking-politics': 'Política de fechas especiales' },
-  en: { 'aviso-legal': 'Legal notice', 'booking-policies': 'Booking policy', 'proteccion-datos': 'Privacy policy', 'special-booking-politics': 'Special-date booking policy' },
+const legalTitles: Record<LegalPageSlug, string> = {
+  'aviso-legal': 'Aviso legal', 'booking-policies': 'Política de reservas', 'proteccion-datos': 'Política de privacidad', 'special-booking-politics': 'Política de fechas especiales',
 }
 
 function contentWithoutDuplicateH1(html: string): string {
@@ -68,9 +68,12 @@ export function LegalPage({ slug }: { slug: LegalPageSlug }) {
           <p class="legal-wordmark">ALQUERIA VILLACARMEN</p>
           <p>C/ Sequía de Rascanya, 2, 46470, Catarroja, Valencia</p>
         </div>
-        <h1>{legalTitles[lang][slug]}</h1>
-        {slug === 'aviso-legal' ? <p>{lang === 'en' ? 'This website provides restaurant, menu, event and booking information for Alqueria Villa Carmen. For questions about this website or its services, contact reservas@alqueriavillacarmen.com or call +34 961 22 20 36. Our address is C/ Sequía de Rascanya, 2, 46470 Catarroja, Valencia.' : 'Este sitio web ofrece información del restaurante, sus menús, celebraciones y reservas de Alquería Villa Carmen. Para consultas sobre el sitio o sus servicios, escribe a reservas@alqueriavillacarmen.com o llama al +34 961 22 20 36. Nuestra dirección es C/ Sequía de Rascanya, 2, 46470 Catarroja, Valencia.'}</p> : null}
-        <div class="wrapperavisolegal" dangerouslySetInnerHTML={{ __html: contentWithoutDuplicateH1(data.contentHtml) }} />
+        {lang === 'en' ? <p>The authoritative legal document below is published in Spanish.</p> : null}
+        <div lang={lang === 'en' ? 'es' : undefined}>
+          <h1>{legalTitles[slug]}</h1>
+          {slug === 'aviso-legal' ? <p>Este sitio web ofrece información del restaurante, sus menús, celebraciones y reservas de Alquería Villa Carmen. Para consultas sobre el sitio o sus servicios, escribe a {RESTAURANT.email} o llama al {RESTAURANT.phone}. Nuestra dirección es {RESTAURANT.street}, {RESTAURANT.postalCode} {RESTAURANT.locality}, {RESTAURANT.region}.</p> : null}
+          <div class="wrapperavisolegal" dangerouslySetInnerHTML={{ __html: contentWithoutDuplicateH1(data.contentHtml) }} />
+        </div>
       </div>
     </div>
   )
