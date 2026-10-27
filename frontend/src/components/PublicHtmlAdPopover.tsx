@@ -15,6 +15,7 @@ import type { PublicAd, PublicAdDesign } from '../lib/publicAds'
 type Message = { type?: string; ad?: number; step?: string; event?: string; height?: number; target?: string }
 
 const FOCUSABLE = 'button, a[href], iframe'
+const SENTINEL = { position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' } as const
 
 export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDesign }; onClose: () => void }) {
   const { ad, onClose } = props
@@ -63,6 +64,8 @@ export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDe
   }, [ad.id, step, steps])
 
   // Focus trap (a11y): Tab stays inside the dialog; focus returns on close.
+  // Tab presses inside the ad iframe never reach this document: the
+  // sentinels at both ends of the dialog are the exit that brings focus back.
   useEffect(() => {
     const modal = modalRef.current
     if (!modal) return
@@ -93,6 +96,11 @@ export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDe
     modalRef.current?.querySelector<HTMLElement>(step ? '.publicAdBack' : '.publicAdClose')?.focus()
   }, [step])
 
+  const focusEdge = (edge: 'first' | 'last') => {
+    const items = modalRef.current ? Array.from(modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)) : []
+    ;(edge === 'first' ? items[0] : items[items.length - 1])?.focus()
+  }
+
   const chrome = design.container ?? {}
   const modalStyle = {
     ['--vc-ad-modal-max' as string]: `${chrome.max_width || 560}px`,
@@ -111,6 +119,7 @@ export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDe
       }}
     >
       <section ref={modalRef} class="publicAdModal publicAdModal--html" role="dialog" aria-modal="true" aria-label={step?.title || ad.name || 'Anuncio'} style={modalStyle}>
+        <span tabindex={0} style={SENTINEL} onFocus={() => focusEdge('last')} />
         <button type="button" class="publicAdClose" aria-label="Cerrar anuncio" onClick={onClose}>×</button>
         {step ? (
           <button
@@ -135,6 +144,7 @@ export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDe
             style={{ height: `${height || 320}px` }}
           />
         </div>
+        <span tabindex={0} style={SENTINEL} onFocus={() => focusEdge('first')} />
       </section>
     </div>
   )
