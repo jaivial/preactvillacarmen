@@ -1,0 +1,245 @@
+.event-inquiry {
+  padding-top: 72px;
+  padding-bottom: 80px;
+  scroll-margin-top: 90px;
+}
+.event-inquiry-heading {
+  max-width: 760px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+.event-inquiry-kicker {
+  color: #9a7442;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.event-inquiry-heading h2 {
+  font-family: "Newsreader", "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.08;
+  margin: 12px 0 18px;
+}
+.event-inquiry-heading > p:not(.event-inquiry-kicker) {
+  color: #68655f;
+  line-height: 1.7;
+}
+.event-inquiry-notice {
+  display: block;
+  margin-top: 18px;
+  color: #765527;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.event-inquiry-stage {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.event-inquiry-form {
+  background: #f8f6f1;
+  border: 1px solid #e6e0d6;
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 42px);
+  box-shadow: 0 20px 55px rgba(55, 44, 27, 0.07);
+}
+.event-inquiry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 20px;
+}
+.event-inquiry-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  color: #37342e;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.event-inquiry-field .resvInput,
+.event-inquiry-field .resvSelectBtn {
+  box-shadow: none;
+  border-radius: 12px;
+  min-height: 48px;
+  background: #fff;
+  font-weight: 400;
+}
+.event-inquiry-field textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+.event-inquiry-field--phone,
+.event-inquiry-field--date,
+.event-inquiry-field--notes {
+  grid-column: 1/-1;
+}
+.event-inquiry-phone {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.event-inquiry-phone > span {
+  flex: 0 0 auto;
+  padding-top: 14px;
+  color: #625b50;
+}
+.event-inquiry-digits {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(32px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.event-inquiry-digits input {
+  min-width: 0;
+  height: 48px;
+  border: 1px solid #dcd5c9;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+  font:
+    600 1.1rem "Inter",
+    sans-serif;
+}
+.event-inquiry-digits input:focus {
+  outline: 3px solid rgba(154, 116, 66, 0.2);
+  border-color: #9a7442;
+}
+.event-inquiry-field .resvCard {
+  margin: 0;
+  max-width: 620px;
+  background: #fff;
+}
+.event-inquiry-label {
+  margin-bottom: 9px;
+}
+.event-inquiry-submit,
+.event-inquiry-reset {
+  border: 0;
+  border-radius: 999px;
+  background: #173c34;
+  color: #fff;
+  padding: 14px 28px;
+  min-height: 48px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.event-inquiry-submit {
+  display: block;
+  margin: 20px auto 0;
+  min-width: 230px;
+}
+.event-inquiry-submit:hover,
+.event-inquiry-reset:hover {
+  background: #245347;
+}
+.event-inquiry-disclaimer {
+  text-align: center;
+  color: #6f675a;
+  font-size: 0.82rem;
+  margin: 24px 0 0;
+}
+.event-inquiry-error {
+  margin: 20px 0 0;
+  padding: 13px 16px;
+  border-radius: 10px;
+  color: #8d2f27;
+  background: #fff0ed;
+  text-align: center;
+}
+.event-inquiry-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  left: -10000px;
+}
+.event-inquiry-loading,
+.event-inquiry-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #f8f6f1;
+  border: 1px solid #e6e0d6;
+  border-radius: 24px;
+  padding: 42px 24px;
+}
+.event-inquiry-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #d8d2c8;
+  border-top-color: #9a7442;
+  border-radius: 50%;
+  animation: event-inquiry-spin 0.8s linear infinite;
+}
+.event-inquiry-success {
+  min-height: 360px;
+  gap: 14px;
+}
+.event-inquiry-success-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #173c34;
+  color: #fff;
+  font-size: 1.7rem;
+}
+.event-inquiry-success h3 {
+  font:
+    400 2rem "Newsreader",
+    serif;
+  margin: 0;
+}
+.event-inquiry-success p {
+  max-width: 560px;
+  margin: 0;
+  line-height: 1.65;
+  color: #625b50;
+}
+@keyframes event-inquiry-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 700px) {
+  .event-inquiry {
+    padding-top: 52px;
+    padding-bottom: 58px;
+  }
+  .event-inquiry-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .event-inquiry-field--phone,
+  .event-inquiry-field--date,
+  .event-inquiry-field--notes {
+    grid-column: auto;
+  }
+  .event-inquiry-form {
+    border-radius: 18px;
+    padding: 20px 14px;
+  }
+  .event-inquiry-digits {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .event-inquiry-digits input {
+    height: 42px;
+    border-radius: 7px;
+    font-size: 0.95rem;
+  }
+  .event-inquiry-phone {
+    gap: 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-inquiry-spinner {
+    animation-duration: 1.8s;
+  }
+}

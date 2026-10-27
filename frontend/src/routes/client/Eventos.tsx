@@ -1,4 +1,6 @@
 import { Link } from "wouter-preact";
+import { Breadcrumbs } from "../../components/Breadcrumbs";
+import { EventInquiryForm } from "../../components/EventInquiryForm";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { BOOT_LOADER_DONE_EVENT } from "../../lib/bootLoader.ts";
 import { cdnUrl } from "../../lib/cdn";
@@ -498,19 +500,34 @@ export function Eventos() {
         </h1>
       </section>
 
+      <Breadcrumbs />
+
       <section class="evrIntro">
         <div class="evrWrap">
           <p>{t("events.intro.statement")}</p>
         </div>
       </section>
 
-      <nav class="evrWrap vc-event-hub" aria-label={t("events.hub.title")} data-testid="events-commercial-hub">
+      <nav
+        class="evrWrap vc-event-hub"
+        aria-label={t("events.hub.title")}
+        data-testid="events-commercial-hub"
+      >
         <h2>{t("events.hub.title")}</h2>
         <p>{t("events.hub.body")}</p>
         <div class="vc-event-hub-links">
-          <Link href="/bodas" data-testid="events-hub-weddings"><strong>{t("home.discovery.wedding")}</strong><span>{t("events.hub.link")}</span></Link>
-          <Link href="/comuniones" data-testid="events-hub-communions"><strong>{t("home.discovery.communion")}</strong><span>{t("events.hub.link")}</span></Link>
-          <Link href="/eventos-empresa" data-testid="events-hub-business"><strong>{t("home.discovery.business")}</strong><span>{t("events.hub.link")}</span></Link>
+          <Link href="/bodas" data-testid="events-hub-weddings">
+            <strong>{t("home.discovery.wedding")}</strong>
+            <span>{t("events.hub.link")}</span>
+          </Link>
+          <Link href="/comuniones" data-testid="events-hub-communions">
+            <strong>{t("home.discovery.communion")}</strong>
+            <span>{t("events.hub.link")}</span>
+          </Link>
+          <Link href="/eventos-empresa" data-testid="events-hub-business">
+            <strong>{t("home.discovery.business")}</strong>
+            <span>{t("events.hub.link")}</span>
+          </Link>
         </div>
       </nav>
 
@@ -582,6 +599,8 @@ export function Eventos() {
           </div>
         </div>
       </section>
+
+      <EventInquiryForm />
 
       <section class="evrClosing">
         <div class="evrWrap evrClosingInner">
