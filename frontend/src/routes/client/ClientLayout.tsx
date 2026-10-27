@@ -56,7 +56,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     <div class="client-shell">
       <ClientHeader />
       <main class={mainClass}>
-        {!isHome ? <Breadcrumbs /> : null}
+        {!isHome && !isEventosPage ? <Breadcrumbs /> : null}
         {props.children}
       </main>
       {isEventosPage ? null : <ClientFooter />}
