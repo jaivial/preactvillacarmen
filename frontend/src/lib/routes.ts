@@ -129,4 +129,6 @@ export function canonicalUrl(pathname: string, menus: MenuRouteEntry[] = []): st
 export const GONE_PATHS = [
   '/menusanvalentin', '/menusanvalentin.php',
   '/regala', '/regala.php',
+  // Retired private administration URL: never expose it as a public page.
+  '/configuracion.php',
 ] as const
