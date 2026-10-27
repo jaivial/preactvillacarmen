@@ -602,9 +602,6 @@ export function Eventos() {
 
       <section class="evrClosing">
         <div class="evrWrap evrClosingInner">
-          <p class="evrKicker">{t("events.cta.kicker")}</p>
-          <h2>{t("events.cta.title")}</h2>
-          <p>{t("events.cta.body")}</p>
           <EventInquiryForm />
         </div>
       </section>
