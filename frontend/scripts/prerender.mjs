@@ -61,13 +61,25 @@ for (const menu of Object.values(menus)) {
   if (menu.slug || menu.seo_slug) redirects[`/menu/${menu.id}`] = target
   if (menu.slug && menu.seo_slug) redirects[`/menu/${menu.id}/${encodeURIComponent(menu.slug)}`] = target
 }
-for (const [source, menu] of Object.entries(legacyMenus)) {
-  if (!menu) continue
+const seasonalMenus = Object.values(menus).filter((menu) => menu.menu_type === 6 && menu.active)
+const menuText = (menu) => `${menu.menu_title || ''} ${menu.slug || ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+const seasonalLegacyMenus = {
+  menuNavidad: seasonalMenus.find((menu) => menu.slug === 'menu-navidad-50') || seasonalMenus.find((menu) => menuText(menu).includes('navidad') && !menuText(menu).includes('grupo')),
+  menuNochevieja: seasonalMenus.find((menu) => menuText(menu).includes('nochevieja')),
+}
+const retiredLegacyPaths = []
+for (const [source, menu] of Object.entries({ ...legacyMenus, ...seasonalLegacyMenus })) {
+  const path = source === 'DIA' ? '/menudeldia' : source === 'FINDE' ? '/menufindesemana' : `/${source}`
+  if (!menu) {
+    retiredLegacyPaths.push(path, `${path}.php`)
+    continue
+  }
   const target = ssr.menuPath(menu)
-  const path = source === 'DIA' ? '/menudeldia' : '/menufindesemana'
   redirects[path] = target
   redirects[`${path}.php`] = target
 }
+if (sidebar.postres_page_active) redirects['/confpostres.php'] = '/postres'
+else retiredLegacyPaths.push('/confpostres.php')
 const withEnglish = Object.fromEntries(Object.entries(redirects).flatMap(([from, to]) => [[from, to], [`/en${from}`, `/en${to === '/' ? '' : to}`]]))
 const baseData = { menus, sidebar, redirects: withEnglish }
 const foodActive = { '/postres': sidebar.postres_page_active, '/vinos': sidebar.vinos_page_active, '/cafes': sidebar.cafe_page_active, '/bebidas': sidebar.bebidas_page_active }
@@ -148,5 +160,5 @@ const urlEntries = indexablePaths.map((path) => {
 }).join('\n')
 await writeFile(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urlEntries}\n</urlset>\n`)
 await writeFile(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${ssr.SITE_ORIGIN}/sitemap.xml\n`)
-await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ redirects: withEnglish, gonePaths: [...ssr.GONE_PATHS, ...ssr.GONE_PATHS.map((path) => `/en${path}`)], menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
+await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ redirects: withEnglish, gonePaths: [...new Set([...ssr.GONE_PATHS, ...retiredLegacyPaths])].flatMap((path) => [path, `/en${path}`]), menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
 console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexablePaths.length} sitemap URLs`)

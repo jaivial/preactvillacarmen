@@ -1,6 +1,7 @@
 .discovery-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid rgba(20,37,32,.12); border-radius: 12px; background: rgba(255,255,255,.88); color: var(--pine); box-shadow: 0 8px 28px rgba(20,37,32,.06); transition: transform 180ms ease, box-shadow 180ms ease; }
 .discovery-card:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(20,37,32,.12); }
 .discovery-card__media { display: block; overflow: hidden; aspect-ratio: 4/3; background: rgba(20,37,32,.06); }
+.discovery-card__media picture { display: block; width: 100%; height: 100%; }
 .discovery-card__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 500ms ease; }
 .discovery-card:hover .discovery-card__media img { transform: scale(1.025); }
 .discovery-card__body { display: flex; flex: 1; flex-direction: column; gap: 9px; padding: 20px; }
