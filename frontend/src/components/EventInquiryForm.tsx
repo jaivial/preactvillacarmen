@@ -475,42 +475,44 @@ export function EventInquiryForm({ defaultEventType = "" }: Props) {
                   required
                 />,
               )}
-              {field(
-                "country",
-                text("Prefijo del país", "Country code"),
-                <PopoverSelect
-                  testId="event-inquiry-country"
-                  ariaLabel={text("Prefijo del país", "Country code")}
-                  value={values.countryCode}
-                  options={countryOptions}
-                  onChange={(value) =>
-                    setValues((old) => ({
-                      ...old,
-                      countryCode: value,
-                      phone: "",
-                    }))
-                  }
-                  searchable
-                  placeholder={text("Selecciona un país", "Select a country")}
-                  searchPlaceholder={text("Buscar país", "Search country")}
-                />,
-              )}
-              {field(
-                "phone",
-                text(
-                  "Teléfono (dígito a dígito)",
-                  "Phone number (one digit per box)",
-                ),
-                <div class="event-inquiry-phone">
-                  <span>+{values.countryCode}</span>
-                  <PhoneDigits
-                    value={values.phone}
-                    countryCode={values.countryCode}
-                    onChange={(value) => set("phone", value)}
-                    label={text("Dígito del teléfono", "Phone digit")}
-                  />
-                </div>,
-              )}
+              <div class="event-inquiry-phone-layout">
+                {field(
+                  "country",
+                  text("Prefijo del país", "Country code"),
+                  <PopoverSelect
+                    testId="event-inquiry-country"
+                    ariaLabel={text("Prefijo del país", "Country code")}
+                    value={values.countryCode}
+                    options={countryOptions}
+                    onChange={(value) =>
+                      setValues((old) => ({
+                        ...old,
+                        countryCode: value,
+                        phone: "",
+                      }))
+                    }
+                    searchable
+                    placeholder={text("Selecciona un país", "Select a country")}
+                    searchPlaceholder={text("Buscar país", "Search country")}
+                  />,
+                )}
+                <div class="event-inquiry-field event-inquiry-field--phone">
+                  <span>
+                    {text(
+                      "Teléfono (dígito a dígito)",
+                      "Phone number (one digit per box)",
+                    )}
+                  </span>
+                  <div class="event-inquiry-phone">
+                    <PhoneDigits
+                      value={values.phone}
+                      countryCode={values.countryCode}
+                      onChange={(value) => set("phone", value)}
+                      label={text("Dígito del teléfono", "Phone digit")}
+                    />
+                  </div>
+                </div>
+              </div>
               <div class="event-inquiry-field">
                 <Counter
                   testId="event-inquiry-adults"
