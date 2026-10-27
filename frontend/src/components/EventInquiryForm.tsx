@@ -249,6 +249,7 @@ export function EventInquiryForm({ defaultEventType = "" }: Props) {
     const invalid = validateEventInquiryValues(values, todayISO, maxISO);
     if (invalid) {
       setStatus("error");
+      setHeldHeight(undefined);
       setMessage(text(...errors[invalid]));
       return;
     }
@@ -277,6 +278,7 @@ export function EventInquiryForm({ defaultEventType = "" }: Props) {
       setStatus("success");
     } catch (error) {
       setStatus("error");
+      setHeldHeight(undefined);
       setMessage(
         error instanceof Error
           ? error.message
