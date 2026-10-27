@@ -41,6 +41,13 @@ for (const [source, target] of [['/datos-busquedas-restaurante', '/'], ['/en/dat
   check(!sitemapSet.has(source), `${source}: retired public report is still in sitemap`)
 }
 check(!files.includes(join(dist, 'downloads/villa-carmen-search-demand-2026-04-23_2026-10-22.csv')), 'private Search Console CSV is still publicly downloadable')
+for (const source of ['/menudeldia.php', '/menusdegrupos.php', '/menuNavidad.php', '/menufindesemana.php', '/menudegrupos.php', '/menuNochevieja.php', '/index.php', '/reservas.php']) {
+  check(!!routeManifest.redirects[source], `${source}: missing explicit legacy Preact destination`)
+}
+for (const source of ['/menusanvalentin.php', '/regala.php', '/configuracion.php', '/confpostres.php']) {
+  check(routeManifest.gonePaths.includes(source) || !!routeManifest.redirects[source], `${source}: missing explicit 410 or equivalent destination`)
+  check(!(routeManifest.gonePaths.includes(source) && routeManifest.redirects[source]), `${source}: cannot be both 410 and redirected`)
+}
 const titles = new Map()
 const descriptions = new Map()
 const alternateOwners = new Map()
