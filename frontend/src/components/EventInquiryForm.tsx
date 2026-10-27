@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "preact/hooks";
+import type { CSSProperties } from "preact/compat";
 import { Counter } from "./reservas/Counter";
 import {
   PopoverSelect,
@@ -118,6 +119,7 @@ function PhoneDigits({
       role="group"
       aria-label={label}
       data-testid="event-inquiry-phone-digits"
+      style={{ "--phone-digit-count": count } as CSSProperties}
     >
       {digits.map((digit, index) => (
         <input
@@ -503,7 +505,7 @@ export function EventInquiryForm({ defaultEventType = "" }: Props) {
                       "Phone number (one digit per box)",
                     )}
                   </span>
-                  <div class="event-inquiry-phone">
+                  <div class="event-inquiry-phone" dir="ltr">
                     <PhoneDigits
                       value={values.phone}
                       countryCode={values.countryCode}

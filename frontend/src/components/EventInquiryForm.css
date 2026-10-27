@@ -92,9 +92,10 @@
 }
 .event-inquiry-digits {
   display: grid;
-  grid-template-columns: repeat(9, 48px);
+  grid-template-columns: repeat(var(--phone-digit-count), minmax(0, 48px));
   gap: 8px;
   width: max-content;
+  max-width: 100%;
 }
 .event-inquiry-digits input {
   min-width: 0;
@@ -244,7 +245,7 @@
     padding: 20px 14px;
   }
   .event-inquiry-digits {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--phone-digit-count), minmax(0, 1fr));
     gap: 4px;
   }
   .event-inquiry-digits input {
