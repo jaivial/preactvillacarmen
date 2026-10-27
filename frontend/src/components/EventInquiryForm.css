@@ -70,26 +70,32 @@
   resize: vertical;
   line-height: 1.55;
 }
-.event-inquiry-field--phone,
+.event-inquiry-phone-layout,
 .event-inquiry-field--date,
 .event-inquiry-field--notes {
   grid-column: 1/-1;
 }
+.event-inquiry-phone-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) auto;
+  align-items: end;
+  justify-content: center;
+  gap: 20px;
+  min-width: 0;
+}
+.event-inquiry-field--phone > span {
+  text-align: center;
+}
 .event-inquiry-phone {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-.event-inquiry-phone > span {
-  flex: 0 0 auto;
-  padding-top: 14px;
-  color: #625b50;
+  justify-content: center;
 }
 .event-inquiry-digits {
   display: grid;
-  grid-template-columns: repeat(9, minmax(32px, 1fr));
+  grid-template-columns: repeat(var(--phone-digit-count), minmax(0, 48px));
   gap: 8px;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
 }
 .event-inquiry-digits input {
   min-width: 0;
@@ -107,7 +113,8 @@
   border-color: #9a7442;
 }
 .event-inquiry-field .resvCard {
-  margin: 0;
+  margin: 0 auto;
+  width: 100%;
   max-width: 620px;
   background: #fff;
 }
@@ -207,6 +214,15 @@
     transform: rotate(360deg);
   }
 }
+@media (max-width: 900px) {
+  .event-inquiry-phone-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .event-inquiry-field--country {
+    width: min(100%, 320px);
+    justify-self: center;
+  }
+}
 @media (max-width: 700px) {
   .event-inquiry {
     padding-top: 52px;
@@ -216,26 +232,26 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  .event-inquiry-field--phone,
+  .event-inquiry-phone-layout,
   .event-inquiry-field--date,
   .event-inquiry-field--notes {
     grid-column: auto;
+  }
+  .event-inquiry-field--country {
+    width: 100%;
   }
   .event-inquiry-form {
     border-radius: 18px;
     padding: 20px 14px;
   }
   .event-inquiry-digits {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--phone-digit-count), minmax(0, 1fr));
     gap: 4px;
   }
   .event-inquiry-digits input {
     height: 42px;
     border-radius: 7px;
     font-size: 0.95rem;
-  }
-  .event-inquiry-phone {
-    gap: 7px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
