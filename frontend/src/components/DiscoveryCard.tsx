@@ -1,11 +1,23 @@
 import { Link } from 'wouter-preact'
 import './DiscoveryCard.css'
 
-type Props = { href: string; title: string; description: string; image: string; imageAlt: string; action: string; testId?: string }
+type Props = {
+  href: string
+  title: string
+  description: string
+  image: string
+  imageAlt: string
+  action: string
+  testId?: string
+  imageSrcSet?: string
+  imageFallbackSrcSet?: string
+  imageSizes?: string
+}
 
 export function DiscoveryCard(props: Props) {
+  const image = <img src={props.image} srcSet={props.imageFallbackSrcSet} sizes={props.imageSizes} alt={props.imageAlt} width="1200" height="900" loading="lazy" decoding="async" />
   const content = <>
-    <span class="discovery-card__media"><img src={props.image} alt={props.imageAlt} width="1200" height="900" loading="lazy" decoding="async" /></span>
+    <span class="discovery-card__media">{props.imageSrcSet ? <picture><source type="image/webp" srcSet={props.imageSrcSet} sizes={props.imageSizes} />{image}</picture> : image}</span>
     <span class="discovery-card__body">
       <span class="discovery-card__title">{props.title}</span>
       <span class="discovery-card__description">{props.description}</span>
