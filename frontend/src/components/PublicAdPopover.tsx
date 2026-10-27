@@ -3,8 +3,15 @@ import { createPortal } from 'preact/compat'
 import type { PublicAd } from '../lib/publicAds'
 import { adCanvasDimsForWidth } from '../lib/publicAds'
 import { safeUrl } from '../lib/safeUrl'
+import { PublicHtmlAdPopover } from './PublicHtmlAdPopover'
 
+/** HTML ads (ads_html_editor_v1) and ads still in the previous format. */
 export function PublicAdPopover(props: { ad: PublicAd; onClose: () => void }) {
+  const { design } = props.ad
+  return design ? <PublicHtmlAdPopover ad={{ ...props.ad, design }} onClose={props.onClose} /> : <LegacyAdPopover {...props} />
+}
+
+function LegacyAdPopover(props: { ad: PublicAd; onClose: () => void }) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') props.onClose()

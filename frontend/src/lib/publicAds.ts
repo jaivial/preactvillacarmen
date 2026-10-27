@@ -35,8 +35,23 @@ export type PublicAdCanvas = {
 
 export type PublicAdStep = { id: string; title: string; description: string; content: PublicAdContent[]; buttons: PublicAdCTA[]; see_more?: boolean; background_mode: string; background_color?: string; background_image?: string; detail_background_mode?: string; detail_background_color?: string; detail_background_image?: string; canvas?: PublicAdCanvas | null; /** ads_step_card_canvas_v1: free-form card face; absent = classic card. */ card_canvas?: PublicAdCanvas | null }
 
+/**
+ * HTML ad (ads_html_editor_v1), built with the backoffice HTML editor. The
+ * public list only carries its kind, window chrome and step ids/titles; each
+ * page renders inside an iframe from the backend render endpoint, which posts
+ * its height and the card a visitor opens ({type:"vc-ad", event:"height"|"step"}).
+ */
+export type PublicAdDesign = {
+  version: number
+  kind: 'single' | 'multiple'
+  container: { max_width?: number; overlay?: string; radius?: number; background?: string }
+  steps?: { id: string; title?: string }[]
+}
+
 export type PublicAd = {
   layout?: { mode: "unico" | "multiple"; steps: PublicAdStep[] };
+  /** HTML design: when present it is what the popover shows. */
+  design?: PublicAdDesign | null;
   id: number
   name: string
   active: boolean
