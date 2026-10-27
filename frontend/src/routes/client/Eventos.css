@@ -456,8 +456,12 @@
 }
 
 .evrClosingInner {
-  max-width: 760px;
+  max-width: 1180px;
   text-align: center;
+}
+
+.evrClosingInner .event-inquiry {
+  margin-top: 44px;
 }
 
 .evrClosingInner h2 {
@@ -474,42 +478,6 @@
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--evr-muted);
   line-height: 1.7;
-}
-
-.evrActions {
-  margin-top: 26px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.evrBtn {
-  border: 1px solid var(--evr-line);
-  color: var(--evr-accent);
-  background: #fff;
-  padding: 11px 18px;
-  border-radius: 999px;
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
-}
-
-.evrBtn:hover {
-  transform: translateY(-1px);
-  background: #f6f6f6;
-}
-
-.evrBtn--solid {
-  border-color: #1c1c20;
-  background: #1c1c20;
-  color: #fff;
-}
-
-.evrBtn--solid:hover {
-  background: #141418;
 }
 
 .evrCookie {
@@ -812,8 +780,7 @@
   .evrHeroPicture,
   .evrHeroImage,
   .evrTile img,
-  .evrPortfolioMedia img,
-  .evrBtn {
+  .evrPortfolioMedia img {
     animation: none !important;
     transition: none !important;
   }
