@@ -1,20 +1,26 @@
+import { Link } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
+import { OPENING_HOURS, RESTAURANT } from '../lib/restaurant'
 
 export function ClientFooter() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   return (
     <footer class="footer">
       <div class="container footer-grid">
         <div class="footer-col">
           <div class="footer-wordmark">Alqueria Villa Carmen</div>
           <p class="footer-small">
-            C/ Sequia de Rascanya, 2
+            {RESTAURANT.street}
             <br />
-            46470 Catarroja, Valencia
+            {RESTAURANT.postalCode} {RESTAURANT.locality}, {RESTAURANT.region}
           </p>
+          <address class="footer-small footer-address">
+            {OPENING_HOURS.map((entry) => <span key={entry.days.join('-')}>{entry[lang]}</span>)}
+          </address>
+          <a class="footer-link" href={`tel:${RESTAURANT.phone}`}>{RESTAURANT.phone}</a>
           <a
             class="footer-maps"
-            href="https://www.google.com/maps?q=alqueria+villacarmen&um=1&ie=UTF-8&sa=X"
+            href={RESTAURANT.directions}
             target="_blank"
             rel="noreferrer"
           >
@@ -66,6 +72,12 @@ export function ClientFooter() {
           </div>
         </div>
       </div>
+      <nav class="container footer-nav" aria-label={lang === 'es' ? 'Explorar Villa Carmen' : 'Explore Villa Carmen'}>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Descubre' : 'Discover'}</p><Link href="/arroces-y-paellas">{t('home.discovery.rice')}</Link><Link href="/menusdegrupos">{t('nav.groupMenus')}</Link><Link href="/eventos">{t('nav.weddingsEvents')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Celebraciones' : 'Celebrations'}</p><Link href="/bodas">{t('home.discovery.wedding')}</Link><Link href="/comuniones">{t('home.discovery.communion')}</Link><Link href="/eventos-empresa">{t('home.discovery.business')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Guías y recursos' : 'Guides and resources'}</p><Link href="/guia-arroces-valencianos">{t('resource.riceGuide')}</Link><Link href="/checklist-celebraciones">{t('resource.celebrationChecklist')}</Link></div>
+        <div class="footer-nav-group"><p class="footer-title">{lang === 'es' ? 'Tu visita' : 'Your visit'}</p><Link href="/contacto">{t('nav.contact')}</Link><Link href="/reservas">{t('nav.reserve')}</Link></div>
+      </nav>
       <div class="container footer-bottom">
         <span>© {new Date().getFullYear()} Alqueria Villa Carmen</span>
       </div>

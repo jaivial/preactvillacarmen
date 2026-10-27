@@ -14,6 +14,8 @@ import {
   MENU_TYPE_SPECIAL,
 } from '../lib/menuTypeCodes'
 import { fetchMenuSidebar } from '../lib/menuApi'
+import { prerenderData } from '../lib/prerenderData'
+import { equivalentLanguagePath } from '../lib/routes'
 import { prefetchRoute } from '../lib/prefetch'
 import type { PublicVisibleSection, SidebarMenu } from '../lib/types'
 import type { MenuSidebarData } from '../lib/menuApi'
@@ -44,6 +46,8 @@ const FOOD_PAGE_NAV: { kind: FoodPageKind; href: string; labelKey: string }[] = 
   { kind: 'postres', href: '/postres', labelKey: 'nav.desserts' },
 ]
 
+const MOBILE_EDITORIAL_HREFS = new Set(['/', '/eventos', '/arroces-y-paellas', '/bodas', '/comuniones', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones'])
+
 const DEFAULT_FOOD_PAGES: Record<FoodPageKind, FoodPageVisibility> = {
   vinos: { active: true, placement: 'inside_menus' },
   cafes: { active: true, placement: 'inside_menus' },
@@ -58,20 +62,29 @@ export function ClientHeader() {
   const [scrolled, setScrolled] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
-  const { lang, setLang, t } = useI18n()
-  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(null)
+  const { lang, t } = useI18n()
+  const [sidebarMenus, setSidebarMenus] = useState<SidebarMenu[] | null>(() => prerenderData().sidebar?.menus || null)
   // Coordination id: menu_section_public_placement_v1
-  const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>([])
+  const [visibleSections, setVisibleSections] = useState<PublicVisibleSection[]>(() => prerenderData().sidebar?.visible_sections || [])
   // One visibility record per food-type page that owns a public nav entry.
   // Coordination id: foodtype_page_visibility_v1
-  const [foodPages, setFoodPages] = useState<Record<FoodPageKind, FoodPageVisibility>>(DEFAULT_FOOD_PAGES)
+  const [foodPages, setFoodPages] = useState<Record<FoodPageKind, FoodPageVisibility>>(() => {
+    const sidebar = prerenderData().sidebar
+    if (!sidebar) return DEFAULT_FOOD_PAGES
+    return {
+      vinos: { active: sidebar.vinos_page_active, placement: sidebar.vinos_web_placement },
+      cafes: { active: sidebar.cafe_page_active, placement: sidebar.cafes_web_placement },
+      bebidas: { active: sidebar.bebidas_page_active, placement: sidebar.bebidas_web_placement },
+      postres: { active: sidebar.postres_page_active, placement: sidebar.postres_web_placement },
+    }
+  })
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
   const setVinosActive = useSetAtom(vinosPageActiveAtom)
   const setPostresActive = useSetAtom(postresPageActiveAtom)
 
   const isHome = location === '/'
-  const isEventosPage = location.startsWith('/eventos')
+  const isEventosPage = location === '/eventos'
   const allowTransparentHeader = isHome || isEventosPage
   const solidHeader = !allowTransparentHeader || scrolled
   const showMenuPick = location.startsWith('/menudeldia') || location.startsWith('/menufindesemana') || location.startsWith('/menu/')
@@ -193,6 +206,8 @@ export function ClientHeader() {
     // web placement, either inside the menus accordion or as a standalone item.
     return [
       { href: '/', labelKey: 'nav.home' },
+      { href: '/eventos', labelKey: 'nav.weddingsEvents' },
+      { href: '/arroces-y-paellas', labelKey: 'home.discovery.rice' },
       { href: '/reservas', labelKey: 'nav.reservations' },
       // /regala ocultado del menú (nav.gift) — página sigue accesible por URL.
       { href: '/contacto', labelKey: 'nav.contact' },
@@ -316,8 +331,8 @@ export function ClientHeader() {
       <div class="container navMenuBurger__panel" onClick={(e) => e.stopPropagation()}>
         <ul class="navMenuBurger__links" aria-label="Principal">
           {items.map((item) => {
-            if (item.href !== '/') return null
-            const isActive = location === '/'
+            if (!MOBILE_EDITORIAL_HREFS.has(item.href)) return null
+            const isActive = item.href === '/' ? location === '/' : location.startsWith(item.href)
             return (
               <li>
                 <Link
@@ -404,7 +419,7 @@ export function ClientHeader() {
           })}
 
           {items.map((item) => {
-            if (item.href === '/') return null
+            if (MOBILE_EDITORIAL_HREFS.has(item.href)) return null
             const isActive = location.startsWith(item.href)
             return (
               <li>
@@ -421,37 +436,14 @@ export function ClientHeader() {
             )
           })}
 
-          <li>
-            <Link
-              href="/eventos"
-              className={isEventosPage ? 'navBurgerLink active' : 'navBurgerLink'}
-              onClick={() => setMobileOpen(false)}
-              onMouseEnter={() => prefetchRoute('/eventos')}
-              onFocus={() => prefetchRoute('/eventos')}
-            >
-              {t('nav.weddingsEvents')}
-            </Link>
-          </li>
         </ul>
 
         <div class="navMenuBurger__bottom">
           <span class="navMenuBurger__langLabel">{t('nav.lang')}</span>
           <div class="navMenuBurger__lang">
-            <button
-              type="button"
-              class={lang === 'es' ? 'langBtn active' : 'langBtn'}
-              onClick={() => setLang('es')}
-            >
-              ES
-            </button>
-            <span class="langSep">/</span>
-            <button
-              type="button"
-              class={lang === 'en' ? 'langBtn active' : 'langBtn'}
-              onClick={() => setLang('en')}
-            >
-              EN
-            </button>
+            <a href={equivalentLanguagePath(location, 'es')} class={lang === 'es' ? 'langBtn active' : 'langBtn'} data-testid="client-header-language-es" onClick={() => setMobileOpen(false)}>ES</a>
+            <span class="langSep"/>
+            <a href={equivalentLanguagePath(location, 'en')} class={lang === 'en' ? 'langBtn active' : 'langBtn'} data-testid="client-header-language-en" onClick={() => setMobileOpen(false)}>EN</a>
           </div>
         </div>
       </div>
@@ -491,6 +483,8 @@ export function ClientHeader() {
                 class={logoClass}
                 src={logoSrc}
                 alt={t('home.hero.title')}
+                width="185"
+                height="85"
                 decoding="async"
                 loading="eager"
               />
@@ -500,7 +494,7 @@ export function ClientHeader() {
           <div class="header__tools">
             {showHeaderActions ? (
               <div class="header__callAction">
-                <a href={isHome ? '#menus' : '/#menus'} class="link link--center">
+                <a href={isHome ? '#menus' : lang === 'en' ? '/en#menus' : '/#menus'} class="link link--center">
                   {t('nav.menus')}
                 </a>
                 <Link href="/reservas" className="link link--center reservaBttn" onMouseEnter={() => prefetchRoute('/reservas')}>

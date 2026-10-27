@@ -60,7 +60,7 @@ describe('fetchMenuByID', () => {
     const result = await fetchMenuByID(42)
 
     expect(mockGetJson).toHaveBeenCalledTimes(1)
-    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/42')
+    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/42', { noStore: true })
     expect(result.id).toBe(42)
   })
 
@@ -71,6 +71,18 @@ describe('fetchMenuByID', () => {
 
     const calls = mockGetJson.mock.calls.map((c) => String(c[0]))
     expect(calls).not.toContainEqual(expect.stringContaining('/api/menus/public'))
+  })
+})
+
+describe('fetchMenuBySlug', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('uses the public SEO slug endpoint and escapes the path segment', async () => {
+    mockGetJson.mockResolvedValueOnce({ success: true, menu: { id: 42, seo_slug: 'menu-arrocero' } })
+    const { fetchMenuBySlug } = await import('../menuApi')
+    const menu = await fetchMenuBySlug('menu-arrocero')
+    expect(mockGetJson).toHaveBeenCalledWith('/api/menus/by-slug/menu-arrocero', { noStore: true })
+    expect(menu.seo_slug).toBe('menu-arrocero')
   })
 })
 

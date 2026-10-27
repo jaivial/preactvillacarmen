@@ -278,6 +278,13 @@ export function normalizePublicMenu(value: unknown): PublicMenu {
   return {
     id,
     slug,
+    seo_slug: toText(record.seo_slug) || undefined,
+    seo_title: toText(record.seo_title) || undefined,
+    seo_title_english: toText(record.seo_title_english) || undefined,
+    seo_description: toText(record.seo_description) || undefined,
+    seo_description_english: toText(record.seo_description_english) || undefined,
+    seo_h1: toText(record.seo_h1) || undefined,
+    seo_h1_english: toText(record.seo_h1_english) || undefined,
     menu_title: title,
     menu_type: inferPublicMenuType(record),
     price: toText(record.price),

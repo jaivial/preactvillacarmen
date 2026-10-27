@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
+import { prerenderData } from '../../lib/prerenderData'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
@@ -12,11 +13,21 @@ type CafesState = {
   error: boolean
 }
 
+function groupCafes(items: ComidaItem[]) {
+  const byTipo: Record<string, ComidaItem[]> = {}
+  for (const item of items) {
+    const tipo = item.tipo || 'OTROS'
+    ;(byTipo[tipo] ||= []).push(item)
+  }
+  return byTipo
+}
+
 export function Cafes() {
   const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
-  const [state, setState] = useState<CafesState>({ loaded: false, itemsByTipo: {}, error: false })
-  const [selectedTipo, setSelectedTipo] = useState<string>('')
+  const initialItems = prerenderData().cafes
+  const [state, setState] = useState<CafesState>(() => ({ loaded: initialItems !== undefined, itemsByTipo: groupCafes(initialItems || []), error: false }))
+  const [selectedTipo, setSelectedTipo] = useState<string>(() => Object.keys(groupCafes(initialItems || [])).sort()[0] || '')
   const [fotoUrls, setFotoUrls] = useState<Record<number, string | null>>({})
   const fotoUrlsRef = useRef<Record<number, string | null>>({})
   const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
@@ -28,12 +39,7 @@ export function Cafes() {
     apiGetJson<ComidaItemsResponse>(`/api/comida/cafes?active=1`)
       .then((res) => {
         if (cancelled) return
-        const byTipo: Record<string, ComidaItem[]> = {}
-        for (const item of res.items || []) {
-          const tipo = item.tipo || 'OTROS'
-          if (!byTipo[tipo]) byTipo[tipo] = []
-          byTipo[tipo].push(item)
-        }
+        const byTipo = groupCafes(res.items || [])
         const tipos = Object.keys(byTipo).sort((a, b) => a.localeCompare(b))
         setState({ loaded: true, itemsByTipo: byTipo, error: false })
         if (!selectedTipo && tipos.length > 0) {

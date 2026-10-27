@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Banknote, CreditCard, Landmark, Plus, Smartphone, Trash2 } from 'lucide-react'
 import { apiFetch, apiGetJson } from '../../lib/api'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
+import { trackConversion } from '../../lib/analytics'
 import { normalizeMenuType, MENU_TYPE_SPECIAL } from '../../lib/menuTypeCodes'
 import type { Lang } from '../../lib/i18n'
 import type {
@@ -2274,6 +2275,7 @@ export function Reservas() {
       if (!data || data.success !== true || typeof data.booking_id !== 'number') {
         throw new Error((data && data.message) || 'Error al realizar la reserva.')
       }
+      trackConversion('reservation_complete', { booking_id: data.booking_id, special_date: isSpecialActiveForSelected })
       if (data.whatsapp_warning) {
         pushToast('warning', text('Reserva realizada', 'Reservation completed'), lang === 'en' ? 'Reservation completed, but the WhatsApp notification could not be sent.' : data.whatsapp_warning)
       }

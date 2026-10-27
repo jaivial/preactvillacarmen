@@ -49,6 +49,11 @@ export async function fetchMenuByID(id: number): Promise<PublicMenu> {
   return normalizePublicMenu(data.menu)
 }
 
+export async function fetchMenuBySlug(slug: string): Promise<PublicMenu> {
+  const data = await apiGetJson<MenuByIDResponse>(`/api/menus/by-slug/${encodeURIComponent(slug)}`, { noStore: true })
+  return normalizePublicMenu(data.menu)
+}
+
 export async function fetchComidaItems(tipo: 'cafes' | 'bebidas'): Promise<ComidaItem[]> {
   const data = await apiGetJson<ComidaItemsResponse>(`/api/comida/${tipo}?active=1`)
   return Array.isArray(data.items) ? data.items : []

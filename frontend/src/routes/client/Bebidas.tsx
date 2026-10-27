@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
+import { prerenderData } from '../../lib/prerenderData'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
@@ -14,16 +15,24 @@ type DynamicBebidasState = {
   error: boolean
 }
 
+function groupBebidas(items: ComidaItem[]) {
+  const byTipo: Record<string, ComidaItem[]> = {}
+  for (const item of items) {
+    const tipo = item.tipo || 'OTROS'
+    ;(byTipo[tipo] ||= []).push(item)
+  }
+  return byTipo
+}
+
 export function Bebidas() {
   const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
-  const [state, setState] = useState<DynamicBebidasState>(() => ({
-    loadedTypes: new Set(),
-    loadingTypes: new Set(),
-    itemsByTipo: {},
-    error: false,
-  }))
-  const [selectedTipo, setSelectedTipo] = useState<string>('')
+  const initialItems = prerenderData().bebidas
+  const [state, setState] = useState<DynamicBebidasState>(() => {
+    const itemsByTipo = groupBebidas(initialItems || [])
+    return { loadedTypes: new Set(Object.keys(itemsByTipo)), loadingTypes: new Set(), itemsByTipo, error: false }
+  })
+  const [selectedTipo, setSelectedTipo] = useState<string>(() => Object.keys(groupBebidas(initialItems || []))[0] || '')
   const [fotoUrls, setFotoUrls] = useState<Record<number, string | null>>({})
   const fotoUrlsRef = useRef<Record<number, string | null>>({})
   const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
@@ -36,12 +45,7 @@ export function Bebidas() {
     apiGetJson<ComidaItemsResponse>(`/api/comida/bebidas?active=1`)
       .then((res) => {
         if (cancelled) return
-        const byTipo: Record<string, ComidaItem[]> = {}
-        for (const item of res.items || []) {
-          const tipo = item.tipo || 'OTROS'
-          if (!byTipo[tipo]) byTipo[tipo] = []
-          byTipo[tipo].push(item)
-        }
+        const byTipo = groupBebidas(res.items || [])
         setState({
           loadedTypes: new Set(Object.keys(byTipo)),
           loadingTypes: new Set(),

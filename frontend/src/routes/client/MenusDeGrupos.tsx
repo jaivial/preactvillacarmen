@@ -2,23 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import { fetchMenuByID } from '../../lib/menuApi'
-import type { PublicMenu } from '../../lib/types'
+import type { GroupMenuDisplay, GroupMenusDisplayResponse, PublicMenu } from '../../lib/types'
+import { initialMenu, prerenderData } from '../../lib/prerenderData'
 import { MenuTemplateFor } from './menuTemplateFor'
-
-// Slim tab descriptor. The group-menu list endpoint is kept (instead of
-// /api/menus/sidebar) because it is the only one that carries
-// menu_title_english, which the tab labels need.
-type SlimMenu = {
-  id: number
-  menu_title: string
-  menu_title_english?: string
-}
-
-type GroupMenusApiResponse = {
-  success: boolean
-  count: number
-  menus: SlimMenu[]
-}
+import { GroupLanding } from './GroupLanding'
 
 function checkpoint(name: string, detail?: Record<string, unknown>) {
   if (!import.meta.env.DEV) return
@@ -39,8 +26,12 @@ function checkpoint(name: string, detail?: Record<string, unknown>) {
 // Coordination id: public_menu_template_v1
 export function MenusDeGrupos() {
   const { t, lang } = useI18n()
-  const [groupMenus, setGroupMenus] = useState<SlimMenu[] | null | undefined>(undefined)
-  const [details, setDetails] = useState<Record<number, PublicMenu>>({})
+  const [groupMenus, setGroupMenus] = useState<GroupMenuDisplay[] | null | undefined>(() => prerenderData().groupMenus)
+  const [details, setDetails] = useState<Record<number, PublicMenu>>(() => {
+    const first = prerenderData().groupMenus?.[0]
+    const menu = first ? initialMenu(first.id) : undefined
+    return menu ? { [menu.id]: menu } : {}
+  })
   const [failed, setFailed] = useState<Record<number, true>>({})
   const [active, setActive] = useState(0)
 
@@ -48,7 +39,7 @@ export function MenusDeGrupos() {
     checkpoint('menusdegrupos_frontend_loaded')
     let cancelled = false
     checkpoint('menusdegrupos_menus_list_fetch_started')
-    apiGetJson<GroupMenusApiResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay', { noStore: true })
+    apiGetJson<GroupMenusDisplayResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay', { noStore: true })
       .then((data) => {
         if (cancelled) return
         checkpoint('menusdegrupos_menus_list_received', { success: data.success, count: data.success ? data.menus.length : 0 })
@@ -172,6 +163,8 @@ export function MenusDeGrupos() {
     if (current) checkpoint('menusdegrupos_menu_rendered', { menu_id: current.id })
   }, [current])
 
+  const landing = <GroupLanding menus={groupMenus} />
+
   const tabs = shouldShowTabs && menus ? (
     <section class="menuBody menuBody--groupPicker" data-testid="menusdegrupos-picker">
       <div class="container">
@@ -198,6 +191,7 @@ export function MenusDeGrupos() {
   if (groupMenus === undefined || (activeMenu && !current && !failed[activeMenu.id])) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         {tabs}
         <section class="menuBody">
           <div class="container">
@@ -211,6 +205,7 @@ export function MenusDeGrupos() {
   if (groupMenus === null || (activeMenu && failed[activeMenu.id])) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         {tabs}
         <section class="menuBody">
           <div class="container">
@@ -224,6 +219,7 @@ export function MenusDeGrupos() {
   if (!menus || menus.length === 0) {
     return (
       <div class="page menuPage" data-testid="menusdegrupos-page">
+        {landing}
         <section class="menuBody">
           <div class="container">
             <div class="menuState" data-testid="menusdegrupos-state-empty">{t('groupMenus.empty')}</div>
@@ -235,8 +231,9 @@ export function MenusDeGrupos() {
 
   return (
     <div class="page menuPage" data-testid="menusdegrupos-page">
+      {landing}
       {tabs}
-      {current ? <MenuTemplateFor menu={current} /> : null}
+      {current ? <MenuTemplateFor menu={current} headingLevel="h2" /> : null}
     </div>
   )
 }

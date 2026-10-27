@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "lint": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/ssr.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:seo": "node scripts/check-seo.mjs",
+    "test:seo": "npm run build && npm run check:seo"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.8",
@@ -21,6 +23,7 @@
     "lucide-react": "^0.564.0",
     "motion": "^12.34.0",
     "preact": "^10.27.2",
+    "preact-render-to-string": "^6.8.1",
     "wouter-preact": "^3.9.0"
   },
   "devDependencies": {

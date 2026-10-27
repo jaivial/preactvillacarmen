@@ -73,13 +73,13 @@
   position: relative;
   z-index: 3;
   margin: 0;
-  width: clamp(220px, 30vw, 420px);
-  aspect-ratio: 9 / 16;
+  width: 100vw;
+  height: 100svh;
   overflow: hidden;
   border-radius: 24px;
   opacity: 0;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
-  will-change: width, height, border-radius, transform, opacity;
+  will-change: transform, border-radius, opacity;
 }
 
 .evrIntroGrowMedia--start {
@@ -117,6 +117,25 @@
   min-height: 100svh;
   isolation: isolate;
   overflow: hidden;
+}
+
+/* The fixed event header overlays the hero, not a page gutter. Keep the
+   breadcrumb inside that same hero, below the header and its intro overlay. */
+.main--eventos > .breadcrumbs {
+  position: absolute;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  z-index: 3;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: rgba(27, 27, 27, 0.58);
+  color: #fff;
+}
+
+.main--eventos > .breadcrumbs ol,
+.main--eventos > .breadcrumbs a {
+  color: #fff;
 }
 
 .evrHeroPicture {
@@ -159,6 +178,9 @@
   position: relative;
   z-index: 2;
   height: 100svh;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   color: #f4f4f1;
   text-shadow: 0 6px 30px rgba(0, 0, 0, 0.24);
 }
@@ -187,6 +209,10 @@
   animation: evrWordIn 540ms ease forwards 120ms;
 }
 
+.evrPage.evrPage--introDone .evrWord--1 {
+  animation-name: evrWordCenteredIn;
+}
+
 .evrPage.evrPage--introDone .evrWord--2 {
   animation: evrWordIn 540ms ease forwards 360ms;
 }
@@ -200,7 +226,7 @@
 }
 
 .evrWord--1 {
-  top: calc(var(--header-h) + 26px);
+  top: calc(var(--header-h) + 66px);
   left: 50%;
   transform: translateX(-50%);
 }
@@ -567,6 +593,17 @@
   }
 }
 
+@keyframes evrWordCenteredIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 18px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @keyframes evrIntroBurstShot {
   0% {
     opacity: 0.12;
@@ -592,23 +629,17 @@
 @keyframes evrIntroGrowToViewport {
   0% {
     opacity: 0;
-    width: clamp(220px, 30vw, 420px);
-    height: auto;
     border-radius: 24px;
-    transform: translateY(18px) scale(0.92);
+    transform: translateY(18px) scale(0.31, 0.79);
   }
   14% {
     opacity: 1;
   }
   62% {
-    width: clamp(380px, 58vw, 980px);
-    height: auto;
     border-radius: 10px;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(0.73, 0.92);
   }
   100% {
-    width: 100vw;
-    height: 100svh;
     border-radius: 0;
     transform: scale(1);
   }
@@ -645,6 +676,25 @@
   }
 }
 
+@keyframes evrIntroGrowToViewportMobile {
+  0% {
+    opacity: 0;
+    border-radius: 24px;
+    transform: translateY(18px) scale(0.78, 0.69);
+  }
+  14% {
+    opacity: 1;
+  }
+  62% {
+    border-radius: 10px;
+    transform: translateY(0) scale(0.92, 0.85);
+  }
+  100% {
+    border-radius: 0;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 1100px) {
   .evrWord {
     font-size: clamp(2.7rem, 12vw, 7.6rem);
@@ -668,18 +718,20 @@
     min-height: 78svh;
   }
 
-  .evrIntroGrowMedia {
-    width: min(64vw, 320px);
+  .evrIntroGrowMedia--start {
+    animation-name: evrIntroGrowToViewportMobile;
   }
 
   .evrIntroBurst {
     width: min(64vw, 320px);
   }
 
+  .evrPage.evrPage--introDone .evrWord--1,
   .evrWord--1 {
-    top: calc(var(--header-h) + 18px);
+    top: calc(var(--header-h) + 86px);
     left: 8%;
     transform: none;
+    animation-name: evrWordIn;
   }
 
   .evrWord--2 {
@@ -769,6 +821,16 @@
   .evrWord {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Disabling the reveal animation must not keep the primary image hidden. */
+  .evrIntroFigure {
+    display: none;
+  }
+
+  .evrHeroPicture {
+    opacity: 1;
+    filter: none;
   }
 }
 

@@ -1,5 +1,7 @@
 import type { PublicMenu } from '../../../lib/types'
+import { useI18n } from '../../../lib/i18n'
 import { CtaButton } from '../../../components/ui/CtaButton'
+import { publicMenuH1 } from '../menuPublicHelpers'
 
 function formatEuro(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(2)}€`
@@ -19,7 +21,10 @@ export function SpecialMenuSimpleTemplate(props: {
   menu: PublicMenu
   subtitle: string
   imageUrl: string
+  headingLevel?: 'h1' | 'h2'
 }) {
+  const { lang } = useI18n()
+  const Heading = props.headingLevel || 'h1'
   const sections = Array.isArray(props.menu.special_menu_sections)
     ? props.menu.special_menu_sections
     : []
@@ -31,8 +36,9 @@ export function SpecialMenuSimpleTemplate(props: {
     <div class="page menuPage menuPage--special" data-testid="public-special-menu-page">
       <section class="page-hero" data-testid="public-special-menu-hero">
         <div class="container" data-testid="public-special-menu-hero-container">
-          <h1 class="page-title" data-testid="public-special-menu-title">{props.menu.menu_title}</h1>
+          <Heading class="page-title" data-testid="public-special-menu-title">{publicMenuH1(props.menu, lang)}</Heading>
           <p class="page-subtitle" data-testid="public-special-menu-subtitle">{props.subtitle}</p>
+          <p>{lang === 'en' ? 'See the published menu image and sections for the current proposal. Contact our team to confirm availability, dishes, allergens and booking conditions before choosing this special menu.' : 'Consulta la imagen y las secciones publicadas para conocer la propuesta actual. Contacta con nuestro equipo para confirmar disponibilidad, platos, alérgenos y condiciones antes de elegir este menú especial.'}</p>
           {/* Coordination id: special_menu_completo_v1 - a COMPLETO menu
               hides the prereserva notice and the booking button even when
               prereserva is enabled for the date. */}

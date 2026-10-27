@@ -1,19 +1,25 @@
-import { Route, Switch } from 'wouter-preact'
-import { BackofficeLayout } from './routes/backoffice/BackofficeLayout.tsx'
-import { BackofficeHome } from './routes/backoffice/BackofficeHome.tsx'
+import { Redirect, Route, Switch } from 'wouter-preact'
+import { lazy, Suspense } from 'preact/compat'
+import { RouteHead } from './components/RouteHead.tsx'
+import { NotFound } from './routes/client/NotFound.tsx'
+const BackofficeLayout = lazy(async () => ({ default: (await import('./routes/backoffice/BackofficeLayout.tsx')).BackofficeLayout }))
+const BackofficeHome = lazy(async () => ({ default: (await import('./routes/backoffice/BackofficeHome.tsx')).BackofficeHome }))
 import { ClientLayout } from './routes/client/ClientLayout.tsx'
 import { Bebidas } from './routes/client/Bebidas.tsx'
 import { Cafes } from './routes/client/Cafes.tsx'
 import { FoodPageGuard } from './routes/client/FoodPageGuard.tsx'
 import { Contacto } from './routes/client/Contacto.tsx'
 import { Eventos } from './routes/client/Eventos.tsx'
+import { CelebrationLanding } from './routes/client/CelebrationLanding.tsx'
+import { ArrocesYPaellas } from './routes/client/ArrocesYPaellas.tsx'
+import { EditorialResource } from './routes/client/EditorialResource.tsx'
 import { Home } from './routes/client/Home.tsx'
 import { LegacyMenuRedirect } from './routes/client/LegacyMenuRedirect.tsx'
 import { MenuCatalogRoute } from './routes/client/MenuCatalogRoute.tsx'
 import { MenusDeGrupos } from './routes/client/MenusDeGrupos.tsx'
 import { Postres } from './routes/client/Postres.tsx'
 import { Placeholder } from './routes/client/Placeholder.tsx'
-import { Reservas } from './routes/client/Reservas.tsx'
+const Reservas = lazy(async () => ({ default: (await import('./routes/client/Reservas.tsx')).Reservas }))
 import { PrereservaPagoCompletado } from './routes/client/PrereservaPagoCompletado'
 import { ModificarReserva } from './routes/client/ModificarReserva.tsx'
 import { AvisoLegal } from './routes/client/AvisoLegal.tsx'
@@ -29,10 +35,18 @@ import { Vinos } from './routes/client/Vinos.tsx'
 function ClientApp() {
   return (
     <ClientLayout>
+      <RouteHead />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/contacto" component={Contacto} />
+        <Route path="/arroces-y-paellas" component={ArrocesYPaellas} />
+        <Route path="/guia-arroces-valencianos" component={EditorialResource} />
+        <Route path="/checklist-celebraciones" component={EditorialResource} />
+        <Route path="/datos-busquedas-restaurante" component={() => <Redirect to="/" replace />} />
         <Route path="/eventos" component={Eventos} />
+        <Route path="/bodas" component={CelebrationLanding} />
+        <Route path="/comuniones" component={CelebrationLanding} />
+        <Route path="/eventos-empresa" component={CelebrationLanding} />
 
         <Route path="/menu/:menuId/:menuSlug" component={MenuCatalogRoute} />
         <Route path="/menu/:menuId" component={MenuCatalogRoute} />
@@ -62,8 +76,8 @@ function ClientApp() {
         <Route path="/reservas/modificar" component={ModificarReserva} />
         {/* Coordination id: stripe_prereserva_adelanto_v1 */}
         <Route path="/reservas/pago-completado" component={PrereservaPagoCompletado} />
-        <Route path="/reservas" component={Reservas} />
-        <Route path="/reservas.php" component={Reservas} />
+        <Route path="/reservas"><Suspense fallback={null}><Reservas /></Suspense></Route>
+        <Route path="/reservas.php"><Suspense fallback={null}><Reservas /></Suspense></Route>
         <Route path="/avisolegal" component={AvisoLegal} />
         <Route path="/avisolegal.html" component={AvisoLegal} />
         <Route path="/booking-policies" component={BookingPolicies} />
@@ -79,7 +93,7 @@ function ClientApp() {
         <Route path="/menusanvalentin" component={() => <Placeholder titleKey="nav.valentine" />} />
         <Route path="/regala" component={() => <Placeholder titleKey="nav.gift" />} />
 
-        <Route component={() => <Placeholder title="404" />} />
+        <Route component={NotFound} />
       </Switch>
     </ClientLayout>
   )
@@ -87,12 +101,14 @@ function ClientApp() {
 
 function BackofficeApp() {
   return (
-    <BackofficeLayout>
-      <Switch>
-        <Route path="/backoffice" component={BackofficeHome} />
-        <Route component={() => <Placeholder title="Backoffice" />} />
-      </Switch>
-    </BackofficeLayout>
+    <Suspense fallback={null}>
+      <BackofficeLayout>
+        <Switch>
+          <Route path="/backoffice" component={BackofficeHome} />
+          <Route component={() => <Placeholder title="Backoffice" />} />
+        </Switch>
+      </BackofficeLayout>
+    </Suspense>
   )
 }
 

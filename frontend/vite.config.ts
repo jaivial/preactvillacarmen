@@ -255,7 +255,15 @@ export default defineConfig(({ mode }) => {
     cacheDir: process.env.VITE_CACHE_DIR ?? undefined,
     plugins: [preact(), devApiProxyPlugin(apiProxyTargets)],
     resolve: {
-      alias: [] as Alias[],
+      alias: [
+        { find: 'react', replacement: 'preact/compat' },
+        { find: 'react-dom', replacement: 'preact/compat' },
+      ] as Alias[],
+    },
+    ssr: {
+      // Bundle React-compatible libraries with the Preact aliases. Externalizing
+      // them makes Node load the real React package and breaks SSR hooks.
+      noExternal: true,
     },
     define: {
       __DEV__: JSON.stringify(mode !== 'production'),
