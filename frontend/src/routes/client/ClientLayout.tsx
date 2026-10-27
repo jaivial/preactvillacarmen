@@ -24,6 +24,13 @@ export function ClientLayout(props: { children: ComponentChildren }) {
     }
     let cancelled = false
     const query = new URLSearchParams(window.location.search)
+    // ads_html_editor_v1: the backoffice ad editor draws the home behind the
+    // ad it is editing (?vc_preview=1&vc_ads=0): no ad of the site on top.
+    if (query.get('vc_ads') === '0') {
+      setPreviewAdId(0)
+      setActiveAd(null)
+      return
+    }
     const requested = Number(query.get('vc_ad'))
     const previewId = Number.isSafeInteger(requested) && requested > 0 ? requested : 0
     setPreviewAdId(previewId)
