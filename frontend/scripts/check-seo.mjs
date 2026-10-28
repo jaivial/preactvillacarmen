@@ -103,6 +103,23 @@ for (const source of ['/menusanvalentin.php', '/regala.php', '/configuracion.php
   check(routeManifest.gonePaths.includes(source) || !!routeManifest.redirects[source], `${source}: missing explicit 410 or equivalent destination`)
   check(!(routeManifest.gonePaths.includes(source) && routeManifest.redirects[source]), `${source}: cannot be both 410 and redirected`)
 }
+const groupMenuPaths = routeManifest.groupMenuPaths || {}
+check(Object.keys(groupMenuPaths).length > 0, 'menusdegrupos: no active group-menu SEO routes in manifest')
+for (const [id, path] of Object.entries(groupMenuPaths)) {
+  check(routeManifest.menuPaths[id] === path, `menusdegrupos?menu=${id}: destination differs from canonical menu path`)
+  for (const localized of [path, `/en${path}`]) {
+    check(sitemapSet.has(localized), `${localized}: active group-menu SEO URL missing from sitemap`)
+    check(!!routeManifest.markdownPaths[localized], `${localized}: active group-menu Markdown missing`)
+  }
+}
+const groupLanding = pages.get('/menusdegrupos')?.html || ''
+check(!groupLanding.includes('menusdegrupos-picker'), 'menusdegrupos: obsolete numeric tab picker is still rendered')
+for (const match of groupLanding.matchAll(/(?:src|srcset)="([^"]+)"/gi)) {
+  for (const candidate of match[1].split(',')) {
+    const url = candidate.trim().split(/\s+/)[0]
+    if (url.startsWith('/images/group-menus/')) check(files.includes(join(dist, url.split('?')[0].slice(1))), `menusdegrupos: missing responsive image ${url}`)
+  }
+}
 const titles = new Map()
 const descriptions = new Map()
 const alternateOwners = new Map()
@@ -178,6 +195,7 @@ for (const [path, { html }] of pages) {
   } else check(alternates.length === 0, `${path}: noindex page has hreflang alternates`)
   for (const anchor of tags(html, 'a')) {
     if (!anchor.href || /^(?:[a-z]+:|\/\/|#)/i.test(anchor.href)) continue
+    check(!/\/menusdegrupos[?&]menu=\d/.test(anchor.href), `${path}: obsolete numeric group-menu link ${anchor.href}`)
     const target = localPath(anchor.href)
     check(pages.has(target) || redirectPaths.has(target) || target === '/en/404' || files.includes(join(dist, target.replace(/^\//, ''))), `${path}: broken internal link ${anchor.href}`)
   }
