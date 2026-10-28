@@ -39,8 +39,8 @@ export function GroupLanding({ menus, details }: { menus: GroupMenuDisplay[] | n
       ].filter(Boolean).join(' · ') || (es ? 'Consulta platos, precio y condiciones' : 'View dishes, price and conditions')
       const photo = menuPhotos[menu.id]
       const image = photo ? `/images/group-menus/${photo.name}-800.jpg?v=${groupPhotoVersion}` : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp'
-      const imageSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.webp ${width}w`).join(', ') : undefined
-      const imageFallbackSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.jpg ${width}w`).join(', ') : undefined
+      const imageSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.webp?v=${groupPhotoVersion} ${width}w`).join(', ') : undefined
+      const imageFallbackSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.jpg?v=${groupPhotoVersion} ${width}w`).join(', ') : undefined
       return <DiscoveryCard key={menu.id} href={menuPath({ id: menu.id, slug: detail?.slug || menu.slug, seo_slug: detail?.seo_slug || menu.seo_slug })} title={title} description={description} image={image} imageSrcSet={imageSrcSet} imageFallbackSrcSet={imageFallbackSrcSet} imageSizes="(max-width: 600px) calc(100vw - 40px), (max-width: 1024px) calc(50vw - 40px), 360px" imageAlt={photo?.alt[lang] || (es ? `Salón de Villa Carmen · ${title}` : `Villa Carmen dining room · ${title}`)} action={action} testId={`group-menu-card-${menu.id}`} />
     })}</div></section> : null}
     <section class="container editorial-faq"><h2>{es ? 'Preguntas antes de reservar' : 'Questions before booking'}</h2>
