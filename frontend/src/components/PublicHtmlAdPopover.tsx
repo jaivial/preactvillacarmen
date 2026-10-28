@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
-import type { PublicAd, PublicAdDesign } from '../lib/publicAds'
+import { adVariantForWidth, type PublicAd, type PublicAdDesign } from '../lib/publicAds'
 
 /*
  * Coordination id: ads_html_editor_v1 - popover of an HTML ad (built with the
@@ -107,7 +107,10 @@ export function PublicHtmlAdPopover(props: { ad: PublicAd & { design: PublicAdDe
     borderRadius: chrome.radius !== undefined ? `${chrome.radius}px` : undefined,
     background: chrome.background || undefined,
   } as const
-  const src = `/api/public/ads/${ad.id}/render?src=villacarmen-home${step ? `&step=${encodeURIComponent(step.id)}` : ''}`
+  // The device of the visitor (mobile / tablet / desktop): the design can lay
+  // out per device, and the ad window is as wide on a tablet as on a desktop.
+  const device = typeof window === 'undefined' ? 'desktop' : adVariantForWidth(window.innerWidth)
+  const src = `/api/public/ads/${ad.id}/render?src=villacarmen-home&vp=${device}${step ? `&step=${encodeURIComponent(step.id)}` : ''}`
 
   const modal = (
     <div
