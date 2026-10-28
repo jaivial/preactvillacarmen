@@ -142,10 +142,13 @@ for (const path of dynamicPaths) {
   const bare = barePath(path)
   const pageData = { ...baseData, menus: bare.startsWith('/menu/') ? menus : {} }
   // Booking-management views intentionally remain client-rendered: some read
-  // their private token from window.location during render. Their noindex head
-  // does not require executing that interactive code during the build.
+  // their private token from window.location during render. Render their public
+  // layout separately so the footer and internal links still exist in the
+  // served HTML; only the private route content waits for hydration.
   const route = ssr.PUBLIC_ROUTES.find((item) => item.path === bare)
-  const body = route && !route.prerender ? '' : ssr.renderPage(path, pageData)
+  const body = route && !route.prerender
+    ? route.path === '/backoffice' ? '' : ssr.renderPublicShell(route.localized ? path : route.path, pageData)
+    : ssr.renderPage(path, pageData)
   const head = ssr.renderHead(path)
   const output = join(dist, `${path.replace(/^\//, '')}/index.html`)
   await mkdir(dirname(output), { recursive: true })

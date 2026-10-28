@@ -74,6 +74,10 @@ export function localizedPath(path: string, lang: Language): string {
 
 export function equivalentLanguagePath(pathname: string, lang: Language): string {
   const current = stripLanguagePrefix(pathname)
+  // Operational booking/unsubscribe routes have no English variant. Keep
+  // their language controls on the real URL instead of emitting dead /en links.
+  const route = PUBLIC_ROUTES.find((item) => item.path === current.path)
+  if (route && !route.localized) return current.path
   return localizedPath(current.path, lang)
 }
 
