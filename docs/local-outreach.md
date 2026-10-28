@@ -8,7 +8,6 @@ Corte: 26 de octubre de 2026. Responsable: Jaime. Esta bitácora distingue recur
 | --- | --- | --- |
 | `/guia-arroces-valencianos` | Guía editorial permanente para entender texturas y preparar una comida; fotografía del CDN propio, con procedencia y autor desconocido declarados. | Página bilingüe y checklist interactiva. |
 | `/checklist-celebraciones` | Lista reusable para coordinar restaurante, invitados y proveedores sin difundir datos privados. | Página bilingüe, checkboxes y descarga HTML imprimible ES/EN. |
-| `/datos-busquedas-restaurante` | Datos agregados reales para medios y profesionales locales, con método, límites y cita reusable. | 471 filas origen; CSV agregado por intención/dispositivo y Dataset JSON-LD; sin consultas individuales. |
 
 ## Auditoría de menciones
 
@@ -20,7 +19,7 @@ No se compran enlaces ni se exige `follow`. La relevancia local y la utilidad ed
 
 ## Propuestas personalizadas preparadas
 
-1. **Medio local / autor del artículo:** ofrecer el dataset agregado y una explicación del método como actualización reusable, sin pedir que se altere el contenido editorial ni un atributo de enlace concreto. Beneficio: cifras fechadas, descargables y citables sobre demanda de un restaurante de Catarroja.
+1. **Medio local / autor del artículo:** ofrecer una explicación agregada del método y de la demanda local como contexto reusable, sin publicar el informe privado del backoffice ni pedir que se altere el contenido editorial o un atributo de enlace concreto.
 2. **Proveedor de bodas o celebraciones:** compartir la checklist imprimible para reducir dudas de coordinación; proponer permiso y crédito recíproco solo cuando exista material autorizado. Beneficio: menos información operativa dispersa y atribución correcta del trabajo.
 3. **Proveedor gastronómico local:** ofrecer la guía como contexto útil sobre arroces, sin inventar una colaboración, origen de ingredientes o fotografía de autor. Beneficio: contenido educativo permanente y condiciones actuales claramente separadas.
 

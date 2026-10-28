@@ -1,4 +1,4 @@
-import { Redirect, Route, Switch } from 'wouter-preact'
+import { Route, Switch } from 'wouter-preact'
 import { lazy, Suspense } from 'preact/compat'
 import { RouteHead } from './components/RouteHead.tsx'
 import { NotFound } from './routes/client/NotFound.tsx'
@@ -42,7 +42,6 @@ function ClientApp() {
         <Route path="/arroces-y-paellas" component={ArrocesYPaellas} />
         <Route path="/guia-arroces-valencianos" component={EditorialResource} />
         <Route path="/checklist-celebraciones" component={EditorialResource} />
-        <Route path="/datos-busquedas-restaurante" component={() => <Redirect to="/" replace />} />
         <Route path="/eventos" component={Eventos} />
         <Route path="/bodas" component={CelebrationLanding} />
         <Route path="/comuniones" component={CelebrationLanding} />
