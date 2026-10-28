@@ -23,9 +23,10 @@ export type PublicMenuViewSection = {
   dishes: Dish[]
 }
 
-function toDishList(section: PublicMenuSection): Dish[] {
+export function toDishList(section: PublicMenuSection): Dish[] {
   return (section.dishes || [])
     .map((item) => ({
+      id: item.id,
       descripcion: String(item.title || '').trim(),
       description: String(item.description || '').trim(),
       description_enabled: item.description_enabled === true,

@@ -196,13 +196,14 @@ export function AllergenIcons(props: { alergenos: string[] }) {
   )
 }
 
-function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImage?: boolean }) {
+function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImage?: boolean; showDishPrice?: boolean }) {
   const { t, lang } = useI18n()
   const ref = useRef<HTMLLIElement>(null)
   const [revealed, setRevealed] = useState(() => prefersReducedMotion())
   const [imageErrored, setImageErrored] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const showImage = props.showImage === true
+  const dishPrice = props.showDishPrice ? dishPriceLabel(props.dish.price) : ''
   const rawImage = String(props.dish.image_url || props.dish.foto_url || '').trim()
   const hasImage = Boolean(rawImage)
   const imageSource = useMemo(() => (hasImage ? mediaSrc(rawImage) : ''), [rawImage, hasImage])
@@ -283,6 +284,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
               <div class="dishDescription">{displayDescripcion}</div>
               {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
               <DishSupplementBadge dish={props.dish} />
+              {dishPrice ? <div class="dishCardPrice">{dishPrice}</div> : null}
             </div>
             <AllergenIcons alergenos={props.dish.alergenos} />
           </div>
@@ -292,6 +294,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
           <div class="dishDescription">{displayDescripcion}</div>
           {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
           <DishSupplementBadge dish={props.dish} />
+          {dishPrice ? <div class="dishCardPrice">{dishPrice}</div> : null}
           <AllergenIcons alergenos={props.dish.alergenos} />
         </div>
       )}
@@ -380,20 +383,20 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
   )
 }
 
-export function DishCardGrid(props: { dishes: Dish[]; pickCategory?: MenuPickCategory }) {
+export function DishCardGrid(props: { dishes: Dish[]; pickCategory?: MenuPickCategory; showDishPrice?: boolean }) {
   const items = props.dishes || []
   if (items.length === 0) return null
 
   return (
     <ul class="dishGrid" role="list">
       {items.map((dish, idx) => (
-        <DishCard dish={dish} pickCategory={props.pickCategory} key={`${dish.descripcion}-${idx}`} />
+        <DishCard dish={dish} pickCategory={props.pickCategory} showDishPrice={props.showDishPrice} key={`${dish.descripcion}-${idx}`} />
       ))}
     </ul>
   )
 }
 
-export function DishCardGridWithImage(props: { dishes: Dish[]; pickCategory?: MenuPickCategory; showImage?: boolean }) {
+export function DishCardGridWithImage(props: { dishes: Dish[]; pickCategory?: MenuPickCategory; showImage?: boolean; showDishPrice?: boolean }) {
   const items = props.dishes || []
   if (items.length === 0) return null
 
@@ -404,6 +407,7 @@ export function DishCardGridWithImage(props: { dishes: Dish[]; pickCategory?: Me
           dish={dish}
           pickCategory={props.pickCategory}
           showImage={props.showImage}
+          showDishPrice={props.showDishPrice}
           key={`${dish.descripcion}-${idx}-${props.showImage ? 'with-image' : 'without-image'}`}
         />
       ))}
@@ -438,6 +442,7 @@ export function MenuSection(props: {
   notes?: string[]
   pickCategory?: MenuPickCategory
   showImage?: boolean
+  showDishPrice?: boolean
   annotations?: string[]
   subtitle?: string
 }) {
@@ -452,9 +457,9 @@ export function MenuSection(props: {
         <p class="menuSectionLead" data-testid="menu-section-lead">{subtitle}</p>
       ) : null}
       {props.showImage ? (
-        <DishCardGridWithImage dishes={items} pickCategory={props.pickCategory} showImage={props.showImage} />
+        <DishCardGridWithImage dishes={items} pickCategory={props.pickCategory} showImage={props.showImage} showDishPrice={props.showDishPrice} />
       ) : (
-        <DishCardGrid dishes={items} pickCategory={props.pickCategory} />
+        <DishCardGrid dishes={items} pickCategory={props.pickCategory} showDishPrice={props.showDishPrice} />
       )}
       {props.notes && props.notes.length > 0 ? (
         <ul class="menuSectionNotes" role="list">
