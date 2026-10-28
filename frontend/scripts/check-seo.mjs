@@ -30,6 +30,11 @@ for (const file of htmlFiles) {
   pages.set(path, { file, html: await readFile(file, 'utf8') })
 }
 const routeManifest = JSON.parse(await readFile(join(dist, 'seo-routes.json'), 'utf8'))
+const footerInternalPaths = [
+  '/arroces-y-paellas', '/menusdegrupos', '/eventos', '/bodas', '/comuniones',
+  '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones',
+  '/contacto', '/reservas',
+]
 const redirectPaths = new Set(Object.keys(routeManifest.redirects).map((path) => cleanPath(path)))
 const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
 const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => localPath(m[1]))
@@ -53,6 +58,16 @@ const descriptions = new Map()
 const alternateOwners = new Map()
 for (const [path, { html }] of pages) {
   if (path === '/gone') continue
+  const isPublicPage = !path.startsWith('/backoffice') && !path.startsWith('/downloads/')
+  if (isPublicPage) {
+    check(one(html, /<footer\b/gi) === 1, `${path}: expected exactly one footer in served HTML`)
+    const footer = html.match(/<footer\b[\s\S]*?<\/footer>/i)?.[0] || ''
+    check(one(footer, /<nav\b[^>]*class="[^"]*footer-nav/gi) === 1, `${path}: footer navigation must be prerendered`)
+    const langPrefix = path === '/en' || path.startsWith('/en/') ? '/en' : ''
+    for (const target of footerInternalPaths) {
+      check(tags(footer, 'a').some((anchor) => anchor.href === `${langPrefix}${target}`), `${path}: missing prerendered footer link ${langPrefix}${target}`)
+    }
+  }
   const lang = html.match(/<html\b[^>]*\blang="([^"]+)"/i)?.[1]
   const validLanguage = path.startsWith('/downloads/') ? lang === 'es' || lang === 'en' : lang === (path === '/en' || path.startsWith('/en/') ? 'en' : 'es')
   check(validLanguage, `${path}: wrong html lang (${lang})`)
