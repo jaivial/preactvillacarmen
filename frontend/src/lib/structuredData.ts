@@ -25,7 +25,9 @@ export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEn
   if (menu) items.push({ name: editorialNames['/menusdegrupos'][lang], path: '/menusdegrupos' })
   // PUBLIC_ROUTES and the catalog are the source of truth for every current
   // page, including editorial resources and menus using an SEO slug.
-  const name = menu?.title[lang].split('|')[0].trim() || routeMetadata(path, menus).title[lang].split('|')[0].trim()
+  const metadata = routeMetadata(path, menus)
+  const name = menu?.title[lang].split('|')[0].trim() || (metadata.indexable ? metadata.title[lang].split('|')[0].trim() : '')
+  if (!name) return []
   items.push({ name, path })
   return items
 }
@@ -59,7 +61,7 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
   }
   const breadcrumbs = breadcrumbItems(pathname, lang, menus)
   const graph: Record<string, unknown>[] = [restaurant]
-  if (path !== '/') graph.push({
+  if (path !== '/' && breadcrumbs.length >= 2) graph.push({
     '@type': 'BreadcrumbList',
     '@id': `${canonical}#breadcrumb`,
     itemListElement: breadcrumbs.map((item, index) => ({

@@ -5,9 +5,11 @@ import { localized, localizedArray } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
 import { equivalentLanguagePath, menuPath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
 import { structuredData } from '../lib/structuredData'
+import type { PublicMenu } from '../lib/types'
+import { absoluteMarkdownUrl } from '../../scripts/lib/public-geo.mjs'
 
-export function catalogRoutes(): MenuRouteEntry[] {
-  return Object.values(prerenderData().menus).filter((menu) => menu.active && menu.menu_public_active !== false).map((menu) => {
+export function catalogRoutesFor(menus: Record<string, PublicMenu>): MenuRouteEntry[] {
+  return Object.values(menus).filter((menu) => menu.active && menu.menu_public_active !== false).map((menu) => {
     return {
       id: menu.id,
       slug: menu.slug || '',
@@ -23,6 +25,10 @@ export function catalogRoutes(): MenuRouteEntry[] {
       },
     }
   })
+}
+
+export function catalogRoutes(): MenuRouteEntry[] {
+  return catalogRoutesFor(prerenderData().menus)
 }
 
 function upsertMeta(selector: string, attributes: Record<string, string>) {
@@ -46,6 +52,7 @@ export function RouteHead() {
   const pathname = lang === 'en' && !location.startsWith('/en') ? `/en${location === '/' ? '' : location}` : location
   const metadata = routeMetadata(pathname, catalogRoutes())
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
+  const hasPublicMarkdown = metadata.indexable || metadata.canonicalPath === '/reservas'
   const jsonLd = JSON.stringify(structuredData(pathname, catalogRoutes()))
 
   useEffect(() => {
@@ -73,6 +80,10 @@ export function RouteHead() {
       upsertMeta(`${property ? 'meta[property' : 'meta[name'}="${name}"]`, { [property ? 'property' : 'name']: name, content })
     })
     upsertMeta('link[rel="canonical"]', { rel: 'canonical', href: canonical })
+    if (hasPublicMarkdown) upsertMeta('link[rel="alternate"][type="text/markdown"]', {
+      rel: 'alternate', type: 'text/markdown', href: absoluteMarkdownUrl(metadata.canonicalPath, SITE_ORIGIN),
+    })
+    else document.head.querySelector('link[rel="alternate"][type="text/markdown"]')?.remove()
     let schema = document.head.querySelector<HTMLScriptElement>('script[data-public-schema]')
     if (!metadata.indexable) schema?.remove()
     else {
@@ -91,7 +102,7 @@ export function RouteHead() {
     for (const [hreflang, path] of alternates) {
       upsertMeta(`link[rel="alternate"][hreflang="${hreflang}"]`, { rel: 'alternate', hreflang, href: new URL(path, SITE_ORIGIN).href })
     }
-  }, [canonical, catalogVersion, jsonLd, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
+  }, [canonical, catalogVersion, hasPublicMarkdown, jsonLd, lang, location, metadata.description, metadata.indexable, metadata.localized, metadata.title])
 
   return null
 }
@@ -105,11 +116,13 @@ export function renderHead(pathname: string): string {
   const esPath = equivalentLanguagePath(metadata.canonicalPath, 'es')
   const enPath = equivalentLanguagePath(metadata.canonicalPath, 'en')
   const alternate = lang === 'es' ? 'en_GB' : 'es_ES'
+  const hasPublicMarkdown = metadata.indexable || metadata.canonicalPath === '/reservas'
   const tags = [
     `<title>${escape(metadata.title[lang])}</title>`,
     `<meta name="description" content="${escape(metadata.description[lang])}" data-seo="description" />`,
     `<meta name="robots" content="${metadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,nofollow'}" data-seo="robots" />`,
     `<link rel="canonical" href="${canonical}" data-seo="canonical" />`,
+    ...(hasPublicMarkdown ? [`<link rel="alternate" type="text/markdown" href="${absoluteMarkdownUrl(metadata.canonicalPath, SITE_ORIGIN)}" />`] : []),
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Alquería Villa Carmen" />`,
     `<meta property="og:title" content="${escape(metadata.title[lang])}" />`,
@@ -150,4 +163,10 @@ function localizedPathForHead(pathname: string, lang: 'es' | 'en') {
 
 export function publicPrerenderPaths(): string[] {
   return PUBLIC_ROUTES.filter((route) => route.prerender).flatMap((route) => route.localized ? [route.path, localizedPathForHead(route.path, 'en')] : [route.path])
+}
+
+// The booking start page is public even though its conversion flow is noindex.
+// Token-driven booking management and administration never get public Markdown.
+export function publicMarkdownPaths(): string[] {
+  return PUBLIC_ROUTES.filter((route) => route.prerender || route.path === '/reservas').flatMap((route) => route.localized ? [route.path, localizedPathForHead(route.path, 'en')] : [route.path])
 }

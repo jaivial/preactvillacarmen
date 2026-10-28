@@ -30,6 +30,12 @@ describe('public structured data', () => {
     expect(structuredData('/en/datos-busquedas-restaurante')).toEqual([])
   })
 
+  it('uses the SEO menu title instead of a not-found label after client navigation', () => {
+    const menu = { id: 42, slug: 'menu-fin-de-semana-42', seo_slug: 'menu-fin-de-semana', path: '/menu/menu-fin-de-semana', title: { es: 'Menú de fin de semana | Villa Carmen', en: 'Weekend menu | Villa Carmen' }, description: { es: 'Menú', en: 'Menu' } }
+    expect(breadcrumbItems('/menu/42/menu-fin-de-semana-42', 'es', [menu]).at(-1)?.name).toBe('Menú de fin de semana')
+    expect(breadcrumbItems('/en/menu/menu-fin-de-semana', 'en', [menu]).at(-1)?.name).toBe('Weekend menu')
+  })
+
   it('provides the restaurant entity and breadcrumb list in one parseable graph', () => {
     expect(JSON.parse(JSON.stringify(weddingData))).toEqual(weddingData)
     expect(weddingGraph.some((node) => node['@type'] === 'Restaurant')).toBe(true)
