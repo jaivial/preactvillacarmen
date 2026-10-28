@@ -1,7 +1,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { geoManifest, llmsFiles, markdownDocument, markdownPath } from './lib/public-geo.mjs'
 
 const dist = new URL('../dist/', import.meta.url).pathname
+const repository = new URL('../../', import.meta.url).pathname
 const ssr = await import('../dist-ssr/ssr.js')
 const apiOrigin = (process.env.VITE_PRERENDER_API_ORIGIN || 'https://www.alqueriavillacarmen.com').replace(/\/$/, '')
 const template = await readFile(join(dist, 'index.html'), 'utf8')
@@ -93,6 +96,37 @@ const paths = [...new Set([...editorialPaths, ...menuPaths])]
 const barePath = (path) => path === '/en' ? '/' : path.startsWith('/en/') ? path.slice(3) : path
 
 const renderedPaths = new Set(paths)
+const renderedBodies = new Map()
+const gitDate = (file) => {
+  try { return execFileSync('git', ['log', '-1', '--format=%cs', '--', `frontend/${file}`], { cwd: repository, encoding: 'utf8' }).trim() }
+  catch { return '' }
+}
+const editorialDates = new Map([
+  ['/', gitDate('src/routes/client/Home.tsx')],
+  ['/contacto', gitDate('src/routes/client/Contacto.tsx')],
+  ['/arroces-y-paellas', gitDate('src/lib/editorialContent.ts')],
+  ['/guia-arroces-valencianos', gitDate('src/lib/editorialContent.ts')],
+  ['/checklist-celebraciones', gitDate('src/lib/celebrationContent.ts')],
+  ['/eventos', gitDate('src/routes/client/Eventos.tsx')],
+  ['/bodas', gitDate('src/routes/client/CelebrationLanding.tsx')],
+  ['/comuniones', gitDate('src/routes/client/CelebrationLanding.tsx')],
+  ['/eventos-empresa', gitDate('src/routes/client/CelebrationLanding.tsx')],
+  ['/menusdegrupos', gitDate('src/routes/client/GroupLanding.tsx')],
+  ['/postres', gitDate('src/routes/client/Postres.tsx')],
+  ['/cafes', gitDate('src/routes/client/Cafes.tsx')],
+  ['/bebidas', gitDate('src/routes/client/Bebidas.tsx')],
+  ['/vinos', gitDate('src/routes/client/Vinos.tsx')],
+])
+const dateOnly = (value) => String(value || '').slice(0, 10)
+const newest = (...dates) => dates.map(dateOnly).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort().at(-1) || gitDate('src/lib/routes.ts')
+const lastModified = ({ bare, menu, legalPage }) => newest(
+  editorialDates.get(bare),
+  menu?.modified_at,
+  legalPage?.updatedAt,
+  bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos'
+    ? [41, 42, 1].map((id) => menus[String(id)]?.modified_at)
+    : '',
+)
 const htmlFor = (path, body, head, pageData) => {
   const lang = path === '/en' || path.startsWith('/en/') ? 'en' : 'es'
   const bootstrap = JSON.stringify(pageData).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
@@ -120,6 +154,7 @@ for (const path of paths) {
     legalPages: legalSlug ? { [legalSlug]: legalPages[legalSlug] } : undefined,
   }
   const body = ssr.renderPage(path, pageData)
+  renderedBodies.set(path, body)
   const head = ssr.renderHead(path)
   const html = htmlFor(path, body, head, pageData)
   const output = join(dist, path === '/' ? 'index.html' : `${path.replace(/^\//, '')}/index.html`)
@@ -150,18 +185,45 @@ for (const path of dynamicPaths) {
     ? route.path === '/backoffice' ? '' : ssr.renderPublicShell(route.localized ? path : route.path, pageData)
     : ssr.renderPage(path, pageData)
   const head = ssr.renderHead(path)
+  if (ssr.publicMarkdownPaths().includes(path)) renderedBodies.set(path, body)
   const output = join(dist, `${path.replace(/^\//, '')}/index.html`)
   await mkdir(dirname(output), { recursive: true })
   await writeFile(output, htmlFor(path, body, head, pageData))
 }
 const indexablePaths = paths.filter((path) => !ssr.PUBLIC_ROUTES.some((route) => !route.indexable && (path === route.path || path === `/en${route.path}`)))
+// Only pages actually rendered in this build plus the public booking start page.
+// Inactive dishes and private/token-driven flows must never leak into llms.txt.
+const markdownPaths = [...new Set([...paths, ...ssr.publicMarkdownPaths().filter((path) => barePath(path) === '/reservas')])]
 const absolute = (value) => `${ssr.SITE_ORIGIN}${value}`
-const urlEntries = indexablePaths.map((path) => {
-  const es = barePath(path)
+const geoEntries = geoManifest({
+  paths: markdownPaths, pages: Object.fromEntries(renderedBodies), menus, legalPages,
+  ssr: { ...ssr, barePath, legalSlugs }, lastModified,
+})
+const indexableGeoEntries = geoEntries.filter((entry) => indexablePaths.includes(entry.path))
+for (const entry of geoEntries) {
+  if (!entry.body) throw new Error(`[geo] ${entry.path} has no rendered Markdown body`)
+  const output = join(dist, markdownPath(entry.path).replace(/^\//, ''))
+  await mkdir(dirname(output), { recursive: true })
+  await writeFile(output, markdownDocument(entry))
+}
+const llms = llmsFiles(geoEntries)
+await writeFile(join(dist, 'llms.txt'), llms.summary)
+const urlEntries = indexableGeoEntries.map((entry) => {
+  const es = barePath(entry.path)
   const en = `/en${es === '/' ? '' : es}`
-  return `  <url><loc>${absolute(path)}</loc><xhtml:link rel="alternate" hreflang="es" href="${absolute(es)}"/><xhtml:link rel="alternate" hreflang="en" href="${absolute(en)}"/><xhtml:link rel="alternate" hreflang="x-default" href="${absolute(es)}"/></url>`
+  return `  <url><loc>${absolute(entry.path)}</loc><lastmod>${entry.lastModified}</lastmod><xhtml:link rel="alternate" hreflang="es" href="${absolute(es)}"/><xhtml:link rel="alternate" hreflang="en" href="${absolute(en)}"/><xhtml:link rel="alternate" hreflang="x-default" href="${absolute(es)}"/></url>`
 }).join('\n')
 await writeFile(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urlEntries}\n</urlset>\n`)
-await writeFile(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${ssr.SITE_ORIGIN}/sitemap.xml\n`)
-await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ redirects: withEnglish, gonePaths: [...new Set([...ssr.GONE_PATHS, ...retiredLegacyPaths])].flatMap((path) => [path, `/en${path}`]), menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
-console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexablePaths.length} sitemap URLs`)
+// Public documentation is deliberately available to search and AI crawlers.
+// Private/backoffice and noindex booking flows are not added to any index.
+const aiCrawlers = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'meta-externalagent']
+const robots = [
+  'User-agent: *', 'Allow: /', 'Disallow: /backoffice', 'Disallow: /downloads/', '',
+  ...aiCrawlers.flatMap((agent) => [`User-agent: ${agent}`, 'Allow: /', 'Disallow: /backoffice', 'Disallow: /downloads/', '']),
+  `Sitemap: ${ssr.SITE_ORIGIN}/sitemap.xml`,
+  `# Generative-engine index with canonical HTML and per-page Markdown links: ${ssr.SITE_ORIGIN}/llms.txt`,
+  '',
+].join('\n')
+await writeFile(join(dist, 'robots.txt'), robots)
+await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ lastModified: Object.fromEntries(geoEntries.map((entry) => [entry.path, entry.lastModified])), markdownPaths: Object.fromEntries(geoEntries.map((entry) => [entry.path, markdownPath(entry.path)])), redirects: withEnglish, gonePaths: [...new Set([...ssr.GONE_PATHS, ...retiredLegacyPaths])].flatMap((path) => [path, `/en${path}`]), menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
+console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexablePaths.length} sitemap URLs and ${geoEntries.length} Markdown alternatives`)
