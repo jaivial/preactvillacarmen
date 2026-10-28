@@ -3,7 +3,7 @@ import { useI18n } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import { fetchMenuByID } from '../../lib/menuApi'
 import type { GroupMenuDisplay, GroupMenusDisplayResponse, PublicMenu } from '../../lib/types'
-import { initialMenu, prerenderData } from '../../lib/prerenderData'
+import { prerenderData } from '../../lib/prerenderData'
 import { MenuTemplateFor } from './menuTemplateFor'
 import { GroupLanding } from './GroupLanding'
 
@@ -28,9 +28,8 @@ export function MenusDeGrupos() {
   const { t, lang } = useI18n()
   const [groupMenus, setGroupMenus] = useState<GroupMenuDisplay[] | null | undefined>(() => prerenderData().groupMenus)
   const [details, setDetails] = useState<Record<number, PublicMenu>>(() => {
-    const first = prerenderData().groupMenus?.[0]
-    const menu = first ? initialMenu(first.id) : undefined
-    return menu ? { [menu.id]: menu } : {}
+    const embedded = prerenderData().menus
+    return Object.fromEntries(Object.values(embedded).map((menu) => [menu.id, menu]))
   })
   const [failed, setFailed] = useState<Record<number, true>>({})
   const [active, setActive] = useState(0)
@@ -130,29 +129,32 @@ export function MenusDeGrupos() {
   const shouldShowTabs = Boolean(menus && menus.length >= 2)
   const activeMenu = menus && menus.length > 0 ? menus[active] || menus[0] : null
 
-  // fetch the full public payload for the selected menu; this is the very same
-  // endpoint the /menu/:id route uses, so both entry points share one shape
+  // Fetch every visible card as well as the selected menu. The lightweight
+  // active-menu list has no price or party size; each card needs the same full
+  // public payload used by the /menu/:id catalog route.
   useEffect(() => {
-    if (!activeMenu) return
-    if (details[activeMenu.id] || failed[activeMenu.id]) return
+    if (!menus?.length) return
     let cancelled = false
-    checkpoint('menusdegrupos_menu_detail_fetch_started', { menu_id: activeMenu.id })
-    fetchMenuByID(activeMenu.id)
-      .then((menu) => {
-        if (cancelled) return
-        checkpoint('menusdegrupos_menu_detail_received', { menu_id: menu.id, menu_type: menu.menu_type })
-        setDetails((prev) => ({ ...prev, [menu.id]: menu }))
-      })
-      .catch((err) => {
-        if (cancelled) return
-        checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: activeMenu.id, error: String(err) })
-        setFailed((prev) => ({ ...prev, [activeMenu.id]: true }))
-      })
+    menus.forEach((summary) => {
+      if (details[summary.id] || failed[summary.id]) return
+      checkpoint('menusdegrupos_menu_detail_fetch_started', { menu_id: summary.id })
+      fetchMenuByID(summary.id)
+        .then((menu) => {
+          if (cancelled) return
+          checkpoint('menusdegrupos_menu_detail_received', { menu_id: menu.id, menu_type: menu.menu_type })
+          setDetails((prev) => ({ ...prev, [menu.id]: menu }))
+        })
+        .catch((err) => {
+          if (cancelled) return
+          checkpoint('menusdegrupos_menu_detail_fetch_failed', { menu_id: summary.id, error: String(err) })
+          setFailed((prev) => ({ ...prev, [summary.id]: true }))
+        })
+    })
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMenu?.id, failed])
+  }, [menus, failed])
 
   const current = useMemo(
     () => (activeMenu ? details[activeMenu.id] || null : null),
@@ -163,7 +165,7 @@ export function MenusDeGrupos() {
     if (current) checkpoint('menusdegrupos_menu_rendered', { menu_id: current.id })
   }, [current])
 
-  const landing = <GroupLanding menus={groupMenus} />
+  const landing = <GroupLanding menus={groupMenus} details={details} />
 
   const tabs = shouldShowTabs && menus ? (
     <section class="menuBody menuBody--groupPicker" data-testid="menusdegrupos-picker">
