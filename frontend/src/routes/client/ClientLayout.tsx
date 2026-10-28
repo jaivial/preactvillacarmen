@@ -66,7 +66,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
         {!isHome && !isEventosPage ? <Breadcrumbs /> : null}
         {props.children}
       </main>
-      {isEventosPage ? null : <ClientFooter />}
+      <ClientFooter />
       {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (!previewAdId) markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )
