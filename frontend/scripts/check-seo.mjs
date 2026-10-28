@@ -40,8 +40,9 @@ const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
 const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => localPath(m[1]))
 check(new Set(sitemapPaths).size === sitemapPaths.length, 'sitemap.xml: duplicate URLs')
 const sitemapSet = new Set(sitemapPaths)
-for (const [source, target] of [['/datos-busquedas-restaurante', '/'], ['/en/datos-busquedas-restaurante', '/en']]) {
-  check(routeManifest.redirects[source] === target, `${source}: private Search Console report must redirect to ${target}`)
+for (const source of ['/datos-busquedas-restaurante', '/en/datos-busquedas-restaurante']) {
+  check(routeManifest.gonePaths.includes(source), `${source}: retired public report must return 410`)
+  check(!routeManifest.redirects[source], `${source}: retired public report must not redirect`)
   check(!pages.has(source), `${source}: retired public report HTML is still generated`)
   check(!sitemapSet.has(source), `${source}: retired public report is still in sitemap`)
 }
@@ -178,6 +179,8 @@ try {
   await request(base, '/sitemap.xml', 200, 'application/xml')
   await request(base, '/__seo_missing_route__', 404, 'text/html')
   await request(base, routeManifest.gonePaths[0], 410, 'text/html')
+  await request(base, '/datos-busquedas-restaurante', 410, 'text/html')
+  await request(base, '/en/datos-busquedas-restaurante', 410, 'text/html')
   for (const [source, target] of Object.entries(routeManifest.redirects)) {
     const response = await request(base, source, 301)
     check(response.headers.get('location') === target, `${source}: Location ${response.headers.get('location')}, expected ${target}`)
@@ -188,6 +191,8 @@ try {
     await request(live, '/robots.txt', 200, 'text/plain')
     await request(live, '/sitemap.xml', 200, 'xml')
     await request(live, '/__seo_missing_route__', 404, 'text/html')
+    await request(live, '/datos-busquedas-restaurante', 410, 'text/html')
+    await request(live, '/en/datos-busquedas-restaurante', 410, 'text/html')
     for (const [source, target] of Object.entries(routeManifest.redirects)) {
       const response = await request(live, source, 301)
       check(response.headers.get('location') === target, `${live}${source}: incorrect production Location`)
