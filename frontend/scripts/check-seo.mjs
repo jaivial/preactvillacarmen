@@ -40,6 +40,52 @@ const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8')
 const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => localPath(m[1]))
 check(new Set(sitemapPaths).size === sitemapPaths.length, 'sitemap.xml: duplicate URLs')
 const sitemapSet = new Set(sitemapPaths)
+const sitemapEntries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => match[1])
+check(sitemapEntries.length === sitemapPaths.length, 'sitemap.xml: every URL must have one complete entry')
+for (const entry of sitemapEntries) {
+  const url = entry.match(/<loc>([^<]+)<\/loc>/)?.[1] || ''
+  check(new URL(url).origin === origin, `sitemap.xml: non-canonical origin ${url}`)
+  check(/^\d{4}-\d{2}-\d{2}$/.test(entry.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1] || ''), `${url}: missing/invalid lastmod`)
+  const languages = [...entry.matchAll(/<xhtml:link\b[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"/g)]
+  check(languages.length === 3, `${url}: expected three sitemap alternates`)
+  check(languages.some((match) => match[1] === 'es' && new URL(match[2]).origin === origin), `${url}: missing www Spanish alternate`)
+  check(languages.some((match) => match[1] === 'en' && new URL(match[2]).origin === origin), `${url}: missing www English alternate`)
+  check(!/\.php(?:$|[?#])|\.md(?:$|[?#])/.test(url), `${url}: legacy or Markdown URL in HTML sitemap`)
+}
+const robots = await readFile(join(dist, 'robots.txt'), 'utf8')
+for (const crawler of ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'meta-externalagent']) {
+  check(new RegExp(`User-agent: ${crawler}\\nAllow: /`).test(robots), `robots.txt: ${crawler} is not explicitly allowed`)
+}
+check(robots.includes(`Sitemap: ${origin}/sitemap.xml`), 'robots.txt: missing canonical sitemap URL')
+check(!/User-agent: [^\n]+\nDisallow: \/\n/.test(robots), 'robots.txt: an AI crawler is blocked')
+const llms = await readFile(join(dist, 'llms.txt'), 'utf8')
+check(!files.includes(join(dist, 'llms-full.txt')), 'llms-full.txt: remove the stale duplicate full-body index')
+for (const path of Object.keys(routeManifest.markdownPaths)) {
+  check(!path.startsWith('/reservas/') && !['/confirm', '/cancel', '/update-rice', '/baja-publicidad', '/backoffice'].includes(path), `${path}: private route has public Markdown`)
+}
+for (const path of ['/reservas', '/en/reservas']) check(!!routeManifest.markdownPaths[path], `${path}: public booking start page is missing Markdown`)
+for (const path of sitemapPaths) {
+  const markdownPath = routeManifest.markdownPaths[path]
+  check(!!markdownPath, `${path}: missing Markdown manifest entry`)
+  if (!markdownPath) continue
+  const markdownFile = join(dist, markdownPath.replace(/^\//, ''))
+  check(files.includes(markdownFile), `${path}: missing generated Markdown ${markdownPath}`)
+  if (!files.includes(markdownFile)) continue
+  const markdown = await readFile(markdownFile, 'utf8')
+  check(markdown.includes(`canonical: ${origin}${path === '/' ? '/' : path}`), `${markdownPath}: incorrect HTML canonical`)
+  check(markdown.includes('robots: noindex, follow'), `${markdownPath}: Markdown is not noindex`)
+  check(markdown.includes('lastmod: '), `${markdownPath}: missing lastmod`)
+  check(text(markdown).length >= 120, `${markdownPath}: insufficient public content`)
+  check(llms.includes(`${origin}${markdownPath}`), `${markdownPath}: not linked from llms.txt`)
+  check(routeManifest.lastModified[path] === markdown.match(/^lastmod: (.+)$/m)?.[1], `${markdownPath}: lastmod differs from sitemap source`)
+  if (['/arroces-y-paellas', '/guia-arroces-valencianos', '/en/arroces-y-paellas', '/en/guia-arroces-valencianos'].includes(path)) {
+    check(markdown.includes('<!--vc-active-rice-markdown:start-->') && markdown.includes('<!--vc-active-rice-markdown:end-->'), `${markdownPath}: missing live menu refresh markers`)
+    const prefix = path.startsWith('/en/') ? '/en' : ''
+    for (const menu of ['menu-del-dia', 'menu-fin-de-semana', 'menu-arrocero']) check(markdown.includes(`${origin}${prefix}/menu/${menu}`), `${markdownPath}: missing active menu backlink ${menu}`)
+  }
+  if (path === '/en') check(/lang: en/.test(markdown), '/en/index.md: wrong language')
+  if (path === '/') check(/lang: es/.test(markdown), '/index.md: wrong language')
+}
 for (const source of ['/datos-busquedas-restaurante', '/en/datos-busquedas-restaurante']) {
   check(routeManifest.gonePaths.includes(source), `${source}: retired public report must return 410`)
   check(!routeManifest.redirects[source], `${source}: retired public report must not redirect`)
@@ -86,7 +132,9 @@ for (const [path, { html }] of pages) {
   check(robotTags.length === 1, `${path}: expected one robots directive, got ${robotTags.length}`)
   check(canonicalTags.length === 1, `${path}: expected one canonical, got ${canonicalTags.length}`)
   check(canonical === `${origin}${path === '/' ? '/' : path}`, `${path}: canonical mismatch (${canonical})`)
+  const markdownAlternates = tags(html, 'link').filter((a) => a.rel === 'alternate' && a.type === 'text/markdown')
   if (indexable) {
+    check(markdownAlternates.length === 1 && markdownAlternates[0].href === `${origin}${routeManifest.markdownPaths[path]}`, `${path}: expected one text/markdown alternate to its own Markdown`)
     check(one(html, /<h1\b/gi) === 1, `${path}: expected exactly one H1 in source HTML`)
     check(sitemapSet.has(path), `${path}: indexable page missing from sitemap`)
     check(!!description && !!title, `${path}: indexable page has empty metadata`)
@@ -146,7 +194,7 @@ for (const [source, target] of Object.entries(routeManifest.redirects)) {
 check(!!routeManifest.gonePaths?.length, 'seo-routes.json: no legacy 410 paths')
 check(pages.has('/404'), 'missing generated 404.html')
 
-const mime = { '.html': 'text/html; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.json': 'application/json; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' }
+const mime = { '.html': 'text/html; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.json': 'application/json; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' }
 const fileFor = (path) => {
   if (path === '/') return join(dist, 'index.html')
   const clean = cleanPath(decodeURIComponent(path))
@@ -161,7 +209,9 @@ const server = createServer((req, res) => {
   const gone = routeManifest.gonePaths.includes(path)
   const file = gone ? join(dist, 'gone.html') : fileFor(path)
   if (!file) { res.writeHead(404, { 'Content-Type': mime['.html'] }); res.end(pages.get('/404').html); return }
-  res.writeHead(gone ? 410 : 200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream' })
+  const headers = { 'Content-Type': mime[extname(file)] || 'application/octet-stream' }
+  if (file.endsWith('.md')) headers['X-Robots-Tag'] = 'noindex, follow'
+  res.writeHead(gone ? 410 : 200, headers)
   res.end(cache.get(file))
 })
 const cache = new Map(await Promise.all(files.map(async (file) => [file, await readFile(file)])))
@@ -177,6 +227,11 @@ async function request(originBase, path, expectedStatus, expectedType) {
 try {
   await request(base, '/robots.txt', 200, 'text/plain')
   await request(base, '/sitemap.xml', 200, 'application/xml')
+  await request(base, '/llms.txt', 200, 'text/plain')
+  for (const path of ['/index.md', '/en/index.md', '/arroces-y-paellas/index.md', '/en/arroces-y-paellas/index.md', '/menu/menu-fin-de-semana/index.md']) {
+    const response = await request(base, path, 200, 'text/markdown')
+    check(response.headers.get('x-robots-tag') === 'noindex, follow', `${path}: missing noindex header`)
+  }
   await request(base, '/__seo_missing_route__', 404, 'text/html')
   await request(base, routeManifest.gonePaths[0], 410, 'text/html')
   await request(base, '/datos-busquedas-restaurante', 410, 'text/html')
@@ -190,6 +245,11 @@ try {
     const live = process.env.SEO_VERIFY_ORIGIN.replace(/\/$/, '')
     await request(live, '/robots.txt', 200, 'text/plain')
     await request(live, '/sitemap.xml', 200, 'xml')
+    await request(live, '/llms.txt', 200, 'text/plain')
+    for (const path of ['/index.md', '/en/index.md', '/arroces-y-paellas/index.md', '/en/arroces-y-paellas/index.md', '/menu/menu-fin-de-semana/index.md']) {
+      const response = await request(live, path, 200, 'text/markdown')
+      check(response.headers.get('x-robots-tag') === 'noindex, follow', `${live}${path}: missing noindex header`)
+    }
     await request(live, '/__seo_missing_route__', 404, 'text/html')
     await request(live, '/datos-busquedas-restaurante', 410, 'text/html')
     await request(live, '/en/datos-busquedas-restaurante', 410, 'text/html')
