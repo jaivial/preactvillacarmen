@@ -131,6 +131,8 @@ export function canonicalUrl(pathname: string, menus: MenuRouteEntry[] = []): st
 }
 
 export const GONE_PATHS = [
+  // Retired public report: its private equivalent lives in the backoffice.
+  '/datos-busquedas-restaurante',
   '/menusanvalentin', '/menusanvalentin.php',
   '/regala', '/regala.php',
   // Retired private administration URL: never expose it as a public page.
