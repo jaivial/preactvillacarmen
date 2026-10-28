@@ -15,7 +15,7 @@ describe('public structured data', () => {
 
   it('keeps the localized events parent in celebration breadcrumbs', () => {
     expect(breadcrumbItems('/en/bodas', 'en').map((item) => item.name)).toEqual([
-      'Home', 'Weddings and events', 'Weddings',
+      'Home', 'Weddings and events', 'Weddings in Catarroja',
     ])
     expect(breadcrumbLinks?.map((item) => item.item)).toEqual([
       'https://www.alqueriavillacarmen.com/en',
