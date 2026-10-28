@@ -8,6 +8,9 @@ import type { GroupMenuDisplay, PublicMenu } from '../../lib/types'
 // Local, responsive derivatives of the freely licensed Unsplash photographs
 // documented in docs/group-menu-photos.md. They illustrate the menu type;
 // they are not presented as photographs of Villa Carmen's dishes or rooms.
+// Versioned asset URLs bypass a stale Bunny 404 cached before all responsive
+// derivatives were deployed; no binary or licensed-source change is needed.
+const groupPhotoVersion = '20261028'
 const menuPhotos: Record<number, { name: string; alt: Record<'es' | 'en', string> }> = {
   1: { name: 'arrocero', alt: { es: 'Fotografía ilustrativa de una paella de marisco para el Menú Arrocero', en: 'Illustrative photograph of a seafood paella for the Rice Menu' } },
   2: { name: 'mediterraneo', alt: { es: 'Fotografía ilustrativa de un plato mediterráneo con verduras para el Menú Mediterráneo', en: 'Illustrative photograph of a Mediterranean dish with vegetables for the Mediterranean Menu' } },
@@ -35,7 +38,7 @@ export function GroupLanding({ menus, details }: { menus: GroupMenuDisplay[] | n
         minimum ? `${es ? 'mínimo' : 'minimum'} ${minimum} ${es ? 'personas' : 'people'}` : '',
       ].filter(Boolean).join(' · ') || (es ? 'Consulta platos, precio y condiciones' : 'View dishes, price and conditions')
       const photo = menuPhotos[menu.id]
-      const image = photo ? `/images/group-menus/${photo.name}-800.jpg` : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp'
+      const image = photo ? `/images/group-menus/${photo.name}-800.jpg?v=${groupPhotoVersion}` : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp'
       const imageSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.webp ${width}w`).join(', ') : undefined
       const imageFallbackSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.jpg ${width}w`).join(', ') : undefined
       return <DiscoveryCard key={menu.id} href={menuPath({ id: menu.id, slug: detail?.slug || menu.slug, seo_slug: detail?.seo_slug || menu.seo_slug })} title={title} description={description} image={image} imageSrcSet={imageSrcSet} imageFallbackSrcSet={imageFallbackSrcSet} imageSizes="(max-width: 600px) calc(100vw - 40px), (max-width: 1024px) calc(50vw - 40px), 360px" imageAlt={photo?.alt[lang] || (es ? `Salón de Villa Carmen · ${title}` : `Villa Carmen dining room · ${title}`)} action={action} testId={`group-menu-card-${menu.id}`} />
