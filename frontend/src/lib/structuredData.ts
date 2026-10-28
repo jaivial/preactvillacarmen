@@ -21,9 +21,11 @@ export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEn
   const items = [home]
   if (['/bodas', '/comuniones', '/eventos-empresa'].includes(path)) items.push({ name: editorialNames['/eventos'][lang], path: '/eventos' })
   const menuId = path.match(/^\/menu\/(\d+)/)?.[1]
-  const menu = menuId ? menus.find((entry) => entry.id === Number(menuId)) : undefined
+  const menu = menus.find((entry) => entry.path === path) || (menuId ? menus.find((entry) => entry.id === Number(menuId)) : undefined)
   if (menu) items.push({ name: editorialNames['/menusdegrupos'][lang], path: '/menusdegrupos' })
-  const name = menu?.title[lang].split('|')[0].trim() || editorialNames[path]?.[lang] || routeMetadata(path, menus).title[lang].split('|')[0].trim()
+  // PUBLIC_ROUTES and the catalog are the source of truth for every current
+  // page, including editorial resources and menus using an SEO slug.
+  const name = menu?.title[lang].split('|')[0].trim() || routeMetadata(path, menus).title[lang].split('|')[0].trim()
   items.push({ name, path })
   return items
 }
