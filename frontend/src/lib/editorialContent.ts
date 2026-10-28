@@ -16,7 +16,7 @@ export const riceContent: Record<Lang, EditorialContent> = {
       { heading: 'Condiciones de los menús con arroz', body: 'Las condiciones dependen del menú elegido. Consulta el mínimo de comensales, la organización por mesa, las bebidas y cualquier suplemento directamente en el menú. El equipo puede resolver dudas sobre alérgenos antes de confirmar la reserva.' },
     ],
     faq: [
-      { question: '¿Qué arroces puedo pedir?', answer: 'Las opciones publicadas en esta página proceden del Menú Arrocero activo. Su disponibilidad y la carta pueden cambiar; abre el menú correspondiente para ver la propuesta completa y actualizada.' },
+      { question: '¿Qué arroces puedo pedir?', answer: 'Las opciones publicadas en esta página proceden del menú del día, del menú de fin de semana y del Menú Arrocero, siempre que estén activos. Su disponibilidad y la carta pueden cambiar; abre el menú correspondiente para ver la propuesta completa y actualizada.' },
       { question: '¿Los arroces se sirven para una persona o para compartir?', answer: 'Depende de la carta o menú. En el Menú Arrocero de grupo rigen las condiciones de mesa completa y el mínimo de comensales indicados en su ficha. Consúltanos para otras opciones.' },
       { question: '¿Cómo reservo una comida con arroces?', answer: 'Puedes consultar disponibilidad en Reservas o escribirnos desde Contacto. Para grupos, revisa primero las condiciones del menú y la antelación necesaria para elegir los arroces.' },
     ],
@@ -35,7 +35,7 @@ export const riceContent: Record<Lang, EditorialContent> = {
       { heading: 'Conditions for menus with rice', body: 'Conditions vary by menu. Check the minimum party size, table arrangements, drinks and any supplements on the menu itself. Ask our team about allergens before confirming your booking.' },
     ],
     faq: [
-      { question: 'Which rice dishes can I order?', answer: 'The choices published on this page come from the active Rice Menu. Availability and the menu can change; open the relevant menu for its complete, up-to-date selection.' },
+      { question: 'Which rice dishes can I order?', answer: 'The choices published on this page come from the set lunch menu, weekend menu and Rice Menu whenever each one is active. Availability and the menu can change; open the relevant menu for its complete, up-to-date selection.' },
       { question: 'Are rice dishes for one person or for sharing?', answer: 'It depends on the menu. The group Rice Menu has whole-table conditions and the minimum party size stated on its page. Ask us about other options.' },
       { question: 'How do I book a meal with rice?', answer: 'Check availability under Bookings or contact us directly. For groups, first review the menu conditions and the notice required to choose your rice dishes.' },
     ],
