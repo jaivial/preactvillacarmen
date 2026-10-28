@@ -90,7 +90,8 @@ export function markdownDocument(entry) {
   const body = editorialRicePaths.has(entry.path)
     ? entry.body.replace('@@VC_ACTIVE_RICE_START@@', ACTIVE_RICE_MARKDOWN_START).replace('@@VC_ACTIVE_RICE_END@@', ACTIVE_RICE_MARKDOWN_END)
     : entry.body
-  return `---\ntitle: "${entry.title.replace(/"/g, '\\"')}"\nlang: ${entry.lang}\ncanonical: ${entry.canonical}\nalternate_${alternateLanguage}: ${entry.alternate}\nlastmod: ${entry.lastModified}\nrobots: noindex, follow\n---\n\n> ${entry.lang === 'es' ? 'Representación Markdown; la versión canónica es la página HTML enlazada arriba.' : 'Markdown representation; the linked HTML page above is the canonical version.'}\n\n${body}\n`
+  const lastmod = entry.lastModified ? `lastmod: ${entry.lastModified}\n` : ''
+  return `---\ntitle: "${entry.title.replace(/"/g, '\\"')}"\nlang: ${entry.lang}\ncanonical: ${entry.canonical}\nalternate_${alternateLanguage}: ${entry.alternate}\n${lastmod}robots: noindex, follow\n---\n\n> ${entry.lang === 'es' ? 'Representación Markdown; la versión canónica es la página HTML enlazada arriba.' : 'Markdown representation; the linked HTML page above is the canonical version.'}\n\n${body}\n`
 }
 
 export function llmsFiles(entries, { origin = DEFAULT_ORIGIN } = {}) {

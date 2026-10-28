@@ -45,7 +45,9 @@ check(sitemapEntries.length === sitemapPaths.length, 'sitemap.xml: every URL mus
 for (const entry of sitemapEntries) {
   const url = entry.match(/<loc>([^<]+)<\/loc>/)?.[1] || ''
   check(new URL(url).origin === origin, `sitemap.xml: non-canonical origin ${url}`)
-  check(/^\d{4}-\d{2}-\d{2}$/.test(entry.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1] || ''), `${url}: missing/invalid lastmod`)
+  const lastmod = entry.match(/<lastmod>([^<]*)<\/lastmod>/)?.[1]
+  const validDate = lastmod && /^\d{4}-\d{2}-\d{2}$/.test(lastmod) && new Date(`${lastmod}T00:00:00Z`).toISOString().slice(0, 10) === lastmod
+  check(!entry.includes('<lastmod') || validDate, `${url}: empty/invalid lastmod`)
   const languages = [...entry.matchAll(/<xhtml:link\b[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"/g)]
   check(languages.length === 3, `${url}: expected three sitemap alternates`)
   check(languages.some((match) => match[1] === 'es' && new URL(match[2]).origin === origin), `${url}: missing www Spanish alternate`)
@@ -74,10 +76,11 @@ for (const path of sitemapPaths) {
   const markdown = await readFile(markdownFile, 'utf8')
   check(markdown.includes(`canonical: ${origin}${path === '/' ? '/' : path}`), `${markdownPath}: incorrect HTML canonical`)
   check(markdown.includes('robots: noindex, follow'), `${markdownPath}: Markdown is not noindex`)
-  check(markdown.includes('lastmod: '), `${markdownPath}: missing lastmod`)
+  const lastmod = markdown.match(/^lastmod: (.+)$/m)?.[1]
+  check(!/^lastmod:\s*$/m.test(markdown) && (!lastmod || /^\d{4}-\d{2}-\d{2}$/.test(lastmod)), `${markdownPath}: empty/invalid lastmod`)
   check(text(markdown).length >= 120, `${markdownPath}: insufficient public content`)
   check(llms.includes(`${origin}${markdownPath}`), `${markdownPath}: not linked from llms.txt`)
-  check(routeManifest.lastModified[path] === markdown.match(/^lastmod: (.+)$/m)?.[1], `${markdownPath}: lastmod differs from sitemap source`)
+  check((routeManifest.lastModified[path] || undefined) === lastmod, `${markdownPath}: lastmod differs from sitemap source`)
   if (['/arroces-y-paellas', '/guia-arroces-valencianos', '/en/arroces-y-paellas', '/en/guia-arroces-valencianos'].includes(path)) {
     check(markdown.includes('<!--vc-active-rice-markdown:start-->') && markdown.includes('<!--vc-active-rice-markdown:end-->'), `${markdownPath}: missing live menu refresh markers`)
     const prefix = path.startsWith('/en/') ? '/en' : ''

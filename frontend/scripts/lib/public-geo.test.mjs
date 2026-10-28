@@ -44,4 +44,7 @@ test('editorial Markdown has live-menu markers and other documents do not', () =
   assert.match(editorial, /<!--vc-active-rice-markdown:end-->[\s\S]*## Preguntas frecuentes/)
   assert.match(editorial, /robots: noindex, follow/)
   assert.doesNotMatch(markdownDocument({ ...base, path: '/eventos', canonical: 'https://www.alqueriavillacarmen.com/eventos' }), /vc-active-rice-markdown/)
+  const withoutDate = markdownDocument({ ...base, path: '/eventos', lastModified: '' })
+  assert.doesNotMatch(withoutDate, /^lastmod:/m)
+  assert.match(markdownDocument(base), /^lastmod: 2026-10-28$/m)
 })

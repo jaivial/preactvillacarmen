@@ -211,7 +211,9 @@ await writeFile(join(dist, 'llms.txt'), llms.summary)
 const urlEntries = indexableGeoEntries.map((entry) => {
   const es = barePath(entry.path)
   const en = `/en${es === '/' ? '' : es}`
-  return `  <url><loc>${absolute(entry.path)}</loc><lastmod>${entry.lastModified}</lastmod><xhtml:link rel="alternate" hreflang="es" href="${absolute(es)}"/><xhtml:link rel="alternate" hreflang="en" href="${absolute(en)}"/><xhtml:link rel="alternate" hreflang="x-default" href="${absolute(es)}"/></url>`
+  // lastmod is optional; an empty element is an invalid W3C date for Google.
+  const lastmod = entry.lastModified ? `<lastmod>${entry.lastModified}</lastmod>` : ''
+  return `  <url><loc>${absolute(entry.path)}</loc>${lastmod}<xhtml:link rel="alternate" hreflang="es" href="${absolute(es)}"/><xhtml:link rel="alternate" hreflang="en" href="${absolute(en)}"/><xhtml:link rel="alternate" hreflang="x-default" href="${absolute(es)}"/></url>`
 }).join('\n')
 await writeFile(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urlEntries}\n</urlset>\n`)
 // Public documentation is deliberately available to search and AI crawlers.
