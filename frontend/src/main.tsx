@@ -7,7 +7,8 @@ import { Provider as JotaiProvider } from 'jotai'
 import { startBootLoader } from './lib/bootLoader.ts'
 import { startSmoothAnchorScroll } from './lib/anchorScroll.ts'
 import { stripLanguagePrefix } from './lib/routes.ts'
-import { trackConversion } from './lib/analytics.ts'
+// Side effect: registers the global phone/WhatsApp click tracking on every page.
+import './lib/analytics.ts'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/600.css'
 import '@fontsource/newsreader/300.css'
@@ -33,4 +34,3 @@ else render(application, container)
 
 startBootLoader()
 startSmoothAnchorScroll({ durationMs: 2000 })
-if (stripLanguagePrefix(pathname).path === '/reservas') trackConversion('reservation_start')

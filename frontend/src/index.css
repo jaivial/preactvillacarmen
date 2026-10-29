@@ -1746,6 +1746,15 @@ svg {
 .contact-visit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 24px; }
 .contact-visit-grid p { line-height: 1.7; color: var(--muted); }
 .contact-visit a { color: var(--green); }
+.contact-nearby { margin-top: 28px; }
+.contact-nearby p { line-height: 1.7; color: var(--muted); max-width: 72ch; }
+
+/* Special menus: crawlable practical facts below the menu images (special_menu_practical_v1). */
+.specialMenuPractical { max-width: 820px; padding-bottom: 56px; }
+.specialMenuPractical h2 { margin-top: 28px; }
+.specialMenuPracticalList { display: grid; gap: 10px; padding-left: 18px; line-height: 1.7; color: var(--muted); }
+.specialMenuPracticalList strong { color: inherit; font-weight: 600; }
+.specialMenuPracticalList a { color: var(--green); }
 
 /* Editorial landing pages: all copy remains in the prerendered HTML. */
 .editorial-page { padding-bottom: 72px; }

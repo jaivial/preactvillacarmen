@@ -144,7 +144,8 @@ for (const path of paths) {
   const legalSlug = legalSlugs[bare]
   const pageData = {
     ...baseData,
-    menus: menu ? { [menu.id]: menu } : isGroup || bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos' ? menus : {},
+    // Special menus also embed the other seasonal menus so special_menu_practical_v1 can link them.
+    menus: menu ? (seasonalMenus.includes(menu) ? Object.fromEntries(seasonalMenus.map((item) => [item.id, item])) : { [menu.id]: menu }) : isGroup || bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos' ? menus : {},
     homeMenus: bare === '/' ? homeMenus : undefined,
     groupMenus: isGroup ? groupMenus : undefined,
     postres: bare === '/postres' ? postres : undefined,

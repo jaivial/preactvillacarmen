@@ -81,6 +81,12 @@ export function Contacto() {
           <article><h3>{lang === 'es' ? 'Aparcamiento' : 'Parking'}</h3><p>{lang === 'es' ? 'El restaurante dispone de aparcamiento junto al establecimiento. Si necesitas una plaza adaptada o vienes en un vehículo de gran tamaño, consúltanos antes de la visita para confirmar el acceso.' : 'The restaurant has parking next to the premises. If you need an accessible space or are arriving in a large vehicle, ask us before your visit so we can confirm access.'}</p></article>
           <article><h3>{lang === 'es' ? 'Transporte y horarios especiales' : 'Transport and special hours'}</h3><p>{lang === 'es' ? 'Para venir en transporte público, comprueba en la ruta la línea, la parada y el horario actualizados desde tu origen. En festivos y celebraciones especiales el horario puede variar: confírmalo al reservar o por teléfono o WhatsApp antes de desplazarte.' : 'For public transport, check the route for current services, stops and timetables from your starting point. Hours can vary on public holidays and special celebrations: confirm when booking or by phone or WhatsApp before travelling.'}</p></article>
         </div>
+        <div class="contact-nearby" data-testid="contact-nearby-towns" data-coordination-id="contact_nearby_towns_v1">
+          <h3 data-testid="contact-nearby-title">{lang === 'es' ? 'Cerca de Albal, Massanassa y toda l\'Horta Sud' : 'Close to Albal, Massanassa and l\'Horta Sud'}</h3>
+          <p data-testid="contact-nearby-text">{lang === 'es'
+            ? 'Estamos en el límite entre Catarroja y Albal: a menos de 1 km de Albal y a unos 2 km de Massanassa y Beniparrell. Benetússer, Alfafar y Sedaví quedan a unos 3–4 km, Silla a unos 5 km y el centro de Valencia a unos 8 km en línea recta, así que es fácil venir a comer desde cualquier pueblo de l\'Horta Sud. El Palmar y el parque natural de la Albufera están a unos 7 km.'
+            : 'We sit on the border between Catarroja and Albal: less than 1 km from Albal and about 2 km from Massanassa and Beniparrell. Benetússer, Alfafar and Sedaví are about 3–4 km away, Silla about 5 km and Valencia city centre about 8 km as the crow flies, so it is an easy lunch trip from anywhere in l\'Horta Sud. El Palmar and the Albufera natural park are about 7 km away.'}</p>
+        </div>
         <p>{lang === 'es' ? 'También puedes escribirnos a ' : 'You can also email us at '}<a href={`mailto:${RESTAURANT.email}`}>{RESTAURANT.email}</a>.</p>
       </section>
     </div>

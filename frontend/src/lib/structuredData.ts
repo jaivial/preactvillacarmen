@@ -41,11 +41,16 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
     '@type': 'Restaurant',
     '@id': `${SITE_ORIGIN}/#restaurant`,
     name: RESTAURANT.name,
+    // Name variants Google and directories already use for this business.
+    alternateName: ['Alqueria Villa Carmen', 'Alquer\u00eda Vila Carmen', 'Villa Carmen Catarroja'],
     url: `${SITE_ORIGIN}/`,
     image: [SOCIAL_IMAGE],
     telephone: RESTAURANT.phone,
     email: RESTAURANT.email,
     servesCuisine: ['Mediterranean', 'Rice'],
+    priceRange: '\u20ac\u20ac',
+    // Coordination id: local_area_served_v1 - towns covered by /contacto (contact_nearby_towns_v1).
+    areaServed: ['Catarroja', 'Albal', 'Massanassa', 'Beniparrell', 'Benet\u00fasser', 'Alfafar', 'Sedav\u00ed', 'Silla', 'Valencia'].map((name) => ({ '@type': 'City', name })),
     acceptsReservations: new URL(localizedPath('/reservas', lang), SITE_ORIGIN).href,
     menu: `${SITE_ORIGIN}/#menus`,
     address: {
