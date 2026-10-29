@@ -3373,23 +3373,79 @@ svg {
     opacity: 1;
 }
 
-.footer-maps {
+.footer-contact-phone {
+    margin: 0 0 14px;
+}
+
+.footer-contact-number {
+    display: block;
+    margin-bottom: 8px;
+    color: rgba(0, 0, 0, 0.88);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.015em;
+}
+
+.footer-contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.footer-contact-action {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    margin-top: 12px;
+    min-height: 44px;
     padding: 8px 14px;
     border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 999px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(6px);
     color: rgba(0, 0, 0, 0.82);
     font-size: 13px;
-    letter-spacing: 0.02em;
+    font-weight: 500;
+    text-decoration: none;
     transition:
         transform 180ms ease,
         border-color 180ms ease,
-        background 180ms ease;
+        background 180ms ease,
+        color 180ms ease;
+}
+
+.footer-contact-action:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 0, 0, 0.24);
+    background: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.96);
+}
+
+.footer-contact-action:focus-visible,
+.footer-maps:focus-visible {
+    outline: 2px solid rgba(9, 121, 105, 0.72);
+    outline-offset: 3px;
+}
+
+.footer-maps {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    margin-top: 14px;
+    padding: 8px 15px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+    color: rgba(0, 0, 0, 0.82);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        background 180ms ease,
+        color 180ms ease;
 }
 
 .footer-maps:hover {
@@ -3400,9 +3456,9 @@ svg {
 }
 
 .footer-maps-icon {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
 }
 
 .footer-social {

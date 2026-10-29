@@ -1,3 +1,4 @@
+import { MapPin, Phone } from 'lucide-react'
 import { Link } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { OPENING_HOURS, RESTAURANT } from '../lib/restaurant'
@@ -17,40 +18,32 @@ export function ClientFooter() {
           <address class="footer-small footer-address">
             {OPENING_HOURS.map((entry) => <span key={entry.days.join('-')}>{entry[lang]}</span>)}
           </address>
-          <a class="footer-link" href={`tel:${RESTAURANT.phone}`}>{RESTAURANT.phone}</a>
           <a
             class="footer-maps"
             href={RESTAURANT.directions}
             target="_blank"
             rel="noreferrer"
           >
-            <img
-              class="footer-maps-icon"
-              src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/google-maps-dark.svg"
-              alt=""
-              width="18"
-              height="18"
-              loading="lazy"
-              decoding="async"
-            />
+            <MapPin class="footer-maps-icon" size={19} strokeWidth={1.8} aria-hidden="true" />
             <span>{t('footer.openMaps')}</span>
           </a>
         </div>
 
         <div class="footer-col">
           <p class="footer-title">{t('footer.contact')}</p>
-          <a class="footer-link footer-link--icon" href="https://wa.me/34638857294" target="_blank" rel="noreferrer">
-            <img
-              class="footer-link-icon"
-              src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/whatsapp.svg"
-              alt=""
-              width="18"
-              height="18"
-              loading="lazy"
-              decoding="async"
-            />
-            <span>638 85 72 94</span>
-          </a>
+          <div class="footer-contact-phone">
+            <span class="footer-contact-number">+34 638 85 72 94</span>
+            <div class="footer-contact-actions" aria-label={lang === 'es' ? 'Contactar por teléfono o WhatsApp' : 'Contact by phone or WhatsApp'}>
+              <a class="footer-contact-action" href={`tel:${RESTAURANT.phone}`}>
+                <Phone class="footer-link-icon" size={18} strokeWidth={1.8} aria-hidden="true" />
+                <span>{lang === 'es' ? 'Llamar' : 'Call'}</span>
+              </a>
+              <a class="footer-contact-action" href={`https://wa.me/${RESTAURANT.phone.replace('+', '')}`} target="_blank" rel="noreferrer">
+                <WhatsAppIcon />
+                <span>WhatsApp</span>
+              </a>
+            </div>
+          </div>
           <a class="footer-link footer-link--icon" href="mailto:reservas@alqueriavillacarmen.com">
             <MailIcon />
             <span>reservas@alqueriavillacarmen.com</span>
@@ -102,6 +95,14 @@ function MailIcon() {
     >
       <rect width="20" height="16" x="2" y="4" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  )
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg class="footer-link-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="M12.04 2a9.84 9.84 0 0 0-8.51 14.78L2 22l5.37-1.41A9.96 9.96 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.19.84.85-3.11-.2-.32a8.11 8.11 0 1 1 7.02 3.91Zm4.47-6.08c-.24-.12-1.45-.71-1.67-.8-.22-.08-.39-.12-.55.13-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.03-.38-1.97-1.22a7.4 7.4 0 0 1-1.36-1.69c-.14-.24-.02-.37.1-.49.11-.11.25-.28.37-.43.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.43-.06-.12-.55-1.32-.75-1.8-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.43.06-.65.3-.22.24-.85.83-.85 2.03s.87 2.36 1 2.52c.12.16 1.72 2.63 4.17 3.69.58.25 1.04.4 1.4.51.59.19 1.12.16 1.54.1.47-.07 1.45-.59 1.65-1.17.2-.57.2-1.07.14-1.17-.06-.1-.22-.16-.46-.28Z" />
     </svg>
   )
 }
