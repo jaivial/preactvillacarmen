@@ -123,6 +123,9 @@ for (const match of groupLanding.matchAll(/(?:src|srcset)="([^"]+)"/gi)) {
 const titles = new Map()
 const descriptions = new Map()
 const alternateOwners = new Map()
+const webManifest = JSON.parse(await readFile(join(dist, 'site.webmanifest'), 'utf8'))
+check(webManifest.icons.some((icon) => icon.src === '/favicons/favicon-192x192.png' && icon.sizes === '192x192'), 'site.webmanifest: missing 192px icon')
+check(webManifest.icons.some((icon) => icon.src === '/favicons/favicon-512x512.png' && icon.sizes === '512x512'), 'site.webmanifest: missing 512px icon')
 for (const [path, { html }] of pages) {
   if (path === '/gone') continue
   const isPublicPage = !path.startsWith('/backoffice') && !path.startsWith('/downloads/')
@@ -135,6 +138,17 @@ for (const [path, { html }] of pages) {
       check(tags(footer, 'a').some((anchor) => anchor.href === `${langPrefix}${target}`), `${path}: missing prerendered footer link ${langPrefix}${target}`)
     }
   }
+  const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1] || html
+  const links = tags(head, 'link')
+  const favicons = links.filter((link) => link.rel?.split(/\s+/).includes('icon'))
+  check(favicons.some((link) => link.href === '/favicon.ico'), `${path}: missing ICO favicon`)
+  check(favicons.some((link) => link.type === 'image/svg+xml' && link.href === '/favicons/favicon.svg'), `${path}: missing SVG favicon`)
+  for (const size of [16, 32, 192, 512]) {
+    check(favicons.some((link) => link.type === 'image/png' && link.sizes === `${size}x${size}` && link.href === `/favicons/favicon-${size}x${size}.png`), `${path}: missing ${size}px PNG favicon`)
+  }
+  check(links.some((link) => link.rel === 'apple-touch-icon' && link.sizes === '180x180' && link.href === '/favicons/apple-touch-icon.png'), `${path}: missing apple-touch-icon`)
+  check(links.filter((link) => link.rel === 'manifest').length === 1 && links.some((link) => link.rel === 'manifest' && link.href === '/site.webmanifest'), `${path}: expected one site.webmanifest link`)
+  check(tags(head, 'meta').some((meta) => meta.name === 'theme-color' && meta.content === '#fffdf8'), `${path}: missing light favicon theme color`)
   const lang = html.match(/<html\b[^>]*\blang="([^"]+)"/i)?.[1]
   const validLanguage = path.startsWith('/downloads/') ? lang === 'es' || lang === 'en' : lang === (path === '/en' || path.startsWith('/en/') ? 'en' : 'es')
   check(validLanguage, `${path}: wrong html lang (${lang})`)
