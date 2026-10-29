@@ -6,11 +6,21 @@ import { DiscoveryCard } from '../../components/DiscoveryCard'
 import type { GroupMenuDisplay, PublicMenu } from '../../lib/types'
 
 // Local, responsive card photographs documented in docs/group-menu-photos.md.
-// Arrocero and Mediterráneo are illustrative stock photographs; Level uses
-// Villa Carmen's own scallop, prawn, caviar and microgreen dish photograph.
+// Mediterráneo is an illustrative stock photograph; Arrocero and Level use
+// Villa Carmen's own paella and scallop dish photographs.
 const groupPhotoVersion = '20261028'
 const menuPhotos: Record<number, { name: string; alt: Record<'es' | 'en', string>; title?: Record<'es' | 'en', string> }> = {
-  1: { name: 'arrocero', alt: { es: 'Fotografía ilustrativa de una paella de marisco para el Menú Arrocero', en: 'Illustrative photograph of a seafood paella for the Rice Menu' } },
+  1: {
+    name: 'paella-marinera-luz-dorada-menu-arrocero',
+    alt: {
+      es: 'Paella marinera con gambas y pulpo bajo la luz dorada del Menú Arrocero de Alquería Villa Carmen',
+      en: 'Seafood paella with prawns and octopus in golden light from the Rice Menu at Alquería Villa Carmen',
+    },
+    title: {
+      es: 'Paella marinera bajo la luz dorada · Menú Arrocero',
+      en: 'Seafood paella in golden light · Rice Menu',
+    },
+  },
   2: { name: 'mediterraneo', alt: { es: 'Fotografía ilustrativa de un plato mediterráneo con verduras para el Menú Mediterráneo', en: 'Illustrative photograph of a Mediterranean dish with vegetables for the Mediterranean Menu' } },
   3: {
     name: 'vieira-gambas-caviar-microbrotes-menu-grupo-level',
