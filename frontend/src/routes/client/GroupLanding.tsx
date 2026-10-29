@@ -5,16 +5,24 @@ import { initialMenu } from '../../lib/prerenderData'
 import { DiscoveryCard } from '../../components/DiscoveryCard'
 import type { GroupMenuDisplay, PublicMenu } from '../../lib/types'
 
-// Local, responsive derivatives of the freely licensed Unsplash photographs
-// documented in docs/group-menu-photos.md. They illustrate the menu type;
-// they are not presented as photographs of Villa Carmen's dishes or rooms.
-// Versioned asset URLs bypass a stale Bunny 404 cached before all responsive
-// derivatives were deployed; no binary or licensed-source change is needed.
+// Local, responsive card photographs documented in docs/group-menu-photos.md.
+// Arrocero and Mediterráneo are illustrative stock photographs; Level uses
+// Villa Carmen's own scallop, prawn, caviar and microgreen dish photograph.
 const groupPhotoVersion = '20261028'
-const menuPhotos: Record<number, { name: string; alt: Record<'es' | 'en', string> }> = {
+const menuPhotos: Record<number, { name: string; alt: Record<'es' | 'en', string>; title?: Record<'es' | 'en', string> }> = {
   1: { name: 'arrocero', alt: { es: 'Fotografía ilustrativa de una paella de marisco para el Menú Arrocero', en: 'Illustrative photograph of a seafood paella for the Rice Menu' } },
   2: { name: 'mediterraneo', alt: { es: 'Fotografía ilustrativa de un plato mediterráneo con verduras para el Menú Mediterráneo', en: 'Illustrative photograph of a Mediterranean dish with vegetables for the Mediterranean Menu' } },
-  3: { name: 'level', alt: { es: 'Fotografía ilustrativa de un comedor preparado para una comida de grupo', en: 'Illustrative photograph of a dining room set for a group meal' } },
+  3: {
+    name: 'vieira-gambas-caviar-microbrotes-menu-grupo-level',
+    alt: {
+      es: 'Vieira con gambas, caviar y microbrotes del Menú de grupo Level de Alquería Villa Carmen',
+      en: 'Scallop with prawns, caviar and microgreens from the Group Menu Level at Alquería Villa Carmen',
+    },
+    title: {
+      es: 'Vieira con gambas, caviar y microbrotes · Menú de grupo Level',
+      en: 'Scallop with prawns, caviar and microgreens · Group Menu Level',
+    },
+  },
 }
 
 export function GroupLanding({ menus, details }: { menus: GroupMenuDisplay[] | null | undefined; details: Record<number, PublicMenu> }) {
@@ -41,7 +49,7 @@ export function GroupLanding({ menus, details }: { menus: GroupMenuDisplay[] | n
       const image = photo ? `/images/group-menus/${photo.name}-800.jpg?v=${groupPhotoVersion}` : 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp'
       const imageSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.webp?v=${groupPhotoVersion} ${width}w`).join(', ') : undefined
       const imageFallbackSrcSet = photo ? [480, 800, 1200].map((width) => `/images/group-menus/${photo.name}-${width}.jpg?v=${groupPhotoVersion} ${width}w`).join(', ') : undefined
-      return <DiscoveryCard key={menu.id} href={menuPath({ id: menu.id, slug: detail?.slug || menu.slug, seo_slug: detail?.seo_slug || menu.seo_slug })} title={title} description={description} image={image} imageSrcSet={imageSrcSet} imageFallbackSrcSet={imageFallbackSrcSet} imageSizes="(max-width: 600px) calc(100vw - 40px), (max-width: 1024px) calc(50vw - 40px), 360px" imageAlt={photo?.alt[lang] || (es ? `Salón de Villa Carmen · ${title}` : `Villa Carmen dining room · ${title}`)} action={action} testId={`group-menu-card-${menu.id}`} />
+      return <DiscoveryCard key={menu.id} href={menuPath({ id: menu.id, slug: detail?.slug || menu.slug, seo_slug: detail?.seo_slug || menu.seo_slug })} title={title} description={description} image={image} imageSrcSet={imageSrcSet} imageFallbackSrcSet={imageFallbackSrcSet} imageSizes="(max-width: 600px) calc(100vw - 40px), (max-width: 1024px) calc(50vw - 40px), 360px" imageAlt={photo?.alt[lang] || (es ? `Salón de Villa Carmen · ${title}` : `Villa Carmen dining room · ${title}`)} imageTitle={photo?.title?.[lang]} action={action} testId={`group-menu-card-${menu.id}`} />
     })}</div></section> : null}
     <section class="container editorial-faq"><h2>{es ? 'Preguntas antes de reservar' : 'Questions before booking'}</h2>
       <details><summary><span>{es ? '¿Qué incluyen las bebidas y qué suplementos puede haber?' : 'What drinks are included and what supplements may apply?'}</span><span class="editorial-faq-icon" aria-hidden="true" /></summary><p>{es ? 'Cada ficha indica las bebidas, el café y cualquier suplemento aplicable. Consulta el menú elegido antes de reservar; las condiciones pueden ser distintas entre propuestas.' : 'Each menu states its drinks, coffee and any applicable supplements. Check your chosen menu before booking; conditions can differ between options.'}</p></details>

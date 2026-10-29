@@ -7,6 +7,7 @@ type Props = {
   description: string
   image: string
   imageAlt: string
+  imageTitle?: string
   action: string
   testId?: string
   imageSrcSet?: string
@@ -15,7 +16,7 @@ type Props = {
 }
 
 export function DiscoveryCard(props: Props) {
-  const image = <img src={props.image} srcSet={props.imageFallbackSrcSet} sizes={props.imageSizes} alt={props.imageAlt} width="1200" height="900" loading="lazy" decoding="async" />
+  const image = <img src={props.image} srcSet={props.imageFallbackSrcSet} sizes={props.imageSizes} alt={props.imageAlt} title={props.imageTitle} width="1200" height="900" loading="lazy" decoding="async" />
   const content = <>
     <span class="discovery-card__media">{props.imageSrcSet ? <picture><source type="image/webp" srcSet={props.imageSrcSet} sizes={props.imageSizes} />{image}</picture> : image}</span>
     <span class="discovery-card__body">

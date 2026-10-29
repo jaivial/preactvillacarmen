@@ -72,7 +72,12 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
     es: {
       kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Eventos de empresa en Catarroja',
       intro: 'Organiza una comida de equipo, un encuentro con clientes o la celebración de tu empresa en Villa Carmen. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
-      image: 'https://villacarmenmedia.b-cdn.net/images/eventos/eventos/16%3A9/eventos9-16_7.webp', imageAlt: 'Evento organizado en Alquería Villa Carmen',
+      image: '/images/discovery/banquete-dorado-800.jpg',
+      imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
+      imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
+      imageSizes: '(max-width: 800px) calc(100vw - 40px), 1280px',
+      imageWidth: 800, imageHeight: 600,
+      imageAlt: 'Mesa de banquete dorado preparada para un evento de empresa en Alquería Villa Carmen',
       sections: [
         { heading: 'Un formato para cada encuentro', body: 'No todos los eventos necesitan el mismo montaje. Cuéntanos si se trata de una comida de equipo, presentación, reunión o celebración y revisaremos contigo el uso de salones y jardines.' },
         { heading: 'Menús y condiciones fáciles de consultar', body: 'Las fichas de grupos muestran las propuestas activas, precios por persona, mínimos, bebidas y suplementos. El equipo confirmará la selección final, los horarios y las necesidades alimentarias.' },
@@ -87,7 +92,12 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
     en: {
       kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company events in Catarroja',
       intro: 'Organise a team meal, client gathering or company celebration at Villa Carmen. We combine spaces, cuisine and coordination around the purpose of your event.',
-      image: 'https://villacarmenmedia.b-cdn.net/images/eventos/eventos/16%3A9/eventos9-16_7.webp', imageAlt: 'Event at Alqueria Villa Carmen',
+      image: '/images/discovery/banquete-dorado-800.jpg',
+      imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
+      imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
+      imageSizes: '(max-width: 800px) calc(100vw - 40px), 1280px',
+      imageWidth: 800, imageHeight: 600,
+      imageAlt: 'Golden banquet table set for a company event at Alquería Villa Carmen',
       sections: [
         { heading: 'A format for every gathering', body: 'Not every event needs the same layout. Tell us whether it is a team meal, presentation, meeting or celebration and we will review how our rooms and gardens could work.' },
         { heading: 'Clear menus and conditions', body: 'Group menu pages show current options, per-person prices, minimums, drinks and supplements. Our team will confirm the final selection, schedule and dietary requirements.' },
