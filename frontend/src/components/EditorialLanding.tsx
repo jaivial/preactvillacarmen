@@ -8,6 +8,9 @@ export type EditorialContent = {
   intro: string
   image?: string
   imageAlt?: string
+  imageSrcSet?: string
+  imageFallbackSrcSet?: string
+  imageSizes?: string
   imageCaption?: string
   imageWidth?: number
   imageHeight?: number
@@ -30,7 +33,10 @@ export function EditorialLanding({ content, children, id }: {
         <p class="editorial-lead">{content.intro}</p>
       </header>
       {content.image ? <figure class="editorial-hero container">
-        <img src={content.image} alt={content.imageAlt || ''} width={content.imageWidth || 1280} height={content.imageHeight || 720} fetchpriority="high" decoding="async" />
+        <picture>
+          {content.imageSrcSet ? <source type="image/webp" srcSet={content.imageSrcSet} sizes={content.imageSizes} /> : null}
+          <img src={content.image} srcSet={content.imageFallbackSrcSet} sizes={content.imageSizes} alt={content.imageAlt || ''} width={content.imageWidth || 1280} height={content.imageHeight || 720} fetchpriority="high" decoding="async" />
+        </picture>
         {content.imageCaption ? <figcaption>{content.imageCaption}</figcaption> : null}
       </figure> : null}
       <div class="container editorial-sections">
