@@ -4,6 +4,7 @@ declare global {
   interface Window {
     dataLayer?: Array<Record<string, unknown>>
     gtag?: (...args: unknown[]) => void
+    umami?: { track: (event: string, data?: Record<string, unknown>) => void }
   }
 }
 
@@ -28,6 +29,7 @@ export function trackConversion(event: ConversionName, parameters: Record<string
   window.dataLayer = window.dataLayer || []
   window.dataLayer.push(payload)
   window.gtag?.('event', event, { ...acquisition, ...parameters })
+  window.umami?.track(event, { ...acquisition, ...parameters })
 }
 
 const conversions: Record<string, ConversionName> = {
