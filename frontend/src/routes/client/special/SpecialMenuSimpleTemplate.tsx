@@ -2,6 +2,7 @@ import type { PublicMenu } from '../../../lib/types'
 import { useI18n } from '../../../lib/i18n'
 import { CtaButton } from '../../../components/ui/CtaButton'
 import { publicMenuH1 } from '../menuPublicHelpers'
+import { SpecialMenuPractical } from './SpecialMenuPractical'
 
 function formatEuro(value: number): string {
   return `${Number.isInteger(value) ? value : value.toFixed(2)}€`
@@ -144,6 +145,7 @@ export function SpecialMenuSimpleTemplate(props: {
           ) : null}
         </div>
       </section>
+      <SpecialMenuPractical menu={props.menu} />
     </div>
   )
 }
