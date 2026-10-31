@@ -6,6 +6,7 @@ import { prerenderData } from '../lib/prerenderData'
 import { equivalentLanguagePath, menuPath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
 import { structuredData } from '../lib/structuredData'
 import type { PublicMenu } from '../lib/types'
+import { menuSEOContent } from '../lib/menuSeoContent'
 import { absoluteMarkdownUrl } from '../../scripts/lib/public-geo.mjs'
 
 export function catalogRoutesFor(menus: Record<string, PublicMenu>): MenuRouteEntry[] {
@@ -15,6 +16,8 @@ export function catalogRoutesFor(menus: Record<string, PublicMenu>): MenuRouteEn
       slug: menu.slug || '',
       seo_slug: menu.seo_slug,
       path: menuPath(menu),
+      price: menu.price,
+      faq: { es: menuSEOContent(menu, 'es').faq, en: menuSEOContent(menu, 'en').faq },
       title: {
         es: menu.seo_title?.trim() || `${menu.menu_title} | Alquería Villa Carmen`,
         en: menu.seo_title_english?.trim() || `${localized(menu.menu_title, menu.menu_title_english, 'en')} | Alqueria Villa Carmen`,
@@ -60,7 +63,7 @@ export function RouteHead() {
     document.documentElement.lang = lang
     const values: Record<string, string> = {
       description: metadata.description[lang],
-      robots: metadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,nofollow',
+      robots: metadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,follow',
       'og:title': metadata.title[lang],
       'og:description': metadata.description[lang],
       'og:url': canonical,
@@ -120,7 +123,7 @@ export function renderHead(pathname: string): string {
   const tags = [
     `<title>${escape(metadata.title[lang])}</title>`,
     `<meta name="description" content="${escape(metadata.description[lang])}" data-seo="description" />`,
-    `<meta name="robots" content="${metadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,nofollow'}" data-seo="robots" />`,
+    `<meta name="robots" content="${metadata.indexable ? 'index,follow,max-image-preview:large' : 'noindex,follow'}" data-seo="robots" />`,
     `<link rel="canonical" href="${canonical}" data-seo="canonical" />`,
     ...(hasPublicMarkdown ? [`<link rel="alternate" type="text/markdown" href="${absoluteMarkdownUrl(metadata.canonicalPath, SITE_ORIGIN)}" />`] : []),
     `<meta property="og:type" content="website" />`,

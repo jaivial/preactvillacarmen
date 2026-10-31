@@ -107,6 +107,7 @@ const editorialDates = new Map([
   ['/arroces-y-paellas', gitDate('src/lib/editorialContent.ts')],
   ['/guia-arroces-valencianos', gitDate('src/lib/editorialContent.ts')],
   ['/checklist-celebraciones', gitDate('src/lib/celebrationContent.ts')],
+  ['/restaurante-albufera-catarroja', gitDate('src/lib/resourceContent.ts')],
   ['/eventos', gitDate('src/routes/client/Eventos.tsx')],
   ['/bodas', gitDate('src/routes/client/CelebrationLanding.tsx')],
   ['/comuniones', gitDate('src/routes/client/CelebrationLanding.tsx')],

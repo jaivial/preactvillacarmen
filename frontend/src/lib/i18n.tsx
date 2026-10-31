@@ -27,6 +27,8 @@ const DICT: Dictionary = {
 
   'common.ok': { es: 'Aceptar', en: 'OK' },
   'editorial.faq': { es: 'Preguntas frecuentes', en: 'Frequently asked questions' },
+  'menu.seo.about': { es: 'Sobre este men\u00fa', en: 'About this menu' },
+  'resource.albufera': { es: 'Cerca de l\u2019Albufera', en: 'Near l\u2019Albufera' },
   'editorial.cta.title': { es: 'Preparamos tu visita', en: 'Plan your visit' },
   'editorial.cta.proposal': { es: 'Pedir una propuesta', en: 'Request a proposal' },
   'editorial.rice': { es: 'Arroces y paellas', en: 'Rice and paellas' },
@@ -65,7 +67,7 @@ const DICT: Dictionary = {
 
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
   'home.hero.title': { es: 'Alquer\u00eda Villa Carmen', en: 'Alqueria Villa Carmen' },
-  'home.hero.intent': { es: 'Restaurante de arroces en Catarroja', en: 'Rice restaurant in Catarroja' },
+  'home.hero.intent': { es: 'Restaurante en Catarroja, junto a l\u2019Albufera', en: 'Restaurant in Catarroja, near l\u2019Albufera' },
   'home.hero.tagline': { es: 'Tradici\u00f3n y gastronom\u00eda mediterr\u00e1nea', en: 'Mediterranean tradition and gastronomy' },
   'home.hero.scroll': { es: 'Ad\u00e9ntrate en la alquer\u00eda', en: 'Step into the alqueria' },
 
