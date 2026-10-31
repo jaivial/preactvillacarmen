@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { geoManifest, llmsFiles, markdownDocument, markdownPath } from './lib/public-geo.mjs'
+import { EDITORIAL_LASTMOD } from './lib/editorial-lastmod.mjs'
 
 const dist = new URL('../dist/', import.meta.url).pathname
 const repository = new URL('../../', import.meta.url).pathname
@@ -101,29 +102,43 @@ const gitDate = (file) => {
   try { return execFileSync('git', ['log', '-1', '--format=%cs', '--', `frontend/${file}`], { cwd: repository, encoding: 'utf8' }).trim() }
   catch { return '' }
 }
-const editorialDates = new Map([
-  ['/', gitDate('src/routes/client/Home.tsx')],
-  ['/contacto', gitDate('src/routes/client/Contacto.tsx')],
-  ['/arroces-y-paellas', gitDate('src/lib/editorialContent.ts')],
-  ['/guia-arroces-valencianos', gitDate('src/lib/editorialContent.ts')],
-  ['/checklist-celebraciones', gitDate('src/lib/celebrationContent.ts')],
-  ['/restaurante-albufera-catarroja', gitDate('src/lib/resourceContent.ts')],
-  ['/eventos', gitDate('src/routes/client/Eventos.tsx')],
-  ['/bodas', gitDate('src/routes/client/CelebrationLanding.tsx')],
-  ['/comuniones', gitDate('src/routes/client/CelebrationLanding.tsx')],
-  ['/bautizos', gitDate('src/lib/celebrationContent.ts')],
-  ['/eventos-empresa', gitDate('src/lib/celebrationContent.ts')],
-  ['/menusdegrupos', gitDate('src/routes/client/GroupLanding.tsx')],
-  ['/postres', gitDate('src/routes/client/Postres.tsx')],
-  ['/cafes', gitDate('src/routes/client/Cafes.tsx')],
-  ['/bebidas', gitDate('src/routes/client/Bebidas.tsx')],
-  ['/vinos', gitDate('src/routes/client/Vinos.tsx')],
+const editorialFiles = new Map([
+  ['/', 'src/routes/client/Home.tsx'],
+  ['/contacto', 'src/routes/client/Contacto.tsx'],
+  ['/arroces-y-paellas', 'src/lib/editorialContent.ts'],
+  ['/guia-arroces-valencianos', 'src/lib/editorialContent.ts'],
+  ['/checklist-celebraciones', 'src/lib/celebrationContent.ts'],
+  ['/restaurante-albufera-catarroja', 'src/lib/resourceContent.ts'],
+  ['/eventos', 'src/routes/client/Eventos.tsx'],
+  ['/bodas', 'src/routes/client/CelebrationLanding.tsx'],
+  ['/comuniones', 'src/routes/client/CelebrationLanding.tsx'],
+  ['/bautizos', 'src/lib/celebrationContent.ts'],
+  ['/eventos-empresa', 'src/lib/celebrationContent.ts'],
+  ['/menusdegrupos', 'src/routes/client/GroupLanding.tsx'],
+  ['/postres', 'src/routes/client/Postres.tsx'],
+  ['/cafes', 'src/routes/client/Cafes.tsx'],
+  ['/bebidas', 'src/routes/client/Bebidas.tsx'],
+  ['/vinos', 'src/routes/client/Vinos.tsx'],
 ])
 const dateOnly = (value) => String(value || '').slice(0, 10)
-const newest = (...dates) => dates.map(dateOnly).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort().at(-1) || gitDate('src/lib/routes.ts')
+const validDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly(value)) ? dateOnly(value) : '')
+// La fecha editorial sale del mapa versionado (la fuente de la verdad: en
+// produccion no hay .git) y, si el build tiene historico, de git. El mapa
+// manda; git solo pisa cuando aporta una fecha mas reciente.
+const editorialDates = new Map([
+  ...Object.entries(EDITORIAL_LASTMOD).map(([route, date]) => [route, validDate(date)]),
+  ...[...editorialFiles].map(([route, file]) => [route, validDate(gitDate(file))]).filter(([, date]) => date),
+])
+// Ultimo recurso para que ninguna URL del sitemap se quede sin fecha: la
+// revision mas reciente del sitio.
+const fallbackDate = validDate(gitDate('src/lib/routes.ts'))
+  || Object.values(EDITORIAL_LASTMOD).map(validDate).filter(Boolean).sort().at(-1)
+  || ''
+const newest = (...dates) => dates.map(dateOnly).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort().at(-1) || fallbackDate
 const lastModified = ({ bare, menu, legalPage }) => newest(
   editorialDates.get(bare),
   menu?.modified_at,
+  menu?.created_at,
   legalPage?.updatedAt,
   bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos'
     ? [41, 42, 1].map((id) => menus[String(id)]?.modified_at)
@@ -222,9 +237,12 @@ await writeFile(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"
 // Public documentation is deliberately available to search and AI crawlers.
 // Private/backoffice and noindex booking flows are not added to any index.
 const aiCrawlers = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'meta-externalagent']
+// Nada de esto es contenido: ni la API, ni las descargas, ni las URLs con
+// parametros (los enlaces de reserva van con token y no deben indexarse).
+const privatePaths = ['Disallow: /backoffice', 'Disallow: /downloads/', 'Disallow: /api/', 'Disallow: /*?']
 const robots = [
-  'User-agent: *', 'Allow: /', 'Disallow: /backoffice', 'Disallow: /downloads/', '',
-  ...aiCrawlers.flatMap((agent) => [`User-agent: ${agent}`, 'Allow: /', 'Disallow: /backoffice', 'Disallow: /downloads/', '']),
+  'User-agent: *', 'Allow: /', ...privatePaths, '',
+  ...aiCrawlers.flatMap((agent) => [`User-agent: ${agent}`, 'Allow: /', ...privatePaths, '']),
   `Sitemap: ${ssr.SITE_ORIGIN}/sitemap.xml`,
   `# Generative-engine index with canonical HTML and per-page Markdown links: ${ssr.SITE_ORIGIN}/llms.txt`,
   '',
