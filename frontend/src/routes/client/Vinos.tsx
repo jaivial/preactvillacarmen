@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
+import { Link } from 'wouter-preact'
 import { StickyTabBar } from '../../components/ui'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
@@ -173,6 +174,16 @@ export function Vinos() {
   }, [])
 
   const hasContent = useMemo(() => Array.isArray(vinos) && vinos.length > 0, [vinos])
+  // Coordination id: seo_item_routes_v1 - cada vino enlaza con su pagina
+  // publica, localizada por su numero legacy.
+  const wineRouteByNum = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const item of prerenderData().itemRoutes || []) {
+      if (item.entity_type !== 'wine' || !item.legacy_num) continue
+      map.set(item.legacy_num, item.path)
+    }
+    return map
+  }, [])
 
   return (
     <div class="page menuPage winePage">
@@ -204,6 +215,8 @@ export function Vinos() {
             <div class="wineList">
               {vinos.map((v, idx) => {
                 const foto = fotoUrls[v.num]
+                const wineName = localized(v.nombre, v.nombre_english, lang)
+                const wineRoute = wineRouteByNum.get(v.num)
                 return (
                   <article class="wineCardWrap" key={v.num} ref={register(v.num)} data-wine-num={v.num} data-wine-has-foto={v.has_foto ? '1' : '0'}>
                     <motion.div
@@ -227,7 +240,11 @@ export function Vinos() {
 
                       <div class="wineInfo">
                         <div class="wineMeta">{localized(v.bodega, v.bodega_english, lang)}</div>
-                        <h2 class="wineName">{localized(v.nombre, v.nombre_english, lang)}</h2>
+                        <h2 class="wineName">
+                          {wineRoute ? (
+                            <Link href={wineRoute} data-testid={`seo-wine-link-${v.num}`}>{wineName}</Link>
+                          ) : wineName}
+                        </h2>
 
                         {v.denominacion_origen ? <div class="wineOrigin">{`D.O. ${localized(v.denominacion_origen, v.denominacion_origen_english, lang)}`}</div> : null}
 

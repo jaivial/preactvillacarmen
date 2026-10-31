@@ -31,6 +31,7 @@ import { ProteccionDatos } from './routes/client/ProteccionDatos.tsx'
 import { ReservasEspecialesPolitica } from './routes/client/ReservasEspecialesPolitica.tsx'
 import { Unsubscribe } from './routes/Unsubscribe.tsx'
 import { Vinos } from './routes/client/Vinos.tsx'
+import { PlatoPage, VinoPage } from './routes/client/ItemPage.tsx'
 
 function ClientApp() {
   return (
@@ -51,6 +52,9 @@ function ClientApp() {
 
         <Route path="/menu/:menuId/:menuSlug" component={MenuCatalogRoute} />
         <Route path="/menu/:menuId" component={MenuCatalogRoute} />
+        {/* Coordination id: seo_item_routes_v1 */}
+        <Route path="/platos/:slug" component={PlatoPage} />
+        <Route path="/vinos/:slug" component={VinoPage} />
         <Route path="/menufindesemana" component={() => <LegacyMenuRedirect target="finde" />} />
         <Route path="/menudeldia" component={() => <LegacyMenuRedirect target="dia" />} />
         <Route path="/menusdegrupos" component={MenusDeGrupos} />

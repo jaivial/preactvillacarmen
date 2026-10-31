@@ -280,6 +280,43 @@ export type VinosResponse = {
   vinos: Vino[]
 }
 
+// Coordination id: seo_item_routes_v1 - una ruta publica por plato de carta y
+// por vino. El backend decide cuales existen (platos y vinos activos) y envia
+// el slug ya generado, de modo que el frontend solo tiene que publicarlos.
+export type SeoItemRoute = {
+  id: number
+  entity_type: 'dish' | 'wine'
+  entity_id: number
+  legacy_num: number
+  slug: string
+  path: string
+  name: string
+  name_en: string
+  description: string
+  description_en: string
+  price: number | null
+  allergens: string[] | null
+  photo: string
+  section: string
+  menu_title: string
+  menu_path: string
+  tipo: string
+  bodega: string
+  denominacion_origen: string
+  graduacion: number | null
+  anyo: string
+  seo_title: string
+  seo_description: string
+  active: boolean
+  has_content: boolean
+  updated_at: string
+}
+
+export type SeoItemRoutesResponse = {
+  success: true
+  items: SeoItemRoute[]
+}
+
 export type ApiError = {
   success: false
   message: string

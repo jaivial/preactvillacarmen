@@ -56,12 +56,14 @@ export function htmlToMarkdown(html, { origin = DEFAULT_ORIGIN } = {}) {
   return value.split('\n').map((line) => plainText(line)).filter((line, index, lines) => line || (index > 0 && lines[index - 1])).join('\n').replace(/\n{3,}/g, '\n\n').trim()
 }
 
-export function geoManifest({ paths, pages, menus, legalPages, ssr, lastModified, origin = DEFAULT_ORIGIN }) {
+export function geoManifest({ paths, pages, menus, legalPages, items, ssr, lastModified, origin = DEFAULT_ORIGIN }) {
   return paths.map((path) => {
     const bare = ssr.barePath(path)
     const lang = path === '/en' || path.startsWith('/en/') ? 'en' : 'es'
     const menu = Object.values(menus).find((item) => ssr.menuPath(item) === bare)
-    const metadata = ssr.routeMetadata(path, ssr.catalogRoutesFor(menus))
+    // Coordination id: seo_item_routes_v1 - the dishes and the wines bring
+    // their own title, description and canonical.
+    const metadata = ssr.routeMetadata(path, ssr.catalogRoutesFor(menus), items)
     const legalSlug = ssr.legalSlugs[bare]
     return {
       path,
