@@ -84,4 +84,45 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
       ],
     },
   },
+  // Coordination id: albufera_local_landing_v1 - local intent "restaurante albufera / puerto de Catarroja".
+  '/restaurante-albufera-catarroja': {
+    es: {
+      kicker: 'Catarroja · l’Albufera · Valencia',
+      title: 'Restaurante cerca de l’Albufera y del Port de Catarroja',
+      intro: 'Alquería Villa Carmen es un restaurante de arroces y cocina mediterránea en Catarroja, a pocos minutos en coche del Port de Catarroja, una de las entradas al Parque Natural de l’Albufera. Si vienes a pasear por el puerto o a dar una vuelta en barca, puedes terminar la mañana comiendo un arroz entre jardines.',
+      image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
+      imageAlt: 'Arroz en paellera servido en Alquería Villa Carmen, Catarroja', imageWidth: 1024, imageHeight: 1024,
+      imageCaption: 'Fotografía propia de Alquería Villa Carmen: arroz servido en paellera.',
+      sections: [
+        { heading: 'Del Port de Catarroja a la mesa', body: 'El Port de Catarroja está al final del Camí del Port, dentro del parque natural, y desde allí salen paseos en barca por los canales y el lago. Villa Carmen está en el límite entre Catarroja y Albal, así que es fácil combinar la visita a l’Albufera con la comida sin entrar en Valencia ciudad. Consulta los horarios de las barcas directamente con los barqueros del puerto.' },
+        { heading: 'Arroces y paella después de l’Albufera', body: 'La cocina de l’Albufera gira alrededor del arroz. En nuestra página de arroces y en el Menú Arrocero publicamos los arroces secos y melosos disponibles, con sus platos, precio y condiciones. La disponibilidad cambia, así que revisa la ficha del menú activo y reserva con antelación, sobre todo en fin de semana.' },
+        { heading: 'Cómo planificar el día', checklist: true, items: ['Reserva mesa antes de ir: abrimos de jueves a domingo a mediodía.', 'Si venís en grupo, revisa los menús de grupos y el mínimo de comensales.', 'Consulta los horarios del paseo en barca con los barqueros del puerto.', 'Para llegar, usa la ruta de Google Maps de la página de contacto.'] },
+        { heading: 'También para grupos y celebraciones', body: 'Además del comedor tenemos salones y jardines para comidas familiares, comuniones, bodas y eventos de empresa. Si estáis organizando una salida en grupo por l’Albufera, pídenos propuesta desde Contacto con la fecha y el número de personas.' },
+      ],
+      faq: [
+        { question: '¿A qué distancia está el restaurante de l’Albufera?', answer: 'El Port de Catarroja queda a pocos minutos en coche y El Palmar a unos 7 km en línea recta. Estamos en Catarroja, junto a Albal, en l’Horta Sud.' },
+        { question: '¿Hace falta reservar?', answer: 'Lo recomendamos, sobre todo en fin de semana y para grupos. Puedes reservar online desde la página de reservas.' },
+        { question: '¿Qué horario tenéis?', answer: 'Abrimos de jueves a domingo a mediodía. Consulta el horario actualizado en Contacto; las fechas festivas pueden tener un horario propio.' },
+      ],
+    },
+    en: {
+      kicker: 'Catarroja · l’Albufera · Valencia',
+      title: 'Restaurant near l’Albufera and Catarroja port',
+      intro: 'Alqueria Villa Carmen is a rice and Mediterranean restaurant in Catarroja, a few minutes’ drive from Catarroja port, one of the gateways to the Albufera Natural Park. If you are visiting the port or taking a boat trip, you can finish the morning with a rice dish among the gardens.',
+      image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
+      imageAlt: 'Rice in a paella pan served at Alqueria Villa Carmen, Catarroja', imageWidth: 1024, imageHeight: 1024,
+      imageCaption: 'Villa Carmen’s own photograph: rice served in a paella pan.',
+      sections: [
+        { heading: 'From Catarroja port to the table', body: 'Catarroja port sits at the end of the Camí del Port inside the natural park, and boat trips through the canals and the lake leave from there. Villa Carmen is on the border between Catarroja and Albal, so it is easy to combine l’Albufera with lunch without driving into Valencia city. Check boat times directly with the boatmen at the port.' },
+        { heading: 'Rice and paella after l’Albufera', body: 'Albufera cooking revolves around rice. Our rice page and the Rice Menu list the dry and creamy rice dishes currently available, with dishes, price and conditions. Availability changes, so check the active menu and book ahead, especially at weekends.' },
+        { heading: 'Plan your day', checklist: true, items: ['Book a table before you go: we open Thursday to Sunday for lunch.', 'For groups, check the group menus and minimum party size.', 'Check boat-trip times with the boatmen at the port.', 'Use the Google Maps route on the contact page to get here.'] },
+        { heading: 'Groups and celebrations too', body: 'Besides the dining room we have rooms and gardens for family meals, communions, weddings and company events. If you are planning a group trip to l’Albufera, request a proposal through Contact with your date and party size.' },
+      ],
+      faq: [
+        { question: 'How far is the restaurant from l’Albufera?', answer: 'Catarroja port is a few minutes’ drive away and El Palmar is about 7 km as the crow flies. We are in Catarroja, next to Albal, in l’Horta Sud.' },
+        { question: 'Do I need to book?', answer: 'We recommend it, especially at weekends and for groups. You can book online on the reservations page.' },
+        { question: 'What are your opening hours?', answer: 'We open Thursday to Sunday for lunch. Check the current hours on Contact; festive dates may have their own schedule.' },
+      ],
+    },
+  },
 }

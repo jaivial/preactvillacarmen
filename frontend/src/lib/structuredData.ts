@@ -1,6 +1,7 @@
 import type { Lang } from './i18n'
 import { localizedPath, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, stripLanguagePrefix, type MenuRouteEntry } from './routes'
 import { OPENING_HOURS, RESTAURANT } from './restaurant'
+import { resourceContent } from './resourceContent'
 
 export type BreadcrumbItem = { name: string; path: string }
 
@@ -12,6 +13,7 @@ const editorialNames: Record<string, Record<Lang, string>> = {
   '/eventos-empresa': { es: 'Eventos de empresa', en: 'Company events' },
   '/menusdegrupos': { es: 'Menús de grupos', en: 'Group menus' },
   '/arroces-y-paellas': { es: 'Arroces y paellas', en: 'Rice and paellas' },
+  '/restaurante-albufera-catarroja': { es: 'Cerca de l’Albufera', en: 'Near l’Albufera' },
 }
 
 export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEntry[] = []): BreadcrumbItem[] {
@@ -73,6 +75,19 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
       '@type': 'ListItem', position: index + 1, name: item.name,
       item: new URL(localizedPath(item.path, lang), SITE_ORIGIN).href,
     })),
+  })
+  // Coordination id: menu_seo_content_v1 - menu Offer + FAQPage from backoffice content.
+  const menu = menus.find((entry) => localizedPath(entry.path, lang) === metadata.canonicalPath)
+  const price = Number(String(menu?.price || '').replace(',', '.').replace(/[^\d.]/g, ''))
+  if (menu) graph.push({
+    '@type': 'Menu', '@id': `${canonical}#menu`, name: menu.title[lang].split('|')[0].trim(), url: canonical, inLanguage: lang,
+    provider: { '@id': `${SITE_ORIGIN}/#restaurant` },
+    ...(price > 0 ? { offers: { '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'EUR', url: canonical } } : {}),
+  })
+  const faq = menu?.faq?.[lang] || resourceContent[path]?.[lang].faq || []
+  if (faq.length) graph.push({
+    '@type': 'FAQPage', '@id': `${canonical}#faq`,
+    mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })),
   })
   return [{ '@context': 'https://schema.org', '@graph': graph }]
 }

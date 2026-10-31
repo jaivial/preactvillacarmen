@@ -6,6 +6,7 @@ import { initialMenu, initialMenuBySlug, setPrerenderData, prerenderData } from 
 import { menuPath } from '../../lib/routes'
 import { MenuTemplateFor } from './menuTemplateFor'
 import { MenuUnavailable } from './MenuUnavailable'
+import { MenuSEOContent } from '../../components/MenuSEOContent'
 import type { PublicMenu } from '../../lib/types'
 
 type MenuCatalogRouteProps = {
@@ -94,5 +95,5 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
   }
 
   checkpoint('menu_catalog_menu_rendered', { menu_id: menu.id, menu_type: menu.menu_type })
-  return <MenuTemplateFor menu={menu} />
+  return <><MenuTemplateFor menu={menu} /><MenuSEOContent menu={menu} /></>
 }
