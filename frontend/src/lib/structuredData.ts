@@ -6,12 +6,14 @@ import { celebrationContent } from './celebrationContent'
 
 export type BreadcrumbItem = { name: string; path: string }
 
+// Breadcrumb labels stay short and stable even when the SEO title changes.
+// Coordination id: editorial_breadcrumb_names_v1 - title edits must not leak into crumbs.
 const editorialNames: Record<string, Record<Lang, string>> = {
   '/contacto': { es: 'Contacto', en: 'Contact' },
   '/eventos': { es: 'Eventos y celebraciones', en: 'Events and celebrations' },
-  '/bodas': { es: 'Bodas', en: 'Weddings' },
-  '/comuniones': { es: 'Comuniones', en: 'Communions' },
-  '/bautizos': { es: 'Bautizos', en: 'Christenings' },
+  '/bodas': { es: 'Bodas en Catarroja', en: 'Weddings in Catarroja' },
+  '/comuniones': { es: 'Comuniones en Catarroja', en: 'Communions in Catarroja' },
+  '/bautizos': { es: 'Bautizos en Catarroja', en: 'Christenings in Catarroja' },
   '/eventos-empresa': { es: 'Eventos de empresa', en: 'Company events' },
   '/menusdegrupos': { es: 'Menús de grupos', en: 'Group menus' },
   '/arroces-y-paellas': { es: 'Arroces y paellas', en: 'Rice and paellas' },
@@ -30,7 +32,8 @@ export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEn
   // PUBLIC_ROUTES and the catalog are the source of truth for every current
   // page, including editorial resources and menus using an SEO slug.
   const metadata = routeMetadata(path, menus)
-  const name = menu?.title[lang].split('|')[0].trim() || (metadata.indexable ? metadata.title[lang].split('|')[0].trim() : '')
+  // Editorial pages use their short label; menus keep their own SEO title.
+  const name = menu?.title[lang].split('|')[0].trim() || editorialNames[path]?.[lang] || (metadata.indexable ? metadata.title[lang].split('|')[0].trim() : '')
   if (!name) return []
   items.push({ name, path })
   return items
