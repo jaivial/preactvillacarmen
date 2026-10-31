@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks'
 import { Link, useLocation } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { breadcrumbItems } from '../lib/structuredData'
-import { catalogRoutes } from './RouteHead'
+import { catalogItemRoutes, catalogRoutes } from './RouteHead'
 
 export function Breadcrumbs() {
   const [location] = useLocation()
@@ -14,7 +14,7 @@ export function Breadcrumbs() {
     return () => window.removeEventListener('villacarmen:menus-updated', update)
   }, [])
   const pathname = lang === 'en' && !location.startsWith('/en') ? `/en${location}` : location
-  const items = breadcrumbItems(pathname, lang, catalogRoutes())
+  const items = breadcrumbItems(pathname, lang, catalogRoutes(), catalogItemRoutes())
   void catalogVersion
   if (items.length < 2) return null
   return (

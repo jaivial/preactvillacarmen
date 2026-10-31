@@ -1,5 +1,5 @@
 import type { Lang } from './i18n'
-import { localizedPath, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, stripLanguagePrefix, type MenuRouteEntry } from './routes'
+import { localizedPath, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, stripLanguagePrefix, type ItemRouteEntry, type MenuRouteEntry } from './routes'
 import { OPENING_HOURS, RESTAURANT } from './restaurant'
 import { resourceContent } from './resourceContent'
 import { celebrationContent } from './celebrationContent'
@@ -20,27 +20,35 @@ const editorialNames: Record<string, Record<Lang, string>> = {
   '/restaurante-albufera-catarroja': { es: 'Cerca de l’Albufera', en: 'Near l’Albufera' },
 }
 
-export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEntry[] = []): BreadcrumbItem[] {
+export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEntry[] = [], items: ItemRouteEntry[] = []): BreadcrumbItem[] {
   const { path } = stripLanguagePrefix(pathname)
   if (path === '/') return []
   const home = { name: lang === 'es' ? 'Inicio' : 'Home', path: '/' }
-  const items = [home]
-  if (['/bodas', '/comuniones', '/bautizos', '/eventos-empresa'].includes(path)) items.push({ name: editorialNames['/eventos'][lang], path: '/eventos' })
+  const crumbs = [home]
+  // Coordination id: seo_item_routes_v1 - a dish or a wine hangs from the menu
+  // it belongs to.
+  const item = items.find((entry) => entry.path === path)
+  if (item) {
+    if (item.menuPath) crumbs.push({ name: item.menuTitle || (lang === 'es' ? 'Carta' : 'Menu'), path: item.menuPath })
+    crumbs.push({ name: item.name[lang], path })
+    return crumbs
+  }
+  if (['/bodas', '/comuniones', '/bautizos', '/eventos-empresa'].includes(path)) crumbs.push({ name: editorialNames['/eventos'][lang], path: '/eventos' })
   const menuId = path.match(/^\/menu\/(\d+)/)?.[1]
   const menu = menus.find((entry) => entry.path === path) || (menuId ? menus.find((entry) => entry.id === Number(menuId)) : undefined)
-  if (menu) items.push({ name: editorialNames['/menusdegrupos'][lang], path: '/menusdegrupos' })
+  if (menu) crumbs.push({ name: editorialNames['/menusdegrupos'][lang], path: '/menusdegrupos' })
   // PUBLIC_ROUTES and the catalog are the source of truth for every current
   // page, including editorial resources and menus using an SEO slug.
-  const metadata = routeMetadata(path, menus)
+  const metadata = routeMetadata(path, menus, items)
   // Editorial pages use their short label; menus keep their own SEO title.
   const name = menu?.title[lang].split('|')[0].trim() || editorialNames[path]?.[lang] || (metadata.indexable ? metadata.title[lang].split('|')[0].trim() : '')
   if (!name) return []
-  items.push({ name, path })
-  return items
+  crumbs.push({ name, path })
+  return crumbs
 }
 
-export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): Record<string, unknown>[] {
-  const metadata = routeMetadata(pathname, menus)
+export function structuredData(pathname: string, menus: MenuRouteEntry[] = [], items: ItemRouteEntry[] = []): Record<string, unknown>[] {
+  const metadata = routeMetadata(pathname, menus, items)
   if (!metadata.indexable) return []
   const { lang, path } = stripLanguagePrefix(pathname)
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
@@ -71,7 +79,7 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
       '@type': 'OpeningHoursSpecification', dayOfWeek: entry.days, opens: entry.opens, closes: entry.closes,
     })),
   }
-  const breadcrumbs = breadcrumbItems(pathname, lang, menus)
+  const breadcrumbs = breadcrumbItems(pathname, lang, menus, items)
   const graph: Record<string, unknown>[] = [restaurant]
   if (path !== '/' && breadcrumbs.length >= 2) graph.push({
     '@type': 'BreadcrumbList',
@@ -95,5 +103,28 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
     '@type': 'FAQPage', '@id': `${canonical}#faq`,
     mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })),
   })
+  // Coordination id: seo_item_routes_v1 - the dish or the wine of this page.
+  const item = items.find((entry) => entry.path === path)
+  if (item) {
+    const offer = item.price && item.price > 0
+      ? { '@type': 'Offer', price: item.price.toFixed(2), priceCurrency: 'EUR', url: canonical, availability: 'https://schema.org/InStock' }
+      : undefined
+    const properties: Record<string, unknown>[] = []
+    if (item.denominacion) properties.push({ '@type': 'PropertyValue', name: lang === 'es' ? 'Denominación de origen' : 'Appellation', value: item.denominacion })
+    if (item.graduacion) properties.push({ '@type': 'PropertyValue', name: lang === 'es' ? 'Graduación' : 'Alcohol by volume', value: `${item.graduacion}%` })
+    graph.push({
+      '@type': item.entityType === 'wine' ? 'Product' : 'MenuItem',
+      '@id': `${canonical}#item`,
+      name: item.name[lang],
+      ...(item.description[lang] ? { description: item.description[lang] } : {}),
+      url: canonical,
+      inLanguage: lang,
+      ...(item.photo ? { image: [item.photo] } : {}),
+      ...(item.bodega ? { brand: { '@type': 'Brand', name: item.bodega } } : {}),
+      ...(properties.length ? { additionalProperty: properties } : {}),
+      ...(offer ? { offers: offer } : {}),
+      provider: { '@id': `${SITE_ORIGIN}/#restaurant` },
+    })
+  }
   return [{ '@context': 'https://schema.org', '@graph': graph }]
 }
