@@ -50,6 +50,10 @@ describe('event inquiry UI', () => {
     const firstDigit = root.querySelector('[data-testid="event-inquiry-phone-digit-0"]') as HTMLInputElement
     act(() => { change(firstDigit, '612345678') })
     const tomorrow = isoFromLocalDate(new Date(Date.now() + 86400000))
+    // Tomorrow can fall in the next month, so move the calendar before picking it.
+    if (new Date(Date.now() + 86400000).getMonth() !== new Date().getMonth()) {
+      act(() => { (root.querySelector('[data-testid="event-inquiry-calendar-next-month"]') as HTMLButtonElement).click() })
+    }
     act(() => { (root.querySelector(`[data-testid="event-inquiry-calendar-day-${tomorrow}"]`) as HTMLButtonElement).click() })
     expect(increment.disabled).toBe(false)
     act(() => { (root.querySelector('[data-testid="event-inquiry-submit"]') as HTMLButtonElement).click() })

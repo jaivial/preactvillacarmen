@@ -427,6 +427,9 @@ function ToastIcon(props: { type: ToastType; testId: string }) {
 }
 
 export function Reservas() {
+  // Every arrival at the booking page counts as a start, including in-app
+  // navigation (the old check in main.tsx only saw direct page loads).
+  useEffect(() => { trackConversion('reservation_start') }, [])
   const reduceMotion = useReducedMotion()
   const { t, lang } = useI18n()
   const text = (es: string, en: string) => textFor(lang, es, en)

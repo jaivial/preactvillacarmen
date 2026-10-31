@@ -38,7 +38,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
   },
   '/comuniones': {
     es: {
-      kicker: 'Una comida para disfrutar en familia', title: 'Comuniones en Catarroja',
+      kicker: 'Una comida para disfrutar en familia', title: 'Restaurante para comuniones en Catarroja',
       intro: 'Celebrad la comunión con una comida pensada para juntar a familia y amigos. Os ayudamos a elegir espacio y menú para que mayores y pequeños disfrutéis del día con tranquilidad.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Salón para una celebración familiar en Alquería Villa Carmen',
       sections: [
@@ -53,7 +53,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
     en: {
-      kicker: 'A meal for the whole family', title: 'Communions in Catarroja',
+      kicker: 'A meal for the whole family', title: 'Communion restaurant in Catarroja',
       intro: 'Celebrate a communion with a meal that brings family and friends together. We will help you choose the space and menu so adults and children can enjoy a relaxed day.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Room for a family celebration at Alqueria Villa Carmen',
       sections: [
@@ -68,10 +68,41 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
   },
-  '/eventos-empresa': {
+  '/bautizos': {
     es: {
-      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Eventos de empresa en Catarroja',
-      intro: 'Organiza una comida de equipo, un encuentro con clientes o la celebración de tu empresa en Villa Carmen. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
+      kicker: 'Una comida familiar para recibir al bebé', title: 'Restaurante para bautizos en Catarroja',
+      intro: 'Celebra el bautizo con una comida familiar tranquila en Catarroja, cerca de Valencia. Os ayudamos a elegir salón o jardín y menú para que la familia disfrute del día y vosotros podáis atender al bebé con calma.',
+      image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp', imageAlt: 'Salón decorado con luces y plantas para una celebración familiar en Alquería Villa Carmen',
+      sections: [
+        { heading: 'Salón o jardín según la fecha y los invitados', body: 'La alquería tiene salones y jardines. Según la época del año, el número de invitados y el horario después de la ceremonia, os propondremos el espacio y el montaje adecuados.' },
+        { heading: 'Menús de grupo con precio cerrado', body: 'Consulta los menús de grupos publicados con precio por persona, mínimo de comensales, bebidas y condiciones. Os orientamos sobre platos para compartir, opciones para los más pequeños y alérgenos antes de confirmar.' },
+        { heading: 'Organizado en torno a la ceremonia', body: 'Indícanos la fecha, la hora aproximada de la ceremonia, cuántos adultos y niños vendréis y cualquier necesidad especial. Confirmaremos disponibilidad, horario, menú y espacio para que todo esté preparado cuando lleguéis.', items: ['Fecha y hora prevista de la ceremonia.', 'Adultos, niños y bebés que asistirán.', 'Necesidades de montaje, como espacio para carritos o tronas.'] },
+      ],
+      faq: [
+        { question: '¿Podemos venir directamente después de la ceremonia?', answer: 'Indícanos la hora prevista de la ceremonia para ajustar el horario de la comida. El equipo confirmará el horario al cerrar la reserva.' },
+        { question: '¿Hay menú para niños?', answer: 'La oferta puede cambiar. Consulta los menús activos y pregúntanos por las opciones disponibles para los más pequeños antes de confirmar.' },
+        { question: '¿Qué necesitáis para preparar una propuesta?', answer: 'Fecha, hora de la ceremonia, número aproximado de adultos y niños y cualquier necesidad alimentaria o de montaje.' },
+      ],
+    },
+    en: {
+      kicker: 'A family meal to welcome the baby', title: 'Christening restaurant in Catarroja',
+      intro: 'Celebrate a christening with a relaxed family meal in Catarroja, near Valencia. We will help you choose a room or garden and a menu so your family can enjoy the day while you look after the baby calmly.',
+      image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp', imageAlt: 'Room decorated with lights and plants for a family celebration at Alqueria Villa Carmen',
+      sections: [
+        { heading: 'A room or garden to suit your date and guests', body: 'The alqueria has rooms and gardens. Depending on the season, guest count and timing after the ceremony, we will suggest a suitable space and layout.' },
+        { heading: 'Group menus at a set price', body: 'Browse published group menus with per-person prices, minimum party sizes, drinks and conditions. We will advise on sharing dishes, options for younger guests and allergens before you confirm.' },
+        { heading: 'Planned around the ceremony', body: 'Tell us the date, approximate ceremony time, how many adults and children are coming and any special needs. We will confirm availability, timing, menu and space so everything is ready when you arrive.', items: ['Date and expected ceremony time.', 'Adults, children and babies attending.', 'Layout needs such as space for prams or high chairs.'] },
+      ],
+      faq: [
+        { question: 'Can we come straight after the ceremony?', answer: 'Tell us the expected ceremony time so we can plan the meal around it. Our team will confirm timing when the booking is finalised.' },
+        { question: 'Is there a children’s menu?', answer: 'The offer can change. Check active menus and ask us about current options for younger guests before confirming.' },
+        { question: 'What do you need for a proposal?', answer: 'Your date, ceremony time, approximate numbers of adults and children and any dietary or layout requirements.' },
+      ],
+    },
+  },
+  '/eventos-empresa': {    es: {
+      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Comidas y cenas de empresa en Catarroja',
+      intro: 'Organiza una comida de equipo, una cena de Navidad, un encuentro con clientes o la celebración de tu empresa en Villa Carmen, en Catarroja, cerca de Valencia. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
       imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
@@ -81,6 +112,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       sections: [
         { heading: 'Un formato para cada encuentro', body: 'No todos los eventos necesitan el mismo montaje. Cuéntanos si se trata de una comida de equipo, presentación, reunión o celebración y revisaremos contigo el uso de salones y jardines.' },
         { heading: 'Menús y condiciones fáciles de consultar', body: 'Las fichas de grupos muestran las propuestas activas, precios por persona, mínimos, bebidas y suplementos. El equipo confirmará la selección final, los horarios y las necesidades alimentarias.' },
+        { heading: 'Comidas y cenas de empresa de Navidad', body: 'Diciembre es la época más solicitada. Consulta el menú de grupos de Navidad publicado en Menús de grupos y escríbenos cuanto antes con la fecha y el número de asistentes para confirmar disponibilidad.' },
         { heading: 'Una propuesta ajustada a vuestro programa', body: 'Envíanos fecha, horario, asistentes, objetivo del evento y cualquier necesidad técnica o de montaje. Con esa información podremos valorar el espacio y responder con una propuesta concreta; cualquier equipamiento especial se confirma previamente.' },
       ],
       faq: [
@@ -90,8 +122,8 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
     en: {
-      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company events in Catarroja',
-      intro: 'Organise a team meal, client gathering or company celebration at Villa Carmen. We combine spaces, cuisine and coordination around the purpose of your event.',
+      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company lunches and dinners in Catarroja',
+      intro: 'Organise a team meal, Christmas dinner, client gathering or company celebration at Villa Carmen in Catarroja, near Valencia. We combine spaces, cuisine and coordination around the purpose of your event.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
       imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
@@ -101,6 +133,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       sections: [
         { heading: 'A format for every gathering', body: 'Not every event needs the same layout. Tell us whether it is a team meal, presentation, meeting or celebration and we will review how our rooms and gardens could work.' },
         { heading: 'Clear menus and conditions', body: 'Group menu pages show current options, per-person prices, minimums, drinks and supplements. Our team will confirm the final selection, schedule and dietary requirements.' },
+        { heading: 'Christmas company lunches and dinners', body: 'December is the busiest season. Check the Christmas group menu under Group menus and contact us early with your date and guest count to confirm availability.' },
         { heading: 'A proposal shaped around your programme', body: 'Send your date, timing, guest count, event purpose and technical or layout needs. We can then assess the space and provide a specific proposal; special equipment is always confirmed in advance.' },
       ],
       faq: [

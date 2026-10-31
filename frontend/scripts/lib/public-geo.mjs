@@ -96,7 +96,7 @@ export function markdownDocument(entry) {
 
 export function llmsFiles(entries, { origin = DEFAULT_ORIGIN } = {}) {
   const byPath = new Map(entries.map((entry) => [entry.path, entry]))
-  const preferred = ['/', '/arroces-y-paellas', '/menusdegrupos', '/eventos', '/bodas', '/comuniones', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones', '/contacto', '/reservas', '/avisolegal', '/protecciondatos']
+  const preferred = ['/', '/arroces-y-paellas', '/menusdegrupos', '/eventos', '/bodas', '/comuniones', '/bautizos', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones', '/restaurante-albufera-catarroja', '/contacto', '/reservas', '/avisolegal', '/protecciondatos']
   const list = (lang) => {
     const paths = [...preferred.map((path) => lang === 'en' ? `/en${path === '/' ? '' : path}` : path), ...entries.filter((entry) => entry.lang === lang).map((entry) => entry.path)]
     return [...new Set(paths)].map((path) => byPath.get(path)).filter(Boolean)

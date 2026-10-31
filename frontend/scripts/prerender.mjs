@@ -107,10 +107,12 @@ const editorialDates = new Map([
   ['/arroces-y-paellas', gitDate('src/lib/editorialContent.ts')],
   ['/guia-arroces-valencianos', gitDate('src/lib/editorialContent.ts')],
   ['/checklist-celebraciones', gitDate('src/lib/celebrationContent.ts')],
+  ['/restaurante-albufera-catarroja', gitDate('src/lib/resourceContent.ts')],
   ['/eventos', gitDate('src/routes/client/Eventos.tsx')],
   ['/bodas', gitDate('src/routes/client/CelebrationLanding.tsx')],
   ['/comuniones', gitDate('src/routes/client/CelebrationLanding.tsx')],
-  ['/eventos-empresa', gitDate('src/routes/client/CelebrationLanding.tsx')],
+  ['/bautizos', gitDate('src/lib/celebrationContent.ts')],
+  ['/eventos-empresa', gitDate('src/lib/celebrationContent.ts')],
   ['/menusdegrupos', gitDate('src/routes/client/GroupLanding.tsx')],
   ['/postres', gitDate('src/routes/client/Postres.tsx')],
   ['/cafes', gitDate('src/routes/client/Cafes.tsx')],
@@ -144,7 +146,8 @@ for (const path of paths) {
   const legalSlug = legalSlugs[bare]
   const pageData = {
     ...baseData,
-    menus: menu ? { [menu.id]: menu } : isGroup || bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos' ? menus : {},
+    // Special menus also embed the other seasonal menus so special_menu_practical_v1 can link them.
+    menus: menu ? (seasonalMenus.includes(menu) ? Object.fromEntries(seasonalMenus.map((item) => [item.id, item])) : { [menu.id]: menu }) : isGroup || bare === '/arroces-y-paellas' || bare === '/guia-arroces-valencianos' ? menus : {},
     homeMenus: bare === '/' ? homeMenus : undefined,
     groupMenus: isGroup ? groupMenus : undefined,
     postres: bare === '/postres' ? postres : undefined,

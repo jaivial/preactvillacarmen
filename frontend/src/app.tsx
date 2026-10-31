@@ -42,9 +42,11 @@ function ClientApp() {
         <Route path="/arroces-y-paellas" component={ArrocesYPaellas} />
         <Route path="/guia-arroces-valencianos" component={EditorialResource} />
         <Route path="/checklist-celebraciones" component={EditorialResource} />
+        <Route path="/restaurante-albufera-catarroja" component={EditorialResource} />
         <Route path="/eventos" component={Eventos} />
         <Route path="/bodas" component={CelebrationLanding} />
         <Route path="/comuniones" component={CelebrationLanding} />
+        <Route path="/bautizos" component={CelebrationLanding} />
         <Route path="/eventos-empresa" component={CelebrationLanding} />
 
         <Route path="/menu/:menuId/:menuSlug" component={MenuCatalogRoute} />

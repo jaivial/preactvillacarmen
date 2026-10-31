@@ -20,13 +20,15 @@ const DICT: Dictionary = {
   'nav.gift': { es: 'Regala', en: 'Gift' },
   'nav.contact': { es: 'Contacto', en: 'Contact' },
   'nav.menusSection': { es: 'Men\u00fas', en: 'Menus' },
-  'nav.weddingsEvents': { es: 'Bodas y eventos', en: 'Weddings and events' },
+  'nav.weddingsEvents': { es: 'Eventos y celebraciones', en: 'Events and celebrations' },
   'nav.menus': { es: 'Carta', en: 'Menu' },
   'nav.reserve': { es: 'Reservar', en: 'Reserve' },
   'nav.lang': { es: 'Idioma', en: 'Language' },
 
   'common.ok': { es: 'Aceptar', en: 'OK' },
   'editorial.faq': { es: 'Preguntas frecuentes', en: 'Frequently asked questions' },
+  'menu.seo.about': { es: 'Sobre este men\u00fa', en: 'About this menu' },
+  'resource.albufera': { es: 'Cerca de l\u2019Albufera', en: 'Near l\u2019Albufera' },
   'editorial.cta.title': { es: 'Preparamos tu visita', en: 'Plan your visit' },
   'editorial.cta.proposal': { es: 'Pedir una propuesta', en: 'Request a proposal' },
   'editorial.rice': { es: 'Arroces y paellas', en: 'Rice and paellas' },
@@ -65,7 +67,7 @@ const DICT: Dictionary = {
 
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
   'home.hero.title': { es: 'Alquer\u00eda Villa Carmen', en: 'Alqueria Villa Carmen' },
-  'home.hero.intent': { es: 'Restaurante de arroces en Catarroja', en: 'Rice restaurant in Catarroja' },
+  'home.hero.intent': { es: 'Restaurante en Catarroja', en: 'Restaurant in Catarroja' },
   'home.hero.tagline': { es: 'Tradici\u00f3n y gastronom\u00eda mediterr\u00e1nea', en: 'Mediterranean tradition and gastronomy' },
   'home.hero.scroll': { es: 'Ad\u00e9ntrate en la alquer\u00eda', en: 'Step into the alqueria' },
 
@@ -80,9 +82,10 @@ const DICT: Dictionary = {
   'home.discovery.rice': { es: 'Arroces y paellas', en: 'Rice dishes and paellas' },
   'home.discovery.menus': { es: 'Carta y men\u00fas', en: 'Menus and \u00e0 la carte' },
   'home.discovery.groups': { es: 'Comidas para grupos', en: 'Group dining' },
-  'home.discovery.weddings': { es: 'Bodas y eventos', en: 'Weddings and events' },
+  'home.discovery.weddings': { es: 'Salones y celebraciones', en: 'Venues and celebrations' },
   'home.discovery.wedding': { es: 'Bodas', en: 'Weddings' },
   'home.discovery.communion': { es: 'Comuniones', en: 'Communions' },
+  'home.discovery.baptism': { es: 'Bautizos', en: 'Christenings' },
   'home.discovery.business': { es: 'Eventos de empresa', en: 'Company events' },
   'events.hub.title': { es: 'Una celebración, un espacio para cada momento', en: 'A space for every celebration' },
   'events.hub.body': { es: 'Explora cada tipo de celebración y cuéntanos fecha, número de invitados y qué ambiente buscas. Confirmaremos contigo el salón, montaje y propuesta.', en: 'Explore each celebration and tell us your date, guest count and preferred atmosphere. We will confirm the room, layout and proposal with you.' },
@@ -101,12 +104,12 @@ const DICT: Dictionary = {
   'home.scrollfx.line4': { es: 'Eventos', en: 'Events' },
 
   'home.showcase.kicker': { es: 'Especialidades', en: 'Specialties' },
-  'home.showcase.title': { es: 'Arroces, producto y calma', en: 'Paellas, produce, and calm' },
+  'home.showcase.title': { es: 'Cocina mediterr\u00e1nea, producto y calma', en: 'Mediterranean cooking, produce, and calm' },
   'home.showcase.subtitle': {
     es: 'Entre las mejores arrocer\u00edas en el editorial \u2018Top 50 Paellas de la Comunidad Valenciana\u2019.',
     en: 'Featured among the best rice restaurants in the editorial \u2018Top 50 Paellas of the Valencian Community\u2019.',
   },
-  'home.showcase.items.1.title': { es: 'Arroces que definen la casa', en: 'Signature rice dishes' },
+  'home.showcase.items.1.title': { es: 'Cocina que define la casa', en: 'Cooking that defines the house' },
   'home.showcase.items.1.body': {
     es: 'Punto, sabor y tradici\u00f3n. El arroz es nuestro lenguaje: directo, elegante y mediterr\u00e1neo.',
     en: 'Timing, flavor, and tradition. Rice is our language: direct, elegant, and Mediterranean.',
@@ -122,7 +125,7 @@ const DICT: Dictionary = {
     en: 'Multiple rooms and corners to find peace: light, garden, and a calm that spreads.',
   },
 
-  'home.events.kicker': { es: 'Bodas y Eventos', en: 'Weddings and Events' },
+  'home.events.kicker': { es: 'Celebraciones', en: 'Celebrations' },
   'home.events.title': { es: 'Un lugar para celebrar', en: 'A place to celebrate' },
   'home.events.body': {
     es: 'Cuidamos cada detalle para que el d\u00eda se sienta natural: salones, jardines y una cocina que acompa\u00f1a.',
@@ -131,7 +134,7 @@ const DICT: Dictionary = {
   'home.events.cta.groups': { es: 'Ver men\u00fas de grupos', en: 'View group menus' },
   'home.events.cta.more': { es: 'Ver m\u00e1s', en: 'View more' },
 
-  'events.hero.kicker': { es: 'Bodas y eventos', en: 'Weddings and events' },
+  'events.hero.kicker': { es: 'Salones y celebraciones', en: 'Venues and celebrations' },
   'events.hero.title': { es: 'Celebraciones con alma mediterr\u00e1nea', en: 'Mediterranean celebrations with soul' },
   'events.hero.body': {
     es: 'Bodas, aniversarios y celebraciones privadas entre salones y jardines, con cocina mediterr\u00e1nea y una puesta en escena elegante.',
@@ -139,17 +142,17 @@ const DICT: Dictionary = {
   },
   'events.hero.gallery': { es: 'Ver galer\u00eda', en: 'View gallery' },
   'events.hero.alt': { es: 'Boda en jard\u00edn', en: 'Garden wedding' },
-  'events.hero.word1': { es: 'Momentos', en: 'Moments' },
-  'events.hero.word2': { es: 'que', en: 'that' },
-  'events.hero.word3': { es: 'nunca', en: 'never' },
-  'events.hero.word4': { es: 'se borran', en: 'fade' },
+  'events.hero.word1': { es: 'Salones', en: 'Venues' },
+  'events.hero.word2': { es: 'para', en: 'to' },
+  'events.hero.word3': { es: 'celebrar', en: 'celebrate' },
+  'events.hero.word4': { es: 'en Catarroja', en: 'in Catarroja' },
   'events.intro.statement': {
     es: 'Cada celebraci\u00f3n merece su propio ritmo: luz, detalles y una atm\u00f3sfera que emociona desde el primer instante.',
     en: 'Every celebration deserves its own rhythm: light, details, and an atmosphere that moves you from the very first moment.',
   },
   'events.portfolio.kicker': { es: 'Colecciones', en: 'Collections' },
-  'events.portfolio.title': { es: 'Historias de bodas y eventos', en: 'Wedding and event stories' },
-  'events.portfolio.card1.title': { es: 'Wedding Garden', en: 'Wedding Garden' },
+  'events.portfolio.title': { es: 'Celebraciones que hemos acogido', en: 'Celebrations we have hosted' },
+  'events.portfolio.card1.title': { es: 'Ceremonias en el jard\u00edn', en: 'Garden ceremonies' },
   'events.portfolio.card1.meta': { es: 'Valencia \u00b7 Exterior', en: 'Valencia \u00b7 Outdoor' },
   'events.portfolio.card2.title': { es: 'Caterings especiales', en: 'Special caterings' },
   'events.portfolio.card2.meta': { es: 'Caterings especiales', en: 'Special caterings' },
@@ -174,8 +177,8 @@ const DICT: Dictionary = {
     en: 'Our team coordinates timing, atmosphere, and cuisine so each moment feels elegant and personal.',
   },
   'events.gallery.kicker': { es: 'Galer\u00eda', en: 'Gallery' },
-  'events.gallery.title': { es: 'Bodas y eventos en Alquer\u00eda Villacarmen', en: 'Weddings and events at Alqueria Villacarmen' },
-  'events.gallery.alt': { es: 'Imagen de boda y evento', en: 'Wedding and event image' },
+  'events.gallery.title': { es: 'Galer\u00eda de salones y jardines', en: 'Rooms and gardens gallery' },
+  'events.gallery.alt': { es: 'Sal\u00f3n o jard\u00edn preparado para una celebraci\u00f3n', en: 'Room or garden set up for a celebration' },
   'events.details.service.title': { es: 'Acompa\u00f1amiento integral', en: 'End-to-end guidance' },
   'events.details.service.body': {
     es: 'Te acompa\u00f1amos desde la primera visita hasta el \u00faltimo brindis para que todo funcione con calma.',
@@ -192,7 +195,7 @@ const DICT: Dictionary = {
     en: 'Menu proposals and Mediterranean dishes for intimate events or larger celebrations.',
   },
   'events.cta.kicker': { es: 'Planifica tu fecha', en: 'Plan your date' },
-  'events.cta.title': { es: 'Hablemos de tu boda o evento', en: 'Let us plan your wedding or event' },
+  'events.cta.title': { es: 'Hablemos de tu celebraci\u00f3n', en: 'Let us plan your celebration' },
   'events.cta.body': {
     es: 'Cu\u00e9ntanos la idea y preparamos una propuesta personalizada para vuestro d\u00eda.',
     en: 'Share your idea and we will prepare a tailored proposal for your day.',
@@ -357,7 +360,7 @@ const DICT: Dictionary = {
   'placeholder.backHome': { es: 'Inicio', en: 'Home' },
   'placeholder.contact': { es: 'Contacto', en: 'Contact' },
 
-  'contact.title': { es: 'Contacto y restaurante en Catarroja', en: 'Contact our restaurant in Catarroja' },
+  'contact.title': { es: 'Contacto y c\u00f3mo llegar a Villa Carmen', en: 'Contact and directions to Villa Carmen' },
   'contact.subtitle': { es: 'Direcci\u00f3n, horario y c\u00f3mo llegar.', en: 'Address, opening hours and directions.' },
   'contact.address': { es: 'Direcci\u00f3n', en: 'Address' },
   'contact.directions': { es: 'C\u00f3mo llegar', en: 'Get directions' },
