@@ -47,7 +47,7 @@ for (const entry of sitemapEntries) {
   check(new URL(url).origin === origin, `sitemap.xml: non-canonical origin ${url}`)
   const lastmod = entry.match(/<lastmod>([^<]*)<\/lastmod>/)?.[1]
   const validDate = lastmod && /^\d{4}-\d{2}-\d{2}$/.test(lastmod) && new Date(`${lastmod}T00:00:00Z`).toISOString().slice(0, 10) === lastmod
-  check(!entry.includes('<lastmod') || validDate, `${url}: empty/invalid lastmod`)
+  check(validDate, `${url}: missing or invalid lastmod`)
   const languages = [...entry.matchAll(/<xhtml:link\b[^>]*hreflang="([^"]+)"[^>]*href="([^"]+)"/g)]
   check(languages.length === 3, `${url}: expected three sitemap alternates`)
   check(languages.some((match) => match[1] === 'es' && new URL(match[2]).origin === origin), `${url}: missing www Spanish alternate`)
