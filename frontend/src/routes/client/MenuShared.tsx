@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
-import type { Dish } from '../../lib/types'
+import { Link } from 'wouter-preact'
+import type { Dish, SeoItemRoute } from '../../lib/types'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n, localized } from '../../lib/i18n'
 import { addMenuPickItem, type MenuPickCategory } from '../../lib/menuPick'
+import { prerenderData } from '../../lib/prerenderData'
 import { ChefHat, Plus } from 'lucide-react'
 
 const ALLERGEN_LABELS: Record<string, { es: string; en: string }> = {
@@ -196,6 +198,37 @@ export function AllergenIcons(props: { alergenos: string[] }) {
   )
 }
 
+// Coordination id: seo_item_routes_v1 - the public route of a dish, so every
+// carta links to the page that the sitemap publishes.
+type DishRouteIndex = { source: SeoItemRoute[]; index: Map<number, string> }
+let dishRouteIndex: DishRouteIndex | null = null
+
+export function dishItemPath(dishId?: number): string {
+  if (!dishId) return ''
+  const source = prerenderData().itemRoutes || []
+  if (!dishRouteIndex || dishRouteIndex.source !== source) {
+    const index = new Map<number, string>()
+    for (const item of source) {
+      if (item.entity_type !== 'dish' || index.has(item.entity_id)) continue
+      index.set(item.entity_id, item.path)
+    }
+    dishRouteIndex = { source, index }
+  }
+  return dishRouteIndex.index.get(dishId) || ''
+}
+
+function DishName(props: { dish: Dish; className?: string }) {
+  const { lang } = useI18n()
+  const text = localized(props.dish.descripcion, props.dish.descripcion_english, lang)
+  const path = dishItemPath(props.dish.id)
+  if (!path) return <div class={props.className}>{text}</div>
+  return (
+    <Link class={`${props.className} dishItemLink`} href={path} data-testid={`dish-item-link-${props.dish.id}`}>
+      {text}
+    </Link>
+  )
+}
+
 function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImage?: boolean; showDishPrice?: boolean }) {
   const { t, lang } = useI18n()
   const ref = useRef<HTMLLIElement>(null)
@@ -281,7 +314,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
           </div>
           <div class="dishCardInfo">
             <div class="dishCardBody">
-              <div class="dishDescription">{displayDescripcion}</div>
+              <DishName dish={props.dish} className="dishDescription" />
               {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
               <DishSupplementBadge dish={props.dish} />
               {dishPrice ? <div class="dishCardPrice">{dishPrice}</div> : null}
@@ -291,7 +324,7 @@ function DishCard(props: { dish: Dish; pickCategory?: MenuPickCategory; showImag
         </div>
       ) : (
         <div class="dishCardBody">
-          <div class="dishDescription">{displayDescripcion}</div>
+          <DishName dish={props.dish} className="dishDescription" />
           {descriptionVisible ? <div class="dishDescriptionExtra">{descriptionText}</div> : null}
           <DishSupplementBadge dish={props.dish} />
           {dishPrice ? <div class="dishCardPrice">{dishPrice}</div> : null}
@@ -678,7 +711,6 @@ export function MenuHeroSlider(props: { images?: string[]; hidden?: boolean } = 
 }
 
 export function DishList(props: { dishes: Dish[] }) {
-  const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
 
@@ -686,7 +718,7 @@ export function DishList(props: { dishes: Dish[] }) {
     <ul class="menuDishList">
       {items.map((dish, idx) => (
         <li class="menuDish" key={`${dish.descripcion}-${idx}`}>
-          <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
+          <DishName dish={dish} className="menuDishText" />
           <AllergenIcons alergenos={dish.alergenos} />
         </li>
       ))}
@@ -707,7 +739,6 @@ export function GroupStyleDishSection(props: {
   annotations?: string[]
   subtitle?: string
 }) {
-  const { lang } = useI18n()
   const items = props.dishes || []
   if (items.length === 0) return null
   const subtitle = String(props.subtitle ?? '').trim()
@@ -725,7 +756,7 @@ export function GroupStyleDishSection(props: {
       <ul class="menuDishList">
         {items.map((dish, idx) => (
           <li class="menuDish" key={`${props.title}-${idx}-${dish.descripcion}`} data-dish-id={dish.id}>
-            <div class="menuDishText">{localized(dish.descripcion, dish.descripcion_english, lang)}</div>
+            <DishName dish={dish} className="menuDishText" />
             <DishSupplementBadge dish={dish} />
             {showAllergens ? <AllergenIcons alergenos={dish.alergenos} /> : null}
             {props.showDishPrice ? (

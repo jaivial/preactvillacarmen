@@ -3,9 +3,9 @@ import { useLocation } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
 import { localized, localizedArray } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
-import { equivalentLanguagePath, menuPath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type MenuRouteEntry } from '../lib/routes'
+import { equivalentLanguagePath, itemPath, menuPath, PUBLIC_ROUTES, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, type ItemRouteEntry, type Language, type MenuRouteEntry } from '../lib/routes'
 import { structuredData } from '../lib/structuredData'
-import type { PublicMenu } from '../lib/types'
+import type { PublicMenu, SeoItemRoute } from '../lib/types'
 import { menuSEOContent } from '../lib/menuSeoContent'
 import { absoluteMarkdownUrl } from '../../scripts/lib/public-geo.mjs'
 
@@ -34,6 +34,88 @@ export function catalogRoutes(): MenuRouteEntry[] {
   return catalogRoutesFor(prerenderData().menus)
 }
 
+// Coordination id: seo_item_routes_v1 - the routes the backend published for
+// the dishes and wines that are active in the carta.
+const metaDescription = (value: string) => {
+  const text = value.replace(/\s+/g, ' ').trim()
+  return text.length > 158 ? `${text.slice(0, 155).trim()}…` : text
+}
+
+export function catalogItemRoutes(routes?: SeoItemRoute[]): ItemRouteEntry[] {
+  const list = routes ?? prerenderData().itemRoutes ?? []
+  const byPath = new Map<string, ItemRouteEntry>()
+  const customTitles = new Set<ItemRouteEntry>()
+  for (const route of list) {
+    const path = route.path || itemPath(route.entity_type, route.slug)
+    // The same dish in two menus shares one page: the first one wins.
+    if (byPath.has(path)) continue
+    const name = { es: route.name, en: route.name_en || route.name }
+    const description = { es: route.description, en: route.description_en || route.description }
+    const context = route.entity_type === 'wine'
+      ? { es: `en la carta de vinos`, en: `on the wine list` }
+      : { es: `en el ${route.menu_title || 'menú'}`, en: `on the ${route.menu_title || 'menu'}` }
+    const entry: ItemRouteEntry = {
+      id: route.id,
+      entityType: route.entity_type,
+      slug: route.slug,
+      path,
+      name,
+      description: {
+        es: metaDescription(route.seo_description || (description.es ? `${name.es}: ${description.es}` : `${name.es}, ${context.es} de Alquería Villa Carmen, Catarroja.`)),
+        en: metaDescription(description.en ? `${name.en}: ${description.en}` : `${name.en}, ${context.en} at Alqueria Villa Carmen, Catarroja.`),
+      },
+      title: {
+        es: route.seo_title || `${name.es} | Alquería Villa Carmen`,
+        en: `${name.en} | Alqueria Villa Carmen`,
+      },
+      price: route.price,
+      allergens: route.allergens || [],
+      photo: route.photo || '',
+      section: route.section || '',
+      menuTitle: route.menu_title || '',
+      menuPath: route.menu_path || '',
+      tipo: route.tipo || '',
+      bodega: route.bodega || '',
+      denominacion: route.denominacion_origen || '',
+      graduacion: route.graduacion,
+      anyo: route.anyo || '',
+    }
+    if (route.seo_title) customTitles.add(entry)
+    byPath.set(path, entry)
+  }
+  const entries = [...byPath.values()]
+  uniqueItemTitles(entries, 'es', customTitles)
+  uniqueItemTitles(entries, 'en', customTitles)
+  return entries
+}
+
+// Coordination id: seo_item_routes_v1 - two dishes can share the same name
+// (the English translation usually repeats it). Every indexable page needs
+// its own title, so the menu, the section or the slug disambiguates it.
+function uniqueItemTitles(entries: ItemRouteEntry[], lang: Language, customTitles: Set<ItemRouteEntry>) {
+  const brand = lang === 'es' ? 'Alquería Villa Carmen' : 'Alqueria Villa Carmen'
+  const qualifier = (entry: ItemRouteEntry, level: number) => {
+    if (level === 1) return entry.menuTitle
+    if (level === 2) return entry.section
+    if (level === 3) return entry.slug
+    return ''
+  }
+  for (const level of [0, 1, 2, 3]) {
+    const titles = entries.map((entry) => {
+      const extra = qualifier(entry, level)
+      if (!extra) return entry.title[lang]
+      // A title written in the backoffice is kept as it is; the default one
+      // is rebuilt with the name and the brand.
+      if (customTitles.has(entry)) return `${entry.title[lang]} | ${extra}`
+      return `${entry.name[lang]} | ${extra} | ${brand}`
+    })
+    if (new Set(titles).size === titles.length) {
+      entries.forEach((entry, index) => { entry.title[lang] = titles[index] })
+      return
+    }
+  }
+}
+
 function upsertMeta(selector: string, attributes: Record<string, string>) {
   let element = document.head.querySelector<HTMLMetaElement | HTMLLinkElement>(selector)
   if (!element) {
@@ -53,10 +135,10 @@ export function RouteHead() {
   }, [])
   const { lang } = useI18n()
   const pathname = lang === 'en' && !location.startsWith('/en') ? `/en${location === '/' ? '' : location}` : location
-  const metadata = routeMetadata(pathname, catalogRoutes())
+  const metadata = routeMetadata(pathname, catalogRoutes(), catalogItemRoutes())
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
   const hasPublicMarkdown = metadata.indexable || metadata.canonicalPath === '/reservas'
-  const jsonLd = JSON.stringify(structuredData(pathname, catalogRoutes()))
+  const jsonLd = JSON.stringify(structuredData(pathname, catalogRoutes(), catalogItemRoutes()))
 
   useEffect(() => {
     document.title = metadata.title[lang]
@@ -112,7 +194,7 @@ export function RouteHead() {
 
 export function renderHead(pathname: string): string {
   const { lang } = languageForHead(pathname)
-  const metadata = routeMetadata(pathname, catalogRoutes())
+  const metadata = routeMetadata(pathname, catalogRoutes(), catalogItemRoutes())
   const canonical = new URL(metadata.canonicalPath, SITE_ORIGIN).href
   const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const localizedRoutes = metadata.localized && metadata.indexable
@@ -140,7 +222,7 @@ export function renderHead(pathname: string): string {
     `<meta name="twitter:description" content="${escape(metadata.description[lang])}" />`,
     `<meta name="twitter:image" content="${SOCIAL_IMAGE}" />`,
   ]
-  for (const data of structuredData(pathname, catalogRoutes())) {
+  for (const data of structuredData(pathname, catalogRoutes(), catalogItemRoutes())) {
     tags.push(`<script type="application/ld+json" data-public-schema="true">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`)
   }
   if (localizedRoutes) {

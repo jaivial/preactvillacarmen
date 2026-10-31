@@ -28,6 +28,10 @@ const [sidebarResponse, homeResponse, groupResponse, postresResponse, cafesRespo
   getJson('/api/vinos?tipo=TINTO&include_image=0'),
   ...Object.values(legalSlugs).map((slug) => getJson(`/api/public/legal-page?slug=${slug}`)),
 ])
+// Coordination id: seo_item_routes_v1 - one public route per active dish and
+// per active wine. The endpoint is optional: an older backend simply means no
+// item pages, never a broken build.
+const itemRoutesResponse = await getJson('/api/seo/item-routes').catch(() => ({ items: [] }))
 const sidebar = {
   menus: sidebarResponse.menus || [], visible_sections: sidebarResponse.visible_sections || [],
   cafe_page_active: Boolean(sidebarResponse.cafe_page_active), bebidas_page_active: Boolean(sidebarResponse.bebidas_page_active),
@@ -51,6 +55,7 @@ const postres = postresResponse.postres || []
 const cafes = cafesResponse.items || []
 const bebidas = bebidasResponse.items || []
 const vinos = { TINTO: tintoResponse.vinos || [] }
+const itemRoutes = (itemRoutesResponse.items || []).filter((item) => item && item.active !== false)
 const legalPages = Object.fromEntries(legalResponses.map((page) => [page.slug, page]))
 
 const redirects = { '/index.php': '/', '/reservas.php': '/reservas', '/avisolegal.html': '/avisolegal', '/protecciondatos.html': '/protecciondatos', '/booking_policies.php': '/booking-policies', '/reservas-especiales-politica.html': '/reservas-especiales-politica', '/menudegrupos': '/menusdegrupos', '/menudegrupos.php': '/menusdegrupos', '/menusdegrupos.php': '/menusdegrupos' }
@@ -85,7 +90,7 @@ for (const [source, menu] of Object.entries({ ...legacyMenus, ...seasonalLegacyM
 if (sidebar.postres_page_active) redirects['/confpostres.php'] = '/postres'
 else retiredLegacyPaths.push('/confpostres.php')
 const withEnglish = Object.fromEntries(Object.entries(redirects).flatMap(([from, to]) => [[from, to], [`/en${from}`, `/en${to === '/' ? '' : to}`]]))
-const baseData = { menus, sidebar, redirects: withEnglish }
+const baseData = { menus, sidebar, redirects: withEnglish, itemRoutes }
 const foodActive = { '/postres': sidebar.postres_page_active, '/vinos': sidebar.vinos_page_active, '/cafes': sidebar.cafe_page_active, '/bebidas': sidebar.bebidas_page_active }
 const routes = ssr.PUBLIC_ROUTES.filter((route) => foodActive[route.path] !== false)
 const editorialPaths = routes.filter((route) => route.prerender).flatMap((route) => route.localized ? [route.path, `/en${route.path === '/' ? '' : route.path}`] : [route.path])
@@ -93,7 +98,9 @@ const menuPaths = Object.values(menus).flatMap((menu) => {
   const path = ssr.menuPath(menu)
   return [path, `/en${path}`]
 })
-const paths = [...new Set([...editorialPaths, ...menuPaths])]
+// Coordination id: seo_item_routes_v1 - one page per dish and per wine.
+const itemPaths = itemRoutes.flatMap((item) => [item.path, `/en${item.path}`])
+const paths = [...new Set([...editorialPaths, ...menuPaths, ...itemPaths])]
 const barePath = (path) => path === '/en' ? '/' : path.startsWith('/en/') ? path.slice(3) : path
 
 const renderedPaths = new Set(paths)
@@ -135,8 +142,11 @@ const fallbackDate = validDate(gitDate('src/lib/routes.ts'))
   || Object.values(EDITORIAL_LASTMOD).map(validDate).filter(Boolean).sort().at(-1)
   || ''
 const newest = (...dates) => dates.map(dateOnly).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort().at(-1) || fallbackDate
+const itemRoutesByPath = new Map(itemRoutes.map((item) => [item.path, item]))
 const lastModified = ({ bare, menu, legalPage }) => newest(
   editorialDates.get(bare),
+  // Coordination id: seo_item_routes_v1 - the date of the dish or the wine.
+  itemRoutesByPath.get(bare)?.updated_at,
   menu?.modified_at,
   menu?.created_at,
   legalPage?.updatedAt,
@@ -213,8 +223,11 @@ const indexablePaths = paths.filter((path) => !ssr.PUBLIC_ROUTES.some((route) =>
 // Inactive dishes and private/token-driven flows must never leak into llms.txt.
 const markdownPaths = [...new Set([...paths, ...ssr.publicMarkdownPaths().filter((path) => barePath(path) === '/reservas')])]
 const absolute = (value) => `${ssr.SITE_ORIGIN}${value}`
+// Coordination id: seo_item_routes_v1 - the Markdown and the sitemap of a
+// dish or a wine use its own title, description and canonical.
+const itemEntries = ssr.catalogItemRoutes(itemRoutes)
 const geoEntries = geoManifest({
-  paths: markdownPaths, pages: Object.fromEntries(renderedBodies), menus, legalPages,
+  paths: markdownPaths, pages: Object.fromEntries(renderedBodies), menus, legalPages, items: itemEntries,
   ssr: { ...ssr, barePath, legalSlugs }, lastModified,
 })
 const indexableGeoEntries = geoEntries.filter((entry) => indexablePaths.includes(entry.path))
