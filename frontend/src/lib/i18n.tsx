@@ -85,6 +85,7 @@ const DICT: Dictionary = {
   'home.discovery.weddings': { es: 'Salones y celebraciones', en: 'Venues and celebrations' },
   'home.discovery.wedding': { es: 'Bodas', en: 'Weddings' },
   'home.discovery.communion': { es: 'Comuniones', en: 'Communions' },
+  'home.discovery.baptism': { es: 'Bautizos', en: 'Christenings' },
   'home.discovery.business': { es: 'Eventos de empresa', en: 'Company events' },
   'events.hub.title': { es: 'Una celebración, un espacio para cada momento', en: 'A space for every celebration' },
   'events.hub.body': { es: 'Explora cada tipo de celebración y cuéntanos fecha, número de invitados y qué ambiente buscas. Confirmaremos contigo el salón, montaje y propuesta.', en: 'Explore each celebration and tell us your date, guest count and preferred atmosphere. We will confirm the room, layout and proposal with you.' },

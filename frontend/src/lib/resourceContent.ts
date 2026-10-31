@@ -46,7 +46,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
     es: {
       kicker: 'Planificación práctica y reutilizable',
       title: 'Checklist para bodas, comuniones y celebraciones',
-      intro: 'Organiza la primera conversación con el restaurante y los proveedores con una lista clara. Está pensada para bodas, comuniones, comidas familiares y eventos de empresa en Catarroja.',
+      intro: 'Organiza la primera conversación con el restaurante y los proveedores con una lista clara. Está pensada para bodas, comuniones, bautizos, comidas familiares y eventos de empresa en Catarroja.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
       imageAlt: 'Salón de Alquería Villa Carmen preparado para una celebración', imageWidth: 3000, imageHeight: 2000,
       imageCaption: 'Fotografía propia de Alquería Villa Carmen: uno de sus salones para celebraciones.',
@@ -66,7 +66,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
     en: {
       kicker: 'Practical, reusable planning',
       title: 'Wedding, communion and celebration checklist',
-      intro: 'Prepare your first conversation with the restaurant and suppliers using one clear list. It is designed for weddings, communions, family meals and company events in Catarroja.',
+      intro: 'Prepare your first conversation with the restaurant and suppliers using one clear list. It is designed for weddings, communions, christenings, family meals and company events in Catarroja.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp',
       imageAlt: 'A room at Alqueria Villa Carmen prepared for a celebration', imageWidth: 3000, imageHeight: 2000,
       imageCaption: 'Villa Carmen’s own photograph: one of the celebration rooms at Alqueria Villa Carmen.',
@@ -97,7 +97,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
         { heading: 'Del Port de Catarroja a la mesa', body: 'El Port de Catarroja está al final del Camí del Port, dentro del parque natural, y desde allí salen paseos en barca por los canales y el lago. Villa Carmen está en el límite entre Catarroja y Albal, así que es fácil combinar la visita a l’Albufera con la comida sin entrar en Valencia ciudad. Consulta los horarios de las barcas directamente con los barqueros del puerto.' },
         { heading: 'Arroces y paella después de l’Albufera', body: 'La cocina de l’Albufera gira alrededor del arroz. En nuestra página de arroces y en el Menú Arrocero publicamos los arroces secos y melosos disponibles, con sus platos, precio y condiciones. La disponibilidad cambia, así que revisa la ficha del menú activo y reserva con antelación, sobre todo en fin de semana.' },
         { heading: 'Cómo planificar el día', checklist: true, items: ['Reserva mesa antes de ir: abrimos de jueves a domingo a mediodía.', 'Si venís en grupo, revisa los menús de grupos y el mínimo de comensales.', 'Consulta los horarios del paseo en barca con los barqueros del puerto.', 'Para llegar, usa la ruta de Google Maps de la página de contacto.'] },
-        { heading: 'También para grupos y celebraciones', body: 'Además del comedor tenemos salones y jardines para comidas familiares, comuniones, bodas y eventos de empresa. Si estáis organizando una salida en grupo por l’Albufera, pídenos propuesta desde Contacto con la fecha y el número de personas.' },
+        { heading: 'También para grupos y celebraciones', body: 'Además del comedor tenemos salones y jardines para comidas familiares, comuniones, bautizos, bodas y eventos de empresa. Si estáis organizando una salida en grupo por l’Albufera, pídenos propuesta desde Contacto con la fecha y el número de personas.' },
       ],
       faq: [
         { question: '¿A qué distancia está el restaurante de l’Albufera?', answer: 'El Port de Catarroja queda a pocos minutos en coche y El Palmar a unos 7 km en línea recta. Estamos en Catarroja, junto a Albal, en l’Horta Sud.' },
@@ -116,7 +116,7 @@ export const resourceContent: Record<string, Record<Lang, EditorialContent>> = {
         { heading: 'From Catarroja port to the table', body: 'Catarroja port sits at the end of the Camí del Port inside the natural park, and boat trips through the canals and the lake leave from there. Villa Carmen is on the border between Catarroja and Albal, so it is easy to combine l’Albufera with lunch without driving into Valencia city. Check boat times directly with the boatmen at the port.' },
         { heading: 'Rice and paella after l’Albufera', body: 'Albufera cooking revolves around rice. Our rice page and the Rice Menu list the dry and creamy rice dishes currently available, with dishes, price and conditions. Availability changes, so check the active menu and book ahead, especially at weekends.' },
         { heading: 'Plan your day', checklist: true, items: ['Book a table before you go: we open Thursday to Sunday for lunch.', 'For groups, check the group menus and minimum party size.', 'Check boat-trip times with the boatmen at the port.', 'Use the Google Maps route on the contact page to get here.'] },
-        { heading: 'Groups and celebrations too', body: 'Besides the dining room we have rooms and gardens for family meals, communions, weddings and company events. If you are planning a group trip to l’Albufera, request a proposal through Contact with your date and party size.' },
+        { heading: 'Groups and celebrations too', body: 'Besides the dining room we have rooms and gardens for family meals, communions, christenings, weddings and company events. If you are planning a group trip to l’Albufera, request a proposal through Contact with your date and party size.' },
       ],
       faq: [
         { question: 'How far is the restaurant from l’Albufera?', answer: 'Catarroja port is a few minutes’ drive away and El Palmar is about 7 km as the crow flies. We are in Catarroja, next to Albal, in l’Horta Sud.' },

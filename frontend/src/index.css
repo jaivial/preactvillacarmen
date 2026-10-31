@@ -6786,7 +6786,7 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
 .publicAdContent--steps { padding-top: 56px; }
 .vc-event-hub { padding-block: 64px; }
 .vc-event-hub > p { max-width: 720px; line-height: 1.7; }
-.vc-event-hub-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+.vc-event-hub-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
 .vc-event-hub-links a { display: grid; gap: 10px; padding: 24px; border: 1px solid currentColor; }
 .vc-event-hub-links span { font-size: 13px; }
 .group-landing { padding-top: 48px; }

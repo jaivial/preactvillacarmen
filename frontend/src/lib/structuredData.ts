@@ -2,6 +2,7 @@ import type { Lang } from './i18n'
 import { localizedPath, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, stripLanguagePrefix, type MenuRouteEntry } from './routes'
 import { OPENING_HOURS, RESTAURANT } from './restaurant'
 import { resourceContent } from './resourceContent'
+import { celebrationContent } from './celebrationContent'
 
 export type BreadcrumbItem = { name: string; path: string }
 
@@ -10,6 +11,7 @@ const editorialNames: Record<string, Record<Lang, string>> = {
   '/eventos': { es: 'Eventos y celebraciones', en: 'Events and celebrations' },
   '/bodas': { es: 'Bodas', en: 'Weddings' },
   '/comuniones': { es: 'Comuniones', en: 'Communions' },
+  '/bautizos': { es: 'Bautizos', en: 'Christenings' },
   '/eventos-empresa': { es: 'Eventos de empresa', en: 'Company events' },
   '/menusdegrupos': { es: 'Menús de grupos', en: 'Group menus' },
   '/arroces-y-paellas': { es: 'Arroces y paellas', en: 'Rice and paellas' },
@@ -21,7 +23,7 @@ export function breadcrumbItems(pathname: string, lang: Lang, menus: MenuRouteEn
   if (path === '/') return []
   const home = { name: lang === 'es' ? 'Inicio' : 'Home', path: '/' }
   const items = [home]
-  if (['/bodas', '/comuniones', '/eventos-empresa'].includes(path)) items.push({ name: editorialNames['/eventos'][lang], path: '/eventos' })
+  if (['/bodas', '/comuniones', '/bautizos', '/eventos-empresa'].includes(path)) items.push({ name: editorialNames['/eventos'][lang], path: '/eventos' })
   const menuId = path.match(/^\/menu\/(\d+)/)?.[1]
   const menu = menus.find((entry) => entry.path === path) || (menuId ? menus.find((entry) => entry.id === Number(menuId)) : undefined)
   if (menu) items.push({ name: editorialNames['/menusdegrupos'][lang], path: '/menusdegrupos' })
@@ -84,7 +86,8 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = []): 
     provider: { '@id': `${SITE_ORIGIN}/#restaurant` },
     ...(price > 0 ? { offers: { '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'EUR', url: canonical } } : {}),
   })
-  const faq = menu?.faq?.[lang] || resourceContent[path]?.[lang].faq || []
+  // Coordination id: celebration_faq_schema_v1 - visible FAQ on celebration pages feeds FAQPage.
+  const faq = menu?.faq?.[lang] || resourceContent[path]?.[lang].faq || celebrationContent[path]?.[lang].faq || []
   if (faq.length) graph.push({
     '@type': 'FAQPage', '@id': `${canonical}#faq`,
     mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })),
