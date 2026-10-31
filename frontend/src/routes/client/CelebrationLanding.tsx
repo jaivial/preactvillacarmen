@@ -14,6 +14,8 @@ export function CelebrationLanding() {
       ? "wedding"
       : location === "/comuniones"
         ? "communion"
+        : location === "/bautizos"
+          ? "baptism" // Coordination id: event_inquiry_type_baptism (public_event_inquiry.go)
         : location === "/eventos-empresa"
           ? "company"
           : "";

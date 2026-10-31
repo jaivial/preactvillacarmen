@@ -32,7 +32,7 @@ for (const file of htmlFiles) {
 const routeManifest = JSON.parse(await readFile(join(dist, 'seo-routes.json'), 'utf8'))
 const footerInternalPaths = [
   '/arroces-y-paellas', '/menusdegrupos', '/eventos', '/bodas', '/comuniones',
-  '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones',
+  '/bautizos', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones',
   '/contacto', '/reservas',
 ]
 const redirectPaths = new Set(Object.keys(routeManifest.redirects).map((path) => cleanPath(path)))

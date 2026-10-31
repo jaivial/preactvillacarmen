@@ -46,7 +46,7 @@ const FOOD_PAGE_NAV: { kind: FoodPageKind; href: string; labelKey: string }[] = 
   { kind: 'postres', href: '/postres', labelKey: 'nav.desserts' },
 ]
 
-const MOBILE_EDITORIAL_HREFS = new Set(['/', '/eventos', '/arroces-y-paellas', '/bodas', '/comuniones', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones'])
+const MOBILE_EDITORIAL_HREFS = new Set(['/', '/eventos', '/arroces-y-paellas', '/bodas', '/comuniones', '/bautizos', '/eventos-empresa', '/guia-arroces-valencianos', '/checklist-celebraciones'])
 
 const DEFAULT_FOOD_PAGES: Record<FoodPageKind, FoodPageVisibility> = {
   vinos: { active: true, placement: 'inside_menus' },

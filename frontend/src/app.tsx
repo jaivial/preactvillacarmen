@@ -46,6 +46,7 @@ function ClientApp() {
         <Route path="/eventos" component={Eventos} />
         <Route path="/bodas" component={CelebrationLanding} />
         <Route path="/comuniones" component={CelebrationLanding} />
+        <Route path="/bautizos" component={CelebrationLanding} />
         <Route path="/eventos-empresa" component={CelebrationLanding} />
 
         <Route path="/menu/:menuId/:menuSlug" component={MenuCatalogRoute} />

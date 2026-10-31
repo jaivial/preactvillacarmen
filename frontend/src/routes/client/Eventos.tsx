@@ -524,6 +524,10 @@ export function Eventos() {
             <strong>{t("home.discovery.communion")}</strong>
             <span>{t("events.hub.link")}</span>
           </Link>
+          <Link href="/bautizos" data-testid="events-hub-baptisms">
+            <strong>{t("home.discovery.baptism")}</strong>
+            <span>{t("events.hub.link")}</span>
+          </Link>
           <Link href="/eventos-empresa" data-testid="events-hub-business">
             <strong>{t("home.discovery.business")}</strong>
             <span>{t("events.hub.link")}</span>
