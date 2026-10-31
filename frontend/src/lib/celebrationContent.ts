@@ -38,7 +38,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
   },
   '/comuniones': {
     es: {
-      kicker: 'Una comida para disfrutar en familia', title: 'Comuniones en Catarroja',
+      kicker: 'Una comida para disfrutar en familia', title: 'Restaurante para comuniones en Catarroja',
       intro: 'Celebrad la comunión con una comida pensada para juntar a familia y amigos. Os ayudamos a elegir espacio y menú para que mayores y pequeños disfrutéis del día con tranquilidad.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Salón para una celebración familiar en Alquería Villa Carmen',
       sections: [
@@ -53,7 +53,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
     en: {
-      kicker: 'A meal for the whole family', title: 'Communions in Catarroja',
+      kicker: 'A meal for the whole family', title: 'Communion restaurant in Catarroja',
       intro: 'Celebrate a communion with a meal that brings family and friends together. We will help you choose the space and menu so adults and children can enjoy a relaxed day.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Room for a family celebration at Alqueria Villa Carmen',
       sections: [
@@ -70,7 +70,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
   },
   '/eventos-empresa': {
     es: {
-      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Eventos de empresa en Catarroja',
+      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Comidas y cenas de empresa en Catarroja',
       intro: 'Organiza una comida de equipo, un encuentro con clientes o la celebración de tu empresa en Villa Carmen. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
@@ -90,7 +90,7 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
     en: {
-      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company events in Catarroja',
+      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company lunches and dinners in Catarroja',
       intro: 'Organise a team meal, client gathering or company celebration at Villa Carmen. We combine spaces, cuisine and coordination around the purpose of your event.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',

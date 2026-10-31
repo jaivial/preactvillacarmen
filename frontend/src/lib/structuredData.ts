@@ -7,7 +7,7 @@ export type BreadcrumbItem = { name: string; path: string }
 
 const editorialNames: Record<string, Record<Lang, string>> = {
   '/contacto': { es: 'Contacto', en: 'Contact' },
-  '/eventos': { es: 'Bodas y eventos', en: 'Weddings and events' },
+  '/eventos': { es: 'Eventos y celebraciones', en: 'Events and celebrations' },
   '/bodas': { es: 'Bodas', en: 'Weddings' },
   '/comuniones': { es: 'Comuniones', en: 'Communions' },
   '/eventos-empresa': { es: 'Eventos de empresa', en: 'Company events' },

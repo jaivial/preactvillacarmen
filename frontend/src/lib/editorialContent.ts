@@ -4,7 +4,7 @@ import type { Lang } from './i18n'
 export const riceContent: Record<Lang, EditorialContent> = {
   es: {
     kicker: 'Cocina mediterránea en Catarroja',
-    title: 'Arroces y paellas en Catarroja',
+    title: 'Arrocería en Catarroja: arroces y paellas',
     intro: 'Descubre los arroces de Alquería Villa Carmen: secos, melosos y propuestas mediterráneas para compartir en Catarroja, Valencia. Consulta los platos disponibles y las condiciones de cada menú antes de reservar.',
     image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
     imageAlt: 'Paellera de arroz servida en una mesa de Alquería Villa Carmen',
@@ -23,7 +23,7 @@ export const riceContent: Record<Lang, EditorialContent> = {
   },
   en: {
     kicker: 'Mediterranean cuisine in Catarroja',
-    title: 'Rice dishes and paellas in Catarroja',
+    title: 'Rice restaurant in Catarroja: rice and paella',
     intro: 'Explore rice at Alqueria Villa Carmen: dry and creamy rice dishes and Mediterranean menus for sharing in Catarroja, Valencia. Check current dishes and each menu’s conditions before booking.',
     image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp',
     imageAlt: 'A pan of rice served on a table at Alqueria Villa Carmen',
