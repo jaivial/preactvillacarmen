@@ -6853,3 +6853,78 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
   .editorial-hero img,.group-landing-hero figure img { aspect-ratio: 2/1; }
 }
 @media (max-width:440px) { .footer-nav { grid-template-columns: 1fr; } }
+
+/* Coordination id: seo_item_routes_v1 - one page per dish and per wine. */
+.itemPage .itemPhoto {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: 14px;
+    margin: 0 0 22px;
+}
+
+.itemPage .itemDescription {
+    margin: 0 0 14px;
+    font-size: 17px;
+    line-height: 1.65;
+    color: rgba(0, 0, 0, .84);
+    text-wrap: pretty;
+}
+
+.itemPage .itemIntro {
+    margin: 0 0 22px;
+    line-height: 1.65;
+    color: rgba(0, 0, 0, .7);
+    max-width: 68ch;
+    text-wrap: pretty;
+}
+
+.itemDetails {
+    margin: 0 0 26px;
+    display: grid;
+    gap: 8px 18px;
+    max-width: 68ch;
+}
+
+.itemDetailRow {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) 1fr;
+    gap: 4px 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(20, 37, 32, .1);
+}
+
+.itemDetailLabel {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.itemDetailValue {
+    margin: 0;
+    color: rgba(0, 0, 0, .84);
+}
+
+.itemActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 34px;
+}
+
+.dishItemLink {
+    display: inline-block;
+    color: var(--green);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.dishItemLink:hover { text-decoration: none; }
+
+@media (max-width:600px) {
+    .itemDetailRow { grid-template-columns: 1fr; }
+}

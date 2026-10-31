@@ -92,9 +92,34 @@ export function menuPath(menu: { id: number; slug?: string | null; seo_slug?: st
 
 // Coordination id: menu_seo_content_v1 - faq/price feed the menu FAQPage and Offer schema.
 export type MenuRouteEntry = { id: number; slug: string; seo_slug?: string; title: Record<Language, string>; description: Record<Language, string>; path: string; price?: string; faq?: Record<Language, { question: string; answer: string }[]> }
+// Coordination id: seo_item_routes_v1 - one public route per dish and per wine.
+export type ItemRouteEntry = {
+  id: number
+  entityType: 'dish' | 'wine'
+  slug: string
+  path: string
+  name: Record<Language, string>
+  description: Record<Language, string>
+  title: Record<Language, string>
+  price?: number | null
+  allergens: string[]
+  photo: string
+  section: string
+  menuTitle: string
+  menuPath: string
+  tipo: string
+  bodega: string
+  denominacion: string
+  graduacion?: number | null
+  anyo: string
+}
 export type RouteMetadataInput = RouteMetadata | MenuRouteEntry
 
-export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = []): RouteMetadata & { canonicalPath: string } {
+export function itemPath(entityType: 'dish' | 'wine', slug: string): string {
+  return entityType === 'wine' ? `/vinos/${encodeURIComponent(slug)}` : `/platos/${encodeURIComponent(slug)}`
+}
+
+export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = [], items: ItemRouteEntry[] = []): RouteMetadata & { canonicalPath: string } {
   const { lang, path } = stripLanguagePrefix(pathname)
   const normalized = path.length > 1 ? path.replace(/\/+$/, '') : path
   const menuMatch = normalized.match(/^\/menu\/([^/]+)(?:\/([^/]+))?$/)
@@ -114,6 +139,25 @@ export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = []): R
       }
     }
   }
+  // Coordination id: seo_item_routes_v1 - /platos/<slug> and /vinos/<slug>.
+  const itemMatch = normalized.match(/^\/(platos|vinos)\/([^/]+)$/)
+  if (itemMatch) {
+    const entityType = itemMatch[1] === 'vinos' ? 'wine' : 'dish'
+    let slug = itemMatch[2]
+    try { slug = decodeURIComponent(slug) } catch { /* Invalid slugs fall through to 404. */ }
+    const item = items.find((entry) => entry.entityType === entityType && entry.slug === slug)
+    if (item) {
+      return {
+        path: item.path,
+        indexable: true,
+        prerender: true,
+        localized: true,
+        title: item.title,
+        description: item.description,
+        canonicalPath: localizedPath(item.path, lang),
+      }
+    }
+  }
   const aliases: Record<string, string> = {
     '/reservas.php': '/reservas',
     '/avisolegal.html': '/avisolegal',
@@ -129,8 +173,8 @@ export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = []): R
   return { ...page(normalized, ['Página no encontrada | Villa Carmen', 'Page not found | Villa Carmen'], ['La página solicitada no está disponible.', 'The requested page is not available.'], { indexable: false, prerender: false, localized: false }), canonicalPath: localizedPath(normalized, lang) }
 }
 
-export function canonicalUrl(pathname: string, menus: MenuRouteEntry[] = []): string {
-  return new URL(routeMetadata(pathname, menus).canonicalPath, SITE_ORIGIN).href
+export function canonicalUrl(pathname: string, menus: MenuRouteEntry[] = [], items: ItemRouteEntry[] = []): string {
+  return new URL(routeMetadata(pathname, menus, items).canonicalPath, SITE_ORIGIN).href
 }
 
 export const GONE_PATHS = [

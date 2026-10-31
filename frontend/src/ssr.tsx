@@ -40,4 +40,4 @@ export function renderPublicShell(path: string, data: PrerenderData): string {
 export { normalizePublicMenu } from './lib/backendAdapters'
 export { renderHead, publicMarkdownPaths } from './components/RouteHead'
 export { PUBLIC_ROUTES, SITE_ORIGIN, GONE_PATHS, menuPath, routeMetadata, equivalentLanguagePath } from './lib/routes'
-export { catalogRoutesFor } from './components/RouteHead'
+export { catalogRoutesFor, catalogItemRoutes } from './components/RouteHead'

@@ -55,21 +55,25 @@ export function MenuSectionTabs(props: {
           controlsPrefix={props.testId}
         />
       ) : null}
-      {visible.map((panel, index) =>
-        tabbed && panel.key !== activeKey ? null : !tabbed ? (
-          <Fragment key={panel.key}>{panel.content}</Fragment>
-        ) : (
+      {visible.map((panel, index) => {
+        if (!tabbed) return <Fragment key={panel.key}>{panel.content}</Fragment>
+        // Coordination id: seo_item_routes_v1 - the inactive panels stay in the
+        // served HTML (hidden) so the dishes of every section link to their
+        // public page and the crawlers find them without clicking the tabs.
+        const isActive = panel.key === activeKey
+        return (
           <div
             key={panel.key}
             role="tabpanel"
+            hidden={!isActive}
             id={`${props.testId}-panel-${index}`}
             aria-labelledby={`${props.testId}-tab-${index}`}
             data-testid={`${props.testId}-panel-${panel.key}`}
           >
             {panel.content}
           </div>
-        ),
-      )}
+        )
+      })}
     </Fragment>
   )
 }
