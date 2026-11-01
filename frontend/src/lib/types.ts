@@ -323,6 +323,10 @@ export type SeoItemRoute = {
 export type SeoItemRoutesResponse = {
   success: true
   items: SeoItemRoute[]
+  // Coordination id: seo_item_unavailable_v1
+  unavailable?: SeoItemRoute[]
+  redirects?: Record<string, string>
+  gone?: string[]
 }
 
 export type ApiError = {

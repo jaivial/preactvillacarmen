@@ -23,14 +23,17 @@ const useItemRoute = (kind: ItemKind, slug: string | undefined) => {
     return items.find((item) => item.entity_type === kind && item.slug === slug) || null
   })
 
+  // Always refresh: the prerendered snapshot can be older than a dish switched
+  // off or on since the last build. Coordination id: seo_item_unavailable_v1
   useEffect(() => {
     let cancelled = false
-    const known = (prerenderData().itemRoutes || []).find((item) => item.entity_type === kind && item.slug === slug)
-    if (known) return
     apiGetJson<SeoItemRoutesResponse>('/api/seo/item-routes')
       .then((response) => {
         if (cancelled) return
-        const match = (response.items || []).find((item) => item.entity_type === kind && item.slug === slug)
+        const same = (item: SeoItemRoute) => item.entity_type === kind && item.slug === slug
+        const live = (response.items || []).find(same)
+        const unavailable = (response.unavailable || []).find(same)
+        const match = live || (unavailable ? { ...unavailable, active: false } : undefined)
         if (match) setRoute(match)
       })
       .catch(() => undefined)
@@ -106,6 +109,11 @@ const ItemPage = (props: { kind: ItemKind; slug?: string }) => {
               decoding="async"
               data-testid="seo-item-photo"
             />
+          ) : null}
+          {route.active === false ? (
+            <p class="itemUnavailable" role="status" data-testid="seo-item-unavailable" data-coordination-id="seo_item_unavailable_v1">
+              {t(props.kind === 'wine' ? 'item.unavailable.wine' : 'item.unavailable.dish')}
+            </p>
           ) : null}
           {description ? <p class="itemDescription">{description}</p> : null}
           <p class="itemIntro">

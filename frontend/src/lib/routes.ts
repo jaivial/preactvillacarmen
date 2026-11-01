@@ -113,6 +113,8 @@ export type ItemRouteEntry = {
   denominacion: string
   graduacion?: number | null
   anyo: string
+  // Coordination id: seo_item_unavailable_v1 - false while switched off.
+  available: boolean
 }
 export type RouteMetadataInput = RouteMetadata | MenuRouteEntry
 

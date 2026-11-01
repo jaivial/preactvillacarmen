@@ -79,6 +79,7 @@ export function catalogItemRoutes(routes?: SeoItemRoute[]): ItemRouteEntry[] {
       denominacion: route.denominacion_origen || '',
       graduacion: route.graduacion,
       anyo: route.anyo || '',
+      available: route.active !== false,
     }
     if (route.seo_title) customTitles.add(entry)
     byPath.set(path, entry)
