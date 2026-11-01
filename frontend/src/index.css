@@ -5891,15 +5891,6 @@ svg {
   box-shadow: 0 4px 20px rgba(107, 58, 31, 0.06);
 }
 
-.cafeItem::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, #c4843a, #8b4513);
-  opacity: 0.55;
-}
-
 @media (hover: hover) {
   .cafeItem {
     transition: transform 200ms ease, box-shadow 200ms ease;
@@ -5939,16 +5930,9 @@ svg {
 
 .cafeItemHead {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
   gap: 12px;
-}
-
-.cafeItemIndex {
-  font-family: var(--font-serif);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  color: rgba(139, 69, 19, 0.55);
 }
 
 .cafeItemName {

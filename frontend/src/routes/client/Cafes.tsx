@@ -12,7 +12,7 @@ import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 
 // Coordination id: cafes_page_ui_v2 - carta-style coffee page: hero, optional
-// type tabs, numbered cards in a responsive grid, and a closing booking CTA.
+// type tabs, cards in a responsive grid, and a closing booking CTA.
 
 function groupCafes(items: ComidaItem[]) {
   const byTipo: Record<string, ComidaItem[]> = {}
@@ -147,7 +147,6 @@ export function Cafes() {
                       ) : null}
                       <div class="cafeItemBody">
                         <div class="cafeItemHead">
-                          <span class="cafeItemIndex" aria-hidden="true">{String(idx + 1).padStart(2, '0')}</span>
                           <h3 class="cafeItemName" data-testid={`cafe-name-${item.num}`}>{localized(item.nombre, item.nombre_english, lang)}</h3>
                           {price ? <span class="cafeItemPrice" data-testid={`cafe-price-${item.num}`}>{price}</span> : null}
                         </div>
