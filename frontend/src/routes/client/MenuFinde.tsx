@@ -140,6 +140,8 @@ export function MenuFinde() {
           ) : (
             <>
               <div class="menuMain">
+                {/* seo_heading_hierarchy_v1: one keyword h2; the sections below are h3. */}
+                <h2 class="menuSectionTitle" data-testid="menu-dishes-heading">{t('menu.dishes.heading.weekend')}</h2>
                 <MenuSection title={t('menus.preview.starters')} dishes={data.entrantes} pickCategory="entrantes" />
                 <MenuSection title={principalesTitleOverride || t('menus.preview.mains')} dishes={data.principales} pickCategory="principales" />
                 {data.arroces.length > 0 ? <p class="menuSectionLead">{t('menu.rice.lead')}</p> : null}

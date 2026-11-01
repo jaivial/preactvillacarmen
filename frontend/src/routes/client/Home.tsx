@@ -904,6 +904,8 @@ export function Home() {
             <div class="subTitle">{t('home.hero.tagline')}</div>
             <h1 class="title" data-testid="home-restaurant-heading">
               {t('home.hero.title')}
+              {/* seo_heading_hierarchy_v1: separator so the h1 does not read "CarmenRestaurante". */}
+              <span class="sr-only">: </span>
               <span class="heroIntent">{t('home.hero.intent')}</span>
             </h1>
           </div>
@@ -925,13 +927,13 @@ export function Home() {
       <section class="vkit__titleSection" id="landing">
         <div class="container">
           <div class="subTitle">{t('home.intro.kicker')}</div>
-          <h2 class="title">{t('home.intro.title')}</h2>
+          <p class="title">{t('home.intro.title')}</p>
           <p class="description">{t('home.intro.description')}</p>
         </div>
       </section>
 
       <nav class="container vc-discovery" aria-label={t('home.discovery.title')} data-testid="home-commercial-navigation">
-        <h2>{t('home.discovery.title')}</h2>
+        <p class="vc-discovery-title">{t('home.discovery.title')}</p>
         <div class="vc-discovery-links">{HOME_DISCOVERY_CARDS.map((card) => <DiscoveryCard key={card.href} href={card.href} title={t(card.label)} description={card.copy[lang]} image={card.image} imageAlt={card.alt[lang]} action={t('home.discovery.explore')} testId={card.id} imageSrcSet={'imageSrcSet' in card ? card.imageSrcSet : undefined} imageFallbackSrcSet={'imageFallbackSrcSet' in card ? card.imageFallbackSrcSet : undefined} imageSizes={'imageSizes' in card ? card.imageSizes : undefined} />)}</div>
         <div class="vc-discovery-actions"><Link href="/contacto" className="btn" data-testid="home-commercial-contact">{t('home.discovery.contact')}</Link><Link href="/reservas" className="btn primary" data-testid="home-commercial-booking">{t('home.discovery.booking')}</Link></div>
       </nav>
@@ -1001,7 +1003,7 @@ export function Home() {
 
       <section class="vc-cta">
         <div class="container vc-cta-inner">
-          <h2 class="vc-cta-title">{t('home.cta.title')}</h2>
+          <p class="vc-cta-title">{t('home.cta.title')}</p>
           <p class="vc-cta-body">{t('home.cta.body')}</p>
           <Link href="/reservas" className="btn primary">
             {t('nav.reserve')}

@@ -15,14 +15,14 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-.event-inquiry-heading h2 {
+.event-inquiry-heading h2, .event-inquiry-title {
   font-family: "Newsreader", "Cormorant Garamond", serif;
   font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 400;
   line-height: 1.08;
   margin: 12px 0 18px;
 }
-.event-inquiry-heading > p:not(.event-inquiry-kicker) {
+.event-inquiry-heading > p:not(.event-inquiry-kicker):not(.event-inquiry-title) {
   color: #68655f;
   line-height: 1.7;
 }

@@ -208,9 +208,10 @@ export function Cafes() {
                             {item.tipo && (
                               <div class="cafeMeta">{lang === 'en' ? (localized(item.tipo, item.tipo_english, lang)) : (t(`cafe_type.${item.tipo}`) || item.tipo)}</div>
                             )}
-                            <h2 class="cafeName">{localized(item.nombre, item.nombre_english, lang)}</h2>
-                            {item.descripcion && item.nombre !== item.descripcion ? (
-                              <p class="cafeDesc">{localized(item.descripcion, item.descripcion_english, lang)}</p>
+                            <h3 class="cafeName">{localized(item.nombre, item.nombre_english, lang)}</h3>
+                            {/* comida_description_toggle_v1: same rule as menu dishes, the backoffice switch decides. */}
+                            {item.description_enabled !== false && item.descripcion && item.nombre !== item.descripcion ? (
+                              <p class="cafeDesc" data-testid={`cafe-description-${item.num}`}>{localized(item.descripcion, item.descripcion_english, lang)}</p>
                             ) : null}
                           </div>
 

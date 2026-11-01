@@ -212,6 +212,9 @@ export function Vinos() {
           ) : !hasContent ? (
             <div class="menuState">{t('wines.empty')}</div>
           ) : (
+            <>
+            {/* seo_heading_hierarchy_v1: one keyword h2 per wine type; wine names are h3. */}
+            <h2 class="wineTypeHeading" data-testid="vinos-type-heading">{t(`wines.heading.${tipo.toLowerCase()}`)}</h2>
             <div class="wineList">
               {vinos.map((v, idx) => {
                 const foto = fotoUrls[v.num]
@@ -240,11 +243,11 @@ export function Vinos() {
 
                       <div class="wineInfo">
                         <div class="wineMeta">{localized(v.bodega, v.bodega_english, lang)}</div>
-                        <h2 class="wineName">
+                        <h3 class="wineName">
                           {wineRoute ? (
                             <Link href={wineRoute} data-testid={`seo-wine-link-${v.num}`}>{wineName}</Link>
                           ) : wineName}
-                        </h2>
+                        </h3>
 
                         {v.denominacion_origen ? <div class="wineOrigin">{`D.O. ${localized(v.denominacion_origen, v.denominacion_origen_english, lang)}`}</div> : null}
 
@@ -264,6 +267,7 @@ export function Vinos() {
                 )
               })}
             </div>
+            </>
           )}
         </div>
       </section>
