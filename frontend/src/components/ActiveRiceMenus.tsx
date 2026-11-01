@@ -39,7 +39,7 @@ export function ActiveRiceMenus() {
       {current.dishes.length || current.links.length ? (
         <div class="container editorial-menu-list" data-testid="active-rice-menus">
           {current.dishes.length && current.menu ? (
-            <MenuSection title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice />
+            <MenuSection headingLevel="h2" title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice />
           ) : null}
           {current.links.length ? (
             <nav class="editorial-rice-links" aria-label={t('rice.menusNavigation')}>

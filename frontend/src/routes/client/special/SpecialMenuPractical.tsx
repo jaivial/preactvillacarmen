@@ -21,8 +21,9 @@ function longDate(iso: string, lang: string): string {
  *
  * Coordination id: special_menu_practical_v1
  */
-export function SpecialMenuPractical(props: { menu: PublicMenu }) {
+export function SpecialMenuPractical(props: { menu: PublicMenu; headingLevel?: 'h2' | 'h3' }) {
   const { lang } = useI18n()
+  const Heading = props.headingLevel || 'h3'
   const es = lang !== 'en'
   const { menu } = props
   const specialDate = menu.special_date ?? null
@@ -48,7 +49,7 @@ export function SpecialMenuPractical(props: { menu: PublicMenu }) {
 
   return (
     <section class="section container specialMenuPractical" data-coordination-id="special_menu_practical_v1" data-testid="public-special-menu-practical">
-      <h2 data-testid="public-special-menu-practical-title">{es ? 'Información práctica' : 'Practical information'}</h2>
+      <Heading data-testid="public-special-menu-practical-title">{es ? 'Información práctica' : 'Practical information'}</Heading>
       <ul class="specialMenuPracticalList" data-testid="public-special-menu-practical-list">
         {specialDate?.date ? (
           <li data-testid="public-special-menu-practical-date"><strong>{es ? 'Fecha: ' : 'Date: '}</strong>{longDate(specialDate.date, lang)}{specialDate.title ? ` · ${specialDate.title}` : ''}</li>
@@ -67,7 +68,7 @@ export function SpecialMenuPractical(props: { menu: PublicMenu }) {
         <li data-testid="public-special-menu-practical-allergens"><strong>{es ? 'Alergias e intolerancias: ' : 'Allergies and intolerances: '}</strong>{es ? 'indícalas al reservar o escríbenos por WhatsApp y te confirmamos las opciones disponibles.' : 'tell us when booking or message us on WhatsApp and we will confirm the available options.'}</li>
         <li data-testid="public-special-menu-practical-place"><strong>{es ? 'Dónde: ' : 'Where: '}</strong>{`${RESTAURANT.name}, ${RESTAURANT.street}, ${RESTAURANT.postalCode} ${RESTAURANT.locality} (${RESTAURANT.region})`}{es ? ', con aparcamiento junto al restaurante.' : ', with parking next to the restaurant.'}</li>
       </ul>
-      <h2 data-testid="public-special-menu-practical-others-title">{menu.completo ? (es ? 'Alternativas disponibles' : 'Available alternatives') : (es ? 'Otras propuestas' : 'Other proposals')}</h2>
+      <Heading data-testid="public-special-menu-practical-others-title">{menu.completo ? (es ? 'Alternativas disponibles' : 'Available alternatives') : (es ? 'Otras propuestas' : 'Other proposals')}</Heading>
       <ul class="specialMenuPracticalList" data-testid="public-special-menu-practical-others">
         {links.map((link) => (
           <li key={link.href} data-testid={`public-special-menu-practical-other-${link.href.replace(/[^a-z0-9]+/gi, '-')}`}>

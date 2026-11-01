@@ -63,7 +63,8 @@ export function EditorialLanding({ content, children, id }: {
         ))}
       </section>
       <aside class="container editorial-cta">
-        <h2>{t('editorial.cta.title')}</h2>
+        {/* seo_heading_hierarchy_v1: repeated CTA, not a keyword section. */}
+        <p class="editorial-cta-title">{t('editorial.cta.title')}</p>
         <div class="editorial-actions">
           <Link href="/reservas" className="btn primary">{t('nav.reserve')}</Link>
           <Link href="/contacto" className="btn">{t('editorial.cta.proposal')}</Link>

@@ -43,6 +43,10 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
       <section class="menuBody">
         <div class="container">
           <div class="menuMain">
+            {/* seo_heading_hierarchy_v1: one keyword h2 ("Platos del menú ..."); sections are h3. */}
+            {(props.headingLevel || 'h1') === 'h1' ? (
+              <h2 class="menuSectionTitle" data-testid="menu-dishes-heading">{`${t('menu.dishes.heading.menu')}: ${localized(props.menu.menu_title, props.menu.menu_title_english, lang)}`}</h2>
+            ) : null}
             <MenuSectionTabs
               enabled={props.menu.show_section_tabs}
               ariaLabel={localized(props.menu.menu_title, props.menu.menu_title_english, lang)}

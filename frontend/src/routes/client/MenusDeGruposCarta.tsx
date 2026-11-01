@@ -43,7 +43,8 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu; headingLevel?: 'h1
                 <img class="menugrupos-vine" src="/media/menugrupos/enredadera.png" alt="" loading="lazy" />
               </div>
 
-              <h2 class="menuSectionTitle">{localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h2>
+              {/* seo_heading_hierarchy_v1: the card title repeated the h1; as a page it is the dishes h2, embedded it stays a title. */}
+              <h2 class="menuSectionTitle" data-testid="group-menu-dishes-heading">{(props.headingLevel || 'h1') === 'h1' ? `${t('menu.dishes.heading.menu')}: ${localized(props.menu.menu_title, props.menu.menu_title_english, lang)}` : localized(props.menu.menu_title, props.menu.menu_title_english, lang)}</h2>
 
               {subtitles.length > 0 ? (
                 <div class="groupSubtitles">

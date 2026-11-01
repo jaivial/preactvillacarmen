@@ -18,6 +18,12 @@ function formatEuro(value: number): string {
  *
  * Coordination id: special_menu_sections_v1
  */
+// Headings that only differ in case/accents/spacing count as the same text.
+function sameHeading(a: string, b: string): boolean {
+  const norm = (v: string) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return norm(a) !== '' && norm(a) === norm(b)
+}
+
 export function SpecialMenuSimpleTemplate(props: {
   menu: PublicMenu
   subtitle: string
@@ -97,8 +103,13 @@ export function SpecialMenuSimpleTemplate(props: {
                       COMPLETO
                     </div>
                   ) : null}
+                  {/* seo_heading_hierarchy_v1: a section named like the menu would just repeat the h1, so it becomes h3. */}
                   {section.title ? (
-                    <h2 class="specialMenuSectionTitle" data-testid={`public-menu-section-title-${section.id}`}>{section.title}</h2>
+                    sameHeading(section.title, props.menu.menu_title) || sameHeading(section.title, publicMenuH1(props.menu, lang)) ? (
+                      <h3 class="specialMenuSectionTitle" data-testid={`public-menu-section-title-${section.id}`}>{section.title}</h3>
+                    ) : (
+                      <h2 class="specialMenuSectionTitle" data-testid={`public-menu-section-title-${section.id}`}>{section.title}</h2>
+                    )
                   ) : null}
                   {section.price != null ? (
                     <p class="specialMenuSectionPrice" data-testid={`public-menu-section-price-${section.id}`}>{formatEuro(section.price)} / pax</p>
@@ -145,7 +156,8 @@ export function SpecialMenuSimpleTemplate(props: {
           ) : null}
         </div>
       </section>
-      <SpecialMenuPractical menu={props.menu} />
+      {/* seo_heading_hierarchy_v1: when no section is an h2, the practical block carries the h2 so levels never skip. */}
+      <SpecialMenuPractical menu={props.menu} headingLevel={sections.some((s) => s.title && !sameHeading(s.title, props.menu.menu_title) && !sameHeading(s.title, publicMenuH1(props.menu, lang))) ? 'h3' : 'h2'} />
     </div>
   )
 }

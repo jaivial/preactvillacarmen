@@ -534,6 +534,8 @@ export type ComidaItem = {
   nombre: string
   precio: number
   descripcion: string
+  // Coordination id: comida_description_toggle_v1 - false hides the text (kept in the backoffice).
+  description_enabled?: boolean
   titulo?: string
   suplemento?: number
   alergenos?: string[]

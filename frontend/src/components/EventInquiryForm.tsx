@@ -316,12 +316,12 @@ export function EventInquiryForm({ defaultEventType = "" }: Props) {
             "Let’s talk about your celebration",
           )}
         </p>
-        <h2 id="event-inquiry-title">
+        <p id="event-inquiry-title" class="event-inquiry-title">
           {text(
             "Solicita información para tu evento",
             "Request information for your event",
           )}
-        </h2>
+        </p>
         <p>
           {text(
             "Cuéntanos qué tienes en mente y te responderemos con una propuesta personalizada.",

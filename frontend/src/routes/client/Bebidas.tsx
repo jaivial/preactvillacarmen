@@ -181,8 +181,8 @@ export function Bebidas() {
                       ) : null}
                       <div class="wineInfo">
                         {item.tipo && <div class="wineMeta">{localized(item.tipo, item.tipo_english, lang)}</div>}
-                        <h2 class="wineName">{localized(item.nombre, item.nombre_english, lang)}</h2>
-                        {item.descripcion && item.nombre !== item.descripcion ? <p class="wineDesc">{localized(item.descripcion, item.descripcion_english, lang)}</p> : null}
+                        <h3 class="wineName">{localized(item.nombre, item.nombre_english, lang)}</h3>
+                        {item.description_enabled !== false && item.descripcion && item.nombre !== item.descripcion ? <p class="wineDesc" data-testid={`bebida-description-${item.num}`}>{localized(item.descripcion, item.descripcion_english, lang)}</p> : null}
                       </div>
                       <div class="winePriceTag">{formatEuro(item.precio)}</div>
                     </motion.div>

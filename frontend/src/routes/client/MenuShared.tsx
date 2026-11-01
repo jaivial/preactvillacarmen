@@ -478,14 +478,18 @@ export function MenuSection(props: {
   showDishPrice?: boolean
   annotations?: string[]
   subtitle?: string
+  // seo_heading_hierarchy_v1: h2 only when the section is a page-level
+  // keyword (editorial rice pages); inside a menu page it hangs as h3.
+  headingLevel?: 'h2' | 'h3'
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
   const subtitle = String(props.subtitle ?? '').trim()
+  const Heading = props.headingLevel || 'h3'
 
   return (
     <section class="menuSection">
-      <h2 class="menuSectionHeading">{props.title}</h2>
+      <Heading class="menuSectionHeading">{props.title}</Heading>
       {subtitle ? (
         <p class="menuSectionLead" data-testid="menu-section-lead">{subtitle}</p>
       ) : null}
@@ -517,7 +521,7 @@ export function MenuImportantBox(props: { lines?: string[] }) {
   if (props.lines === undefined) {
     return (
       <div class="menuImportantBox" data-testid="menu-important-box-legacy">
-        <h3 class="menuImportantTitle">{t('menu.important.title')}</h3>
+        <h4 class="menuImportantTitle">{t('menu.important.title')}</h4>
         <p class="menuImportantText">{t('menu.important.minConsumption')}</p>
         <p class="menuImportantText">{t('menu.important.noKidsMenu')}</p>
         <p class="menuImportantText menuImportantText--takeaway">{t('menu.takeaway.note')}</p>
@@ -532,7 +536,7 @@ export function MenuImportantBox(props: { lines?: string[] }) {
 
   return (
     <div class="menuImportantBox" data-testid="menu-important-box">
-      <h3 class="menuImportantTitle">{t('menu.important.title')}</h3>
+      <h4 class="menuImportantTitle">{t('menu.important.title')}</h4>
       {lines.map((line, idx) => (
         <p class="menuImportantText" key={`${line}-${idx}`} data-testid={`menu-important-line-${idx}`}>
           {line}
@@ -547,7 +551,7 @@ export function MenuPriceCard(props: { precio: string; importantInfo?: string[] 
 
   return (
     <section class="menuAsideCard">
-      <h2 class="menuAsideTitle">{t('menus.preview.price')}</h2>
+      <h3 class="menuAsideTitle">{t('menus.preview.price')}</h3>
 
       <div class="menuPriceNotes">
         <div class="menuPriceNote">{t('menu.price.dessertOrCoffee')}</div>
@@ -566,7 +570,7 @@ export function AllergensLegend() {
 
   return (
     <section class="allergensLegend" aria-label={t('menu.allergens.legend.title')}>
-      <h2 class="allergensLegendTitle">{t('menu.allergens.legend.title')}</h2>
+      <h3 class="allergensLegendTitle">{t('menu.allergens.legend.title')}</h3>
       <div class="allergensLegendGrid">
         {ALLERGEN_ORDER.map((key) => {
           const src = ALLERGEN_ICONS[key]

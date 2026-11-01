@@ -244,6 +244,9 @@ const DICT: Dictionary = {
   'menus.preview.loading': { es: 'Cargando...', en: 'Loading...' },
   'menus.preview.unavailable': { es: 'No disponible', en: 'Unavailable' },
   'menus.preview.starters': { es: 'Entrantes', en: 'Starters' },
+  'menu.dishes.heading.daily': { es: 'Platos del menú del día', en: 'Daily menu dishes' },
+  'menu.dishes.heading.weekend': { es: 'Platos del menú de fin de semana', en: 'Weekend menu dishes' },
+  'menu.dishes.heading.menu': { es: 'Platos del menú', en: 'Menu dishes' },
   'menus.preview.mains': { es: 'Principales', en: 'Mains' },
   'menus.preview.price': { es: 'Precio', en: 'Price' },
 
@@ -360,6 +363,9 @@ const DICT: Dictionary = {
   'wines.type.tinto': { es: 'Tinto', en: 'Red' },
   'wines.type.blanco': { es: 'Blanco', en: 'White' },
   'wines.type.cava': { es: 'Cava', en: 'Sparkling' },
+  'wines.heading.tinto': { es: 'Vinos tintos', en: 'Red wines' },
+  'wines.heading.blanco': { es: 'Vinos blancos', en: 'White wines' },
+  'wines.heading.cava': { es: 'Cavas y espumosos', en: 'Cava and sparkling wines' },
   'wines.error': { es: 'No se pudo cargar la carta de vinos.', en: 'Could not load wine list.' },
   'wines.empty': { es: 'No hay vinos disponibles.', en: 'No wines available.' },
 

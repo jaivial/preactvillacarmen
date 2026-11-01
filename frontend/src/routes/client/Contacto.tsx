@@ -27,7 +27,9 @@ export function Contacto() {
       <section class="section">
         <div class="container contact-grid">
           <div class="contact-card">
-            <h2 class="contact-title">{t('contact.address')}</h2>
+            {/* seo_heading_hierarchy_v1: keyword h2 for the address/hours card; its labels are h3. */}
+            <h2 class="contact-card-heading">{lang === 'es' ? 'Dirección y horario de Alquería Villa Carmen' : 'Address and opening hours of Alquería Villa Carmen'}</h2>
+            <h3 class="contact-title">{t('contact.address')}</h3>
             <p class="contact-text">
               {RESTAURANT.street}
               <br />
@@ -50,9 +52,9 @@ export function Contacto() {
               <Link className="btn" href="/reservas" data-testid="contact-booking-link">{t('nav.reserve')}</Link>
             </div>
 
-            <h2 class="contact-title" style={{ marginTop: '26px' }}>
+            <h3 class="contact-title" style={{ marginTop: '26px' }}>
               {t('contact.hours')}
-            </h2>
+            </h3>
             <div class="hours">
               {hours.map((line) => (
                 <p key={line}>{line}</p>
@@ -61,7 +63,6 @@ export function Contacto() {
           </div>
 
           <div class="contact-map">
-            <h2 class="sr-only">{lang === 'es' ? 'Cómo llegar a Alquería Villa Carmen' : 'How to get to Alquería Villa Carmen'}</h2>
             <iframe
               title="Mapa Alquería Villa Carmen"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3082.9041110667404!2d-0.41829958463462646!3d39.4036753794957!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd604fed36fb5283%3A0xebbb1fe4b41e6e15!2sRestaurante%20Alquer%C3%ADa%20Villa%20Carmen!5e0!3m2!1ses!2ses!4v1681057872724!5m2!1ses!2ses"
