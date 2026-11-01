@@ -25,7 +25,7 @@ export const EDITORIAL_LASTMOD = {
   '/eventos-empresa': '2026-10-31',
   '/menusdegrupos': '2026-10-29',
   '/postres': '2026-10-25',
-  '/cafes': '2026-10-25',
+  '/cafes': '2026-11-01',
   '/bebidas': '2026-10-25',
   '/vinos': '2026-10-25',
 }
