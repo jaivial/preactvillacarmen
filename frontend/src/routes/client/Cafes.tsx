@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
+import { Link } from 'wouter-preact'
+import { Coffee } from 'lucide-react'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import { prerenderData, setPrerenderData } from '../../lib/prerenderData'
 import type { CafesPageSEO, ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { MenuSEOContent } from '../../components/MenuSEOContent'
+import { useFoodShowPrices } from '../../lib/useFoodShowPrices'
 import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 
-type CafesState = {
-  loaded: boolean
-  itemsByTipo: Record<string, ComidaItem[]>
-  error: boolean
-}
+// Coordination id: cafes_page_ui_v2 - carta-style coffee page: hero, optional
+// type tabs, numbered cards in a responsive grid, and a closing booking CTA.
 
 function groupCafes(items: ComidaItem[]) {
   const byTipo: Record<string, ComidaItem[]> = {}
@@ -26,19 +26,20 @@ function groupCafes(items: ComidaItem[]) {
 export function Cafes() {
   const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
-  const initialItems = prerenderData().cafes
-  const [state, setState] = useState<CafesState>(() => ({ loaded: initialItems !== undefined, itemsByTipo: groupCafes(initialItems || []), error: false }))
-  const [selectedTipo, setSelectedTipo] = useState<string>(() => Object.keys(groupCafes(initialItems || [])).sort()[0] || '')
+  const showPrices = useFoodShowPrices('cafes')
+  const [items, setItems] = useState<ComidaItem[] | undefined>(() => prerenderData().cafes)
+  const [error, setError] = useState(false)
+  const [selectedTipo, setSelectedTipo] = useState('')
   const [fotoUrls, setFotoUrls] = useState<Record<number, string | null>>({})
-  const fotoUrlsRef = useRef<Record<number, string | null>>({})
-  const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
-  const observerRef = useRef<IntersectionObserver | null>(null)
   const inflightFotoRef = useRef<Set<number>>(new Set())
   // Coordination id: cafes_page_seo_v1 - backoffice SEO for /cafes (H1, intro, FAQ, head).
   const [seo, setSeo] = useState<CafesPageSEO>(() => prerenderData().cafesSeo || {})
 
   useEffect(() => {
     let cancelled = false
+    apiGetJson<ComidaItemsResponse>('/api/comida/cafes?active=1')
+      .then((res) => { if (!cancelled) setItems(res.items || []) })
+      .catch(() => { if (!cancelled) setError(true) })
     apiGetJson<{ seo?: CafesPageSEO }>('/api/public/cafes-seo')
       .then((res) => {
         if (cancelled || !res.seo) return
@@ -49,200 +50,122 @@ export function Cafes() {
       .catch(() => { /* Defaults stay in place. */ })
     return () => { cancelled = true }
   }, [])
+
+  const byTipo = useMemo(() => groupCafes(items || []), [items])
+  const tipos = useMemo(() => Object.keys(byTipo).sort((a, b) => a.localeCompare(b)), [byTipo])
+  const activeTipo = tipos.includes(selectedTipo) ? selectedTipo : tipos[0] || ''
+  const visible = activeTipo ? byTipo[activeTipo] || [] : []
+
+  const tipoLabel = useCallback((tipo: string) => {
+    if (lang === 'en') return byTipo[tipo]?.find((it) => it.tipo_english)?.tipo_english || tipo
+    const key = `cafe_type.${tipo}`
+    const label = t(key)
+    return label === key ? tipo : label
+  }, [byTipo, lang, t])
+
+  // Photos are fetched on demand, only for the coffees that have one.
+  useEffect(() => {
+    for (const item of visible) {
+      if (!item.has_foto || item.num in fotoUrls || inflightFotoRef.current.has(item.num)) continue
+      inflightFotoRef.current.add(item.num)
+      apiGetJson<ComidaItemsResponse>(`/api/comida/cafes/${item.num}`)
+        .then((res) => {
+          const found = (res.items || []).find((it) => it.num === item.num)
+          setFotoUrls((prev) => ({ ...prev, [item.num]: found?.has_foto && found.foto_url ? found.foto_url : null }))
+        })
+        .catch(() => setFotoUrls((prev) => ({ ...prev, [item.num]: null })))
+        .finally(() => { inflightFotoRef.current.delete(item.num) })
+    }
+  }, [visible, fotoUrls])
+
   const h1 = String((lang === 'en' ? seo.seo_h1_english : seo.seo_h1) || '').trim() || t('nav.coffees')
-
-  useEffect(() => {
-    let cancelled = false
-    apiGetJson<ComidaItemsResponse>(`/api/comida/cafes?active=1`)
-      .then((res) => {
-        if (cancelled) return
-        const byTipo = groupCafes(res.items || [])
-        const tipos = Object.keys(byTipo).sort((a, b) => a.localeCompare(b))
-        setState({ loaded: true, itemsByTipo: byTipo, error: false })
-        if (!selectedTipo && tipos.length > 0) {
-          setSelectedTipo(tipos[0])
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setState((prev) => ({ ...prev, loaded: true, error: true }))
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  const availableTypes = useMemo(
-    () => Object.keys(state.itemsByTipo).sort((a, b) => a.localeCompare(b)),
-    [state.itemsByTipo]
-  )
-
-  const tipoLabels = useMemo(() => {
-    const map: Record<string, string> = {}
-    for (const [tipo, list] of Object.entries(state.itemsByTipo)) {
-      const withEn = (list || []).find((it) => String(it.tipo_english || '').trim())
-      if (withEn?.tipo_english) map[tipo] = withEn.tipo_english
-    }
-    return map
-  }, [state.itemsByTipo])
-
-  const items = selectedTipo ? (state.itemsByTipo[selectedTipo] || []) : []
-
-  useEffect(() => {
-    if (availableTypes.length > 0 && !selectedTipo) {
-      setSelectedTipo(availableTypes[0])
-    }
-  }, [availableTypes, selectedTipo])
-
-  const loadFoto = useCallback((num: number) => {
-    if (num in fotoUrlsRef.current || inflightFotoRef.current.has(num)) return
-    inflightFotoRef.current.add(num)
-    apiGetJson<ComidaItemsResponse>(`/api/comida/cafes/${num}`)
-      .then((res) => {
-        const next: Record<number, string | null> = {}
-        for (const item of res.items || []) {
-          next[item.num] = item.has_foto && item.foto_url ? item.foto_url : null
-        }
-        fotoUrlsRef.current = { ...fotoUrlsRef.current, ...next }
-        setFotoUrls((prev) => ({ ...prev, ...next }))
-      })
-      .catch(() => {
-        fotoUrlsRef.current = { ...fotoUrlsRef.current, [num]: null }
-        setFotoUrls((prev) => (num in prev ? prev : { ...prev, [num]: null }))
-      })
-      .finally(() => { inflightFotoRef.current.delete(num) })
-  }, [])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue
-          const num = Number((e.target as HTMLElement).dataset.itemNum)
-          if (Number.isFinite(num) && num > 0) loadFoto(num)
-          obs.unobserve(e.target)
-        }
-      },
-      { rootMargin: '280px 0px', threshold: 0.15 }
-    )
-    observerRef.current = obs
-    for (const el of nodesRef.current.values()) obs.observe(el)
-    return () => { obs.disconnect(); observerRef.current = null }
-  }, [loadFoto])
-
-  const register = useCallback((num: number) => {
-    return (el: HTMLElement | null) => {
-      const map = nodesRef.current
-      const prev = map.get(num)
-      if (prev && observerRef.current) observerRef.current.unobserve(prev)
-      if (!el) { map.delete(num); return }
-      map.set(num, el)
-      if (observerRef.current) observerRef.current.observe(el)
-    }
-  }, [])
-
-  const hasContent = useMemo(() => Array.isArray(items) && items.length > 0, [items])
+  const loaded = items !== undefined
 
   return (
-    <div class="page cafePage">
-      <section class="page-hero">
-        <div class="container">
-          <h1 class="page-title" data-testid="cafes-page-h1">{h1}</h1>
-          <p class="page-subtitle">{t('menu.cafes.subtitle')}</p>
+    <div class="page cafePage" data-testid="cafes-page" data-coordination-id="cafes_page_ui_v2">
+      <section class="page-hero cafeHero" data-testid="cafes-hero">
+        <div class="container cafeHeroInner">
+          <span class="cafeHeroIcon" aria-hidden="true"><Coffee size={22} strokeWidth={1.6} /></span>
+          <p class="cafeHeroEyebrow" data-testid="cafes-hero-eyebrow">{t('cafes.eyebrow')}</p>
+          <h1 class="page-title cafeHeroTitle" data-testid="cafes-page-h1">{h1}</h1>
+          <p class="page-subtitle cafeHeroLead" data-testid="cafes-hero-lead">{t('cafes.lead')}</p>
+          {items && items.length > 0 ? (
+            <p class="cafeHeroCount" data-testid="cafes-hero-count">{`${items.length} ${t(items.length === 1 ? 'cafes.count.one' : 'cafes.count.many')}`}</p>
+          ) : null}
         </div>
       </section>
 
-      <section class="cafeBody">
+      <section class="cafeBody" data-testid="cafes-body">
         <div class="container">
-          {state.error ? (
-            <div class="menuState">{t('cafes.error')}</div>
-          ) : !state.loaded ? (
-            <div class="menuState">{t('menus.preview.loading')}</div>
+          {error && !items?.length ? (
+            <div class="menuState" data-testid="cafes-error">{t('cafes.error')}</div>
+          ) : !loaded ? (
+            <div class="menuState" data-testid="cafes-loading">{t('menus.preview.loading')}</div>
+          ) : visible.length === 0 ? (
+            <EmptyState title={t('cafes.empty')} />
           ) : (
             <>
-              {availableTypes.length > 1 && (
-                <div class="cafeTabsSticky" role="tablist" aria-label={t('nav.coffees')}>
+              {tipos.length > 1 ? (
+                <div class="cafeTabsSticky" role="tablist" aria-label={t('nav.coffees')} data-testid="cafes-tabs">
                   <div class="cafeTabs">
-                    {availableTypes.map((tipo) => {
-                      const active = tipo === selectedTipo
+                    {tipos.map((tipo) => {
+                      const active = tipo === activeTipo
                       return (
-                        <button
-                          key={tipo}
-                          type="button"
-                          class={active ? 'cafeTab is-active' : 'cafeTab'}
-                          onClick={() => setSelectedTipo(tipo)}
-                          role="tab"
-                          aria-selected={active}
-                        >
+                        <button key={tipo} type="button" class={active ? 'cafeTab is-active' : 'cafeTab'} onClick={() => setSelectedTipo(tipo)} role="tab" aria-selected={active} data-testid={`cafes-tab-${tipo}`}>
                           {active ? (
-                            <motion.span
-                              class="cafeTabBubble"
-                              layoutId="cafeTabBubble"
-                              transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }}
-                            />
+                            <motion.span class="cafeTabBubble" layoutId="cafeTabBubble" transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30, mass: 1.15 }} />
                           ) : null}
-                          <span class="cafeTabLabel">{lang === 'en' ? (tipoLabels[tipo] || tipo) : tipo}</span>
+                          <span class="cafeTabLabel">{tipoLabel(tipo)}</span>
                         </button>
                       )
                     })}
                   </div>
                 </div>
-              )}
+              ) : null}
 
-              {!hasContent ? (
-                <EmptyState title={t('cafes.empty')} />
-              ) : (
-                <div class="cafeList">
-                  {items.map((item, idx) => {
-                    const foto = fotoUrls[item.num] || null
-                    return (
-                      <article
-                        class="cafeCardWrap"
-                        key={item.num}
-                        ref={register(item.num)}
-                        data-item-num={item.num}
-                      >
-                        <motion.div
-                          class="cafeCard"
-                          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, amount: 0.15 }}
-                          transition={{
-                            duration: reduceMotion ? 0 : 0.5,
-                            ease: 'easeOut',
-                            delay: reduceMotion ? 0 : Math.min(0.2, idx * 0.022),
-                          }}
-                        >
-                          {item.has_foto ? (
-                            <div class="cafePhoto" aria-hidden="true">
-                              {foto ? (
-                                <img src={foto} alt="" loading="lazy" decoding="async" />
-                              ) : (
-                                <div class="cafePhotoPlaceholder is-loading" />
-                              )}
-                            </div>
-                          ) : null}
-
-                          <div class="cafeContent">
-                            {item.tipo && (
-                              <div class="cafeMeta">{lang === 'en' ? (localized(item.tipo, item.tipo_english, lang)) : (t(`cafe_type.${item.tipo}`) || item.tipo)}</div>
-                            )}
-                            <h3 class="cafeName">{localized(item.nombre, item.nombre_english, lang)}</h3>
-                            {/* comida_description_toggle_v1: same rule as menu dishes, the backoffice switch decides. */}
-                            {item.description_enabled !== false && item.descripcion && item.nombre !== item.descripcion ? (
-                              <p class="cafeDesc" data-testid={`cafe-description-${item.num}`}>{localized(item.descripcion, item.descripcion_english, lang)}</p>
-                            ) : null}
-                          </div>
-
-                          <div class="cafePriceTag">
-                            <span class="cafePriceAmount">{formatEuro(item.precio)}</span>
-                          </div>
-                        </motion.div>
-                      </article>
-                    )
-                  })}
-                </div>
-              )}
+              <ol class="cafeGrid" data-testid="cafes-grid">
+                {visible.map((item, idx) => {
+                  const foto = fotoUrls[item.num]
+                  const price = showPrices && Number(item.precio) > 0 ? formatEuro(item.precio) : ''
+                  const description = item.description_enabled !== false && item.descripcion && item.nombre !== item.descripcion
+                    ? localized(item.descripcion, item.descripcion_english, lang)
+                    : ''
+                  return (
+                    <motion.li
+                      key={item.num}
+                      class={item.has_foto ? 'cafeItem has-photo' : 'cafeItem'}
+                      data-testid={`cafe-item-${item.num}`}
+                      initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.45, ease: 'easeOut', delay: reduceMotion ? 0 : Math.min(0.24, idx * 0.04) }}
+                    >
+                      {item.has_foto ? (
+                        <div class="cafeItemPhoto" aria-hidden="true" data-testid={`cafe-photo-${item.num}`}>
+                          {foto ? <img src={foto} alt="" loading="lazy" decoding="async" /> : <div class="cafeItemPhotoPlaceholder" />}
+                        </div>
+                      ) : null}
+                      <div class="cafeItemBody">
+                        <div class="cafeItemHead">
+                          <span class="cafeItemIndex" aria-hidden="true">{String(idx + 1).padStart(2, '0')}</span>
+                          <h3 class="cafeItemName" data-testid={`cafe-name-${item.num}`}>{localized(item.nombre, item.nombre_english, lang)}</h3>
+                          {price ? <span class="cafeItemPrice" data-testid={`cafe-price-${item.num}`}>{price}</span> : null}
+                        </div>
+                        {description ? (
+                          <p class="cafeItemDesc" data-testid={`cafe-description-${item.num}`}>{description}</p>
+                        ) : null}
+                      </div>
+                    </motion.li>
+                  )
+                })}
+              </ol>
             </>
           )}
+
+          <aside class="cafeOutro" data-testid="cafes-outro">
+            <p class="cafeOutroText" data-testid="cafes-outro-text">{t('cafes.outro')}</p>
+            <Link href="/reservas" className="btn primary" data-testid="cafes-outro-reserve">{t('nav.reserve')}</Link>
+          </aside>
         </div>
       </section>
       <MenuSEOContent menu={seo} aboutKey="cafes.seo.about" />

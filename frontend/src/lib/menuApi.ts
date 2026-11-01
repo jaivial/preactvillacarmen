@@ -15,6 +15,10 @@ export type MenuSidebarData = {
   cafes_web_placement: string
   vinos_web_placement: string
   bebidas_web_placement: string
+  // Coordination id: foodtype_show_prices_v1
+  cafes_show_prices: boolean
+  bebidas_show_prices: boolean
+  vinos_show_prices: boolean
 }
 
 export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
@@ -30,6 +34,9 @@ export async function fetchMenuSidebar(): Promise<MenuSidebarData> {
     cafes_web_placement: data.cafes_web_placement || 'inside_menus',
     vinos_web_placement: data.vinos_web_placement || 'inside_menus',
     bebidas_web_placement: data.bebidas_web_placement || 'inside_menus',
+    cafes_show_prices: data.cafes_show_prices !== false,
+    bebidas_show_prices: data.bebidas_show_prices !== false,
+    vinos_show_prices: data.vinos_show_prices !== false,
   }
 }
 

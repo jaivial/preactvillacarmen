@@ -6,6 +6,7 @@ import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
 import type { Vino, VinosResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
+import { useFoodShowPrices } from '../../lib/useFoodShowPrices'
 import { prerenderData } from '../../lib/prerenderData'
 
 type WineType = 'TINTO' | 'BLANCO' | 'CAVA'
@@ -19,6 +20,7 @@ const WINE_TYPES: { tipo: WineType; labelKey: string }[] = [
 export function Vinos() {
   const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
+  const showPrices = useFoodShowPrices('vinos')
   const [tipo, setTipo] = useState<WineType>('TINTO')
   const [vinosByTipo, setVinosByTipo] = useState<Record<WineType, Vino[] | null | undefined>>(() => ({
     TINTO: prerenderData().vinos?.TINTO,
@@ -259,9 +261,11 @@ export function Vinos() {
                         </div>
                       </div>
 
-                      <div class="winePriceTag" aria-label={t('menus.preview.price')}>
-                        {formatEuro(v.precio)}
-                      </div>
+                      {showPrices ? (
+                        <div class="winePriceTag" aria-label={t('menus.preview.price')}>
+                          {formatEuro(v.precio)}
+                        </div>
+                      ) : null}
                     </motion.div>
                   </article>
                 )
