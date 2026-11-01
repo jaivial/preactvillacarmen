@@ -40,6 +40,9 @@ const sidebar = {
   postres_page_active: Boolean(sidebarResponse.postres_page_active), vinos_page_active: sidebarResponse.vinos_page_active !== false,
   postres_web_placement: sidebarResponse.postres_web_placement || 'inside_menus', cafes_web_placement: sidebarResponse.cafes_web_placement || 'inside_menus',
   vinos_web_placement: sidebarResponse.vinos_web_placement || 'inside_menus', bebidas_web_placement: sidebarResponse.bebidas_web_placement || 'inside_menus',
+  // Coordination id: foodtype_show_prices_v1
+  cafes_show_prices: sidebarResponse.cafes_show_prices !== false, bebidas_show_prices: sidebarResponse.bebidas_show_prices !== false,
+  vinos_show_prices: sidebarResponse.vinos_show_prices !== false,
 }
 const menus = {}
 await Promise.all(sidebar.menus.map(async (item) => {

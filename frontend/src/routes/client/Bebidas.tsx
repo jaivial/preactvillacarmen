@@ -5,6 +5,7 @@ import { apiGetJson } from '../../lib/api'
 import { prerenderData } from '../../lib/prerenderData'
 import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
 import { formatEuro } from './MenuShared'
+import { useFoodShowPrices } from '../../lib/useFoodShowPrices'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 import { StickyTabBar } from '../../components/ui'
 
@@ -27,6 +28,7 @@ function groupBebidas(items: ComidaItem[]) {
 export function Bebidas() {
   const { t, lang } = useI18n()
   const reduceMotion = useReducedMotion()
+  const showPrices = useFoodShowPrices('bebidas')
   const initialItems = prerenderData().bebidas
   const [state, setState] = useState<DynamicBebidasState>(() => {
     const itemsByTipo = groupBebidas(initialItems || [])
@@ -184,7 +186,7 @@ export function Bebidas() {
                         <h3 class="wineName">{localized(item.nombre, item.nombre_english, lang)}</h3>
                         {item.description_enabled !== false && item.descripcion && item.nombre !== item.descripcion ? <p class="wineDesc" data-testid={`bebida-description-${item.num}`}>{localized(item.descripcion, item.descripcion_english, lang)}</p> : null}
                       </div>
-                      <div class="winePriceTag">{formatEuro(item.precio)}</div>
+                      {showPrices ? <div class="winePriceTag">{formatEuro(item.precio)}</div> : null}
                     </motion.div>
                   </article>
                 )

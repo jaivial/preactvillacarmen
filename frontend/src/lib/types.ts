@@ -533,6 +533,9 @@ export type MenuSidebarResponse = {
   cafes_web_placement?: string
   vinos_web_placement?: string
   bebidas_web_placement?: string
+  cafes_show_prices?: boolean
+  bebidas_show_prices?: boolean
+  vinos_show_prices?: boolean
 }
 
 export type ComidaItem = {

@@ -29,6 +29,12 @@ const DICT: Dictionary = {
   'editorial.faq': { es: 'Preguntas frecuentes', en: 'Frequently asked questions' },
   'menu.seo.about': { es: 'Sobre este men\u00fa', en: 'About this menu' },
   'cafes.seo.about': { es: 'Sobre nuestros caf\u00e9s', en: 'About our coffee' },
+  // Coordination id: cafes_page_ui_v2
+  'cafes.eyebrow': { es: 'Sobremesa en la alquer\u00eda', en: 'After the meal at the alqueria' },
+  'cafes.lead': { es: 'Caf\u00e9s de autor con notas de frutos secos, fruta y especias para alargar la sobremesa en Catarroja.', en: 'Signature coffees with notes of nuts, fruit and spices to make the most of the table talk in Catarroja.' },
+  'cafes.count.one': { es: 'caf\u00e9 en carta', en: 'coffee on the menu' },
+  'cafes.count.many': { es: 'caf\u00e9s en carta', en: 'coffees on the menu' },
+  'cafes.outro': { es: 'Ped\u00eddselos al equipo de sala al terminar la comida.', en: 'Ask our team for them when you finish your meal.' },
   'resource.albufera': { es: 'Cerca de l\u2019Albufera', en: 'Near l\u2019Albufera' },
   'editorial.cta.title': { es: 'Preparamos tu visita', en: 'Plan your visit' },
   'editorial.cta.proposal': { es: 'Pedir una propuesta', en: 'Request a proposal' },

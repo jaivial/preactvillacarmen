@@ -4,7 +4,7 @@ import { createPortal } from 'preact/compat'
 import { useSetAtom } from 'jotai'
 import { useI18n } from '../lib/i18n'
 import { cdnUrl } from '../lib/cdn'
-import { bebidasPageActiveAtom, cafePageActiveAtom, postresPageActiveAtom, vinosPageActiveAtom } from '../lib/config'
+import { bebidasPageActiveAtom, cafePageActiveAtom, postresPageActiveAtom, vinosPageActiveAtom, foodShowPricesAtom } from '../lib/config'
 import { MenuPickWidget } from './MenuPickWidget'
 import { buildPublicMenuHref, isGroupMenuType, isNonGroupMenuType } from '../lib/publicMenus'
 import {
@@ -80,6 +80,7 @@ export function ClientHeader() {
   })
   const setBebidasActive = useSetAtom(bebidasPageActiveAtom)
   const setCafeActive = useSetAtom(cafePageActiveAtom)
+  const setFoodShowPrices = useSetAtom(foodShowPricesAtom)
   const setVinosActive = useSetAtom(vinosPageActiveAtom)
   const setPostresActive = useSetAtom(postresPageActiveAtom)
 
@@ -136,6 +137,7 @@ export function ClientHeader() {
         }
         setFoodPages(pages)
         setCafeActive(data.cafe_page_active)
+        setFoodShowPrices({ cafes: data.cafes_show_prices, bebidas: data.bebidas_show_prices, vinos: data.vinos_show_prices })
         setBebidasActive(data.bebidas_page_active)
         setVinosActive(pages.vinos.active)
         setPostresActive(pages.postres.active)
