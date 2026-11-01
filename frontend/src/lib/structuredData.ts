@@ -3,6 +3,8 @@ import { localizedPath, routeMetadata, SITE_ORIGIN, SOCIAL_IMAGE, stripLanguageP
 import { OPENING_HOURS, RESTAURANT } from './restaurant'
 import { resourceContent } from './resourceContent'
 import { celebrationContent } from './celebrationContent'
+import { menuSEOContent } from './menuSeoContent'
+import { prerenderData } from './prerenderData'
 
 export type BreadcrumbItem = { name: string; path: string }
 
@@ -98,7 +100,9 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = [], i
     ...(price > 0 ? { offers: { '@type': 'Offer', price: price.toFixed(2), priceCurrency: 'EUR', url: canonical } } : {}),
   })
   // Coordination id: celebration_faq_schema_v1 - visible FAQ on celebration pages feeds FAQPage.
-  const faq = menu?.faq?.[lang] || resourceContent[path]?.[lang].faq || celebrationContent[path]?.[lang].faq || []
+  // Coordination id: cafes_page_seo_v1 - the /cafes FAQ comes from its backoffice SEO.
+  const pageFaq = path === '/cafes' ? menuSEOContent(prerenderData().cafesSeo || {}, lang).faq : []
+  const faq = menu?.faq?.[lang] || resourceContent[path]?.[lang].faq || celebrationContent[path]?.[lang].faq || pageFaq
   if (faq.length) graph.push({
     '@type': 'FAQPage', '@id': `${canonical}#faq`,
     mainEntity: faq.map((item) => ({ '@type': 'Question', name: item.question, acceptedAnswer: { '@type': 'Answer', text: item.answer } })),

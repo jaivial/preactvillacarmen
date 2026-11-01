@@ -65,6 +65,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
                       annotations={localizedArray(sectionData.starterAnnotations, sectionData.starterAnnotationsEnglish, lang)}
                       pickCategory="entrantes"
                       showImage={props.menu.show_dish_images}
+                      cta={sectionData.startersCta}
                     />
                   ),
                 },
@@ -80,6 +81,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
                       annotations={localizedArray(sectionData.mainsAnnotations, sectionData.mainsAnnotationsEnglish, lang)}
                       pickCategory="principales"
                       showImage={props.menu.show_dish_images}
+                      cta={sectionData.mainsCta}
                     />
                   ),
                 },
@@ -97,6 +99,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
                         annotations={localizedArray(sectionData.riceAnnotations, sectionData.riceAnnotationsEnglish, lang)}
                         pickCategory="arroces"
                         showImage={props.menu.show_dish_images}
+                        cta={sectionData.riceCta}
                         notes={[
                           t('menu.rice.note1'),
                           t('menu.rice.note2'),
@@ -118,6 +121,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
                       dishes={section.dishes}
                       annotations={localizedArray(section.annotations, section.annotations_english, lang)}
                       showImage={props.menu.show_dish_images}
+                      cta={section.cta}
                     />
                   ),
                 })),

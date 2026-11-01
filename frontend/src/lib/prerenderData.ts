@@ -1,4 +1,4 @@
-import type { ComidaItem, Dish, GroupMenuDisplay, HomeMenu, LegalPage, LegalPageSlug, PublicMenu, SeoItemRoute, Vino } from './types'
+import type { CafesPageSEO, ComidaItem, Dish, GroupMenuDisplay, HomeMenu, LegalPage, LegalPageSlug, PublicMenu, SeoItemRoute, Vino } from './types'
 import type { MenuSidebarData } from './menuApi'
 
 export type PrerenderData = {
@@ -13,6 +13,8 @@ export type PrerenderData = {
   legalPages?: Partial<Record<LegalPageSlug, LegalPage>>
   // Coordination id: seo_item_routes_v1
   itemRoutes?: SeoItemRoute[]
+  // Coordination id: cafes_page_seo_v1
+  cafesSeo?: CafesPageSEO
   redirects: Record<string, string>
 }
 

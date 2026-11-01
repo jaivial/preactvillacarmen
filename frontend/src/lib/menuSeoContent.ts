@@ -1,5 +1,5 @@
 import type { Lang } from './i18n'
-import type { PublicMenu } from './types'
+import type { MenuPublicSEO } from './types'
 
 export type FAQItem = { question: string; answer: string }
 
@@ -15,7 +15,7 @@ export function parseFAQ(text?: string): FAQItem[] {
 }
 
 // English pages never fall back to Spanish copy so each language stays a clean variant.
-export function menuSEOContent(menu: PublicMenu, lang: Lang): { intro: string[]; faq: FAQItem[] } {
+export function menuSEOContent(menu: MenuPublicSEO, lang: Lang): { intro: string[]; faq: FAQItem[] } {
   const en = lang === 'en'
   return { intro: blocks(en ? menu.seo_intro_english : menu.seo_intro), faq: parseFAQ(en ? menu.seo_faq_english : menu.seo_faq) }
 }

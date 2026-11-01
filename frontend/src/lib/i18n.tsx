@@ -28,6 +28,7 @@ const DICT: Dictionary = {
   'common.ok': { es: 'Aceptar', en: 'OK' },
   'editorial.faq': { es: 'Preguntas frecuentes', en: 'Frequently asked questions' },
   'menu.seo.about': { es: 'Sobre este men\u00fa', en: 'About this menu' },
+  'cafes.seo.about': { es: 'Sobre nuestros caf\u00e9s', en: 'About our coffee' },
   'resource.albufera': { es: 'Cerca de l\u2019Albufera', en: 'Near l\u2019Albufera' },
   'editorial.cta.title': { es: 'Preparamos tu visita', en: 'Plan your visit' },
   'editorial.cta.proposal': { es: 'Pedir una propuesta', en: 'Request a proposal' },

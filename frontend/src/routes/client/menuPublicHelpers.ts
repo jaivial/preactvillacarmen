@@ -1,4 +1,4 @@
-import type { Dish, PublicMenu, PublicMenuSection } from '../../lib/types'
+import type { Dish, MenuSectionCta, PublicMenu, PublicMenuSection } from '../../lib/types'
 
 export function publicMenuH1(menu: PublicMenu, lang: 'es' | 'en'): string {
   return String((lang === 'en' ? menu.seo_h1_english : menu.seo_h1) || '').trim()
@@ -20,6 +20,7 @@ export type PublicMenuViewSection = {
   tab_label_english?: string
   annotations: string[]
   annotations_english?: string[]
+  cta?: MenuSectionCta
   dishes: Dish[]
 }
 
@@ -100,6 +101,7 @@ export function getMenuViewSections(menu: PublicMenu): PublicMenuViewSection[] {
       annotations_english: Array.isArray(row.annotations_english)
         ? row.annotations_english.map((item) => String(item || '').trim()).filter(Boolean)
         : undefined,
+      cta: row.cta,
       dishes,
     })
   }
@@ -134,6 +136,10 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   riceAnnotations: string[]
   riceAnnotationsEnglish?: string[]
   others: PublicMenuViewSection[]
+  // Coordination id: menu_section_cta_v1 - merged sections keep the first button.
+  startersCta?: MenuSectionCta
+  mainsCta?: MenuSectionCta
+  riceCta?: MenuSectionCta
 } {
   const sections = getMenuViewSections(menu)
   const starters: Dish[] = []
@@ -156,6 +162,9 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   const riceAnnotations: string[] = []
   const riceAnnotationsEnglish: string[] = []
   const others: PublicMenuViewSection[] = []
+  let startersCta: MenuSectionCta | undefined
+  let mainsCta: MenuSectionCta | undefined
+  let riceCta: MenuSectionCta | undefined
   let mainsTitle = menu.principales?.titulo_principales || 'Principales'
   let mainsTitleEnglish: string | undefined
   let mainsSubtitle: string | undefined
@@ -166,6 +175,7 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   for (const section of sections) {
     if (section.kind === 'entrantes') {
       starters.push(...section.dishes)
+      startersCta ||= section.cta
       starterAnnotations.push(...section.annotations)
       starterAnnotationsEnglish.push(...(section.annotations_english || []))
       // Keep the operator-provided subtitle if there is only one starters
@@ -179,6 +189,7 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
 
     if (isRiceSection(section)) {
       rice.push(...section.dishes)
+      riceCta ||= section.cta
       if (section.title) riceTitle = section.title
       if (section.title_english) riceTitleEnglish = section.title_english
       if (section.subtitle) riceSubtitle = section.subtitle
@@ -192,6 +203,7 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
 
     if (section.kind === 'principales') {
       mains.push(...section.dishes)
+      mainsCta ||= section.cta
       mainsAnnotations.push(...section.annotations)
       mainsAnnotationsEnglish.push(...(section.annotations_english || []))
       if (section.title) mainsTitle = section.title
@@ -207,6 +219,9 @@ export function splitClosedConventionalSections(menu: PublicMenu): {
   }
 
   return {
+    startersCta,
+    mainsCta,
+    riceCta,
     starters,
     starterAnnotations,
     starterAnnotationsEnglish,

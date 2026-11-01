@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { motion, useReducedMotion } from 'motion/react'
 import { useI18n, localized } from '../../lib/i18n'
 import { apiGetJson } from '../../lib/api'
-import { prerenderData } from '../../lib/prerenderData'
-import type { ComidaItem, ComidaItemsResponse } from '../../lib/types'
+import { prerenderData, setPrerenderData } from '../../lib/prerenderData'
+import type { CafesPageSEO, ComidaItem, ComidaItemsResponse } from '../../lib/types'
+import { MenuSEOContent } from '../../components/MenuSEOContent'
 import { formatEuro } from './MenuShared'
 import { EmptyState } from './functionalComponents/EmptyState/EmptyState'
 
@@ -33,6 +34,22 @@ export function Cafes() {
   const nodesRef = useRef<Map<number, HTMLElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const inflightFotoRef = useRef<Set<number>>(new Set())
+  // Coordination id: cafes_page_seo_v1 - backoffice SEO for /cafes (H1, intro, FAQ, head).
+  const [seo, setSeo] = useState<CafesPageSEO>(() => prerenderData().cafesSeo || {})
+
+  useEffect(() => {
+    let cancelled = false
+    apiGetJson<{ seo?: CafesPageSEO }>('/api/public/cafes-seo')
+      .then((res) => {
+        if (cancelled || !res.seo) return
+        setSeo(res.seo)
+        setPrerenderData({ ...prerenderData(), cafesSeo: res.seo })
+        window.dispatchEvent(new Event('villacarmen:menus-updated'))
+      })
+      .catch(() => { /* Defaults stay in place. */ })
+    return () => { cancelled = true }
+  }, [])
+  const h1 = String((lang === 'en' ? seo.seo_h1_english : seo.seo_h1) || '').trim() || t('nav.coffees')
 
   useEffect(() => {
     let cancelled = false
@@ -128,7 +145,7 @@ export function Cafes() {
     <div class="page cafePage">
       <section class="page-hero">
         <div class="container">
-          <h1 class="page-title">{t('nav.coffees')}</h1>
+          <h1 class="page-title" data-testid="cafes-page-h1">{h1}</h1>
           <p class="page-subtitle">{t('menu.cafes.subtitle')}</p>
         </div>
       </section>
@@ -228,6 +245,7 @@ export function Cafes() {
           )}
         </div>
       </section>
+      <MenuSEOContent menu={seo} aboutKey="cafes.seo.about" />
     </div>
   )
 }

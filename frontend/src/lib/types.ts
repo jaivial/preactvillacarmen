@@ -109,6 +109,7 @@ export type PublicMenuSection = {
   dessert_source?: string
   position: number
   annotations: string[]
+  cta?: MenuSectionCta
   dishes: PublicMenuDish[]
   title_english?: string
   display_title_english?: string
@@ -154,6 +155,13 @@ export type MenuPublicSEO = {
   seo_faq?: string
   seo_faq_english?: string
 }
+
+// Coordination id: cafes_page_seo_v1 - SEO of /cafes, same fields as a menu (no slug).
+export type CafesPageSEO = Omit<MenuPublicSEO, 'seo_slug'>
+
+// Coordination id: menu_section_cta_v1 - button under a menu section; href is a
+// whitelisted public path resolved by the backend.
+export type MenuSectionCta = { enabled: boolean; label: string; target: string; href: string }
 
 export type PublicMenu = MenuPublicSEO & {
   id: number

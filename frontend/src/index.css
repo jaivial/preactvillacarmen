@@ -6938,11 +6938,17 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
 .dishItemLink {
     display: inline-block;
     color: var(--green);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    text-decoration: none;
 }
 
-.dishItemLink:hover { text-decoration: none; }
+/* Coordination id: menu_section_cta_v1 */
+.menuSectionCta {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.menuSectionCtaBtn { text-decoration: none; }
 
 @media (max-width:600px) {
     .itemDetailRow { grid-template-columns: 1fr; }
