@@ -334,6 +334,9 @@ const DICT: Dictionary = {
   'item.seeWines': { es: 'Ver la carta de vinos', en: 'See the wine list' },
   'item.book': { es: 'Reservar mesa', en: 'Book a table' },
   'item.notFound': { es: 'Este plato no está disponible', en: 'This dish is not available' },
+  // Coordination id: seo_item_unavailable_v1
+  'item.unavailable.dish': { es: 'Este plato no está disponible ahora mismo. Consulta el menú para ver lo que servimos hoy.', en: 'This dish is not available right now. Check the menu to see what we are serving today.' },
+  'item.unavailable.wine': { es: 'Este vino no está disponible ahora mismo. Consulta la carta de vinos para ver las referencias actuales.', en: 'This wine is not available right now. Check the wine list for the current selection.' },
   'menu.postres.subtitle': { es: 'Dulces de temporada y clásicos.', en: 'Seasonal sweets and classics.' },
   'menu.wines.subtitle': { es: 'Una selección para acompañar el arroz.', en: 'A selection to pair with rice.' },
   'menu.cafes.subtitle': { es: 'Café, infusiones y chocolates.', en: 'Coffee, teas, and hot chocolate.' },

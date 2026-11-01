@@ -61,9 +61,15 @@ const cafes = cafesResponse.items || []
 const bebidas = bebidasResponse.items || []
 const vinos = { TINTO: tintoResponse.vinos || [] }
 const itemRoutes = (itemRoutesResponse.items || []).filter((item) => item && item.active !== false)
+// Coordination id: seo_item_unavailable_v1 - a dish or wine switched off less
+// than 60 days ago keeps its page (200, "not available right now"); older ones
+// redirect to their menu and the ones without a menu answer 410.
+const unavailableItemRoutes = (itemRoutesResponse.unavailable || []).filter(Boolean).map((item) => ({ ...item, active: false }))
+const pageItemRoutes = [...itemRoutes, ...unavailableItemRoutes]
+const unavailableItemPaths = new Set(unavailableItemRoutes.flatMap((item) => [item.path, `/en${item.path}`]))
 const legalPages = Object.fromEntries(legalResponses.map((page) => [page.slug, page]))
 
-const redirects = { '/index.php': '/', '/reservas.php': '/reservas', '/avisolegal.html': '/avisolegal', '/protecciondatos.html': '/protecciondatos', '/booking_policies.php': '/booking-policies', '/reservas-especiales-politica.html': '/reservas-especiales-politica', '/menudegrupos': '/menusdegrupos', '/menudegrupos.php': '/menusdegrupos', '/menusdegrupos.php': '/menusdegrupos' }
+const redirects = { ...(itemRoutesResponse.redirects || {}), '/index.php': '/', '/reservas.php': '/reservas', '/avisolegal.html': '/avisolegal', '/protecciondatos.html': '/protecciondatos', '/booking_policies.php': '/booking-policies', '/reservas-especiales-politica.html': '/reservas-especiales-politica', '/menudegrupos': '/menusdegrupos', '/menudegrupos.php': '/menusdegrupos', '/menusdegrupos.php': '/menusdegrupos' }
 const conventionalMenus = Object.values(menus).filter((menu) => menu.menu_type === 1 && menu.active)
 const legacyMenus = {
   DIA: conventionalMenus.find((menu) => String(menu.legacy_source_table || '').toUpperCase() === 'DIA') || conventionalMenus.find((menu) => menu.slug === 'menu-del-dia-41'),
@@ -95,7 +101,7 @@ for (const [source, menu] of Object.entries({ ...legacyMenus, ...seasonalLegacyM
 if (sidebar.postres_page_active) redirects['/confpostres.php'] = '/postres'
 else retiredLegacyPaths.push('/confpostres.php')
 const withEnglish = Object.fromEntries(Object.entries(redirects).flatMap(([from, to]) => [[from, to], [`/en${from}`, `/en${to === '/' ? '' : to}`]]))
-const baseData = { menus, sidebar, redirects: withEnglish, itemRoutes, cafesSeo }
+const baseData = { menus, sidebar, redirects: withEnglish, itemRoutes: pageItemRoutes, cafesSeo }
 const foodActive = { '/postres': sidebar.postres_page_active, '/vinos': sidebar.vinos_page_active, '/cafes': sidebar.cafe_page_active, '/bebidas': sidebar.bebidas_page_active }
 const routes = ssr.PUBLIC_ROUTES.filter((route) => foodActive[route.path] !== false)
 const editorialPaths = routes.filter((route) => route.prerender).flatMap((route) => route.localized ? [route.path, `/en${route.path === '/' ? '' : route.path}`] : [route.path])
@@ -104,7 +110,7 @@ const menuPaths = Object.values(menus).flatMap((menu) => {
   return [path, `/en${path}`]
 })
 // Coordination id: seo_item_routes_v1 - one page per dish and per wine.
-const itemPaths = itemRoutes.flatMap((item) => [item.path, `/en${item.path}`])
+const itemPaths = pageItemRoutes.flatMap((item) => [item.path, `/en${item.path}`])
 const paths = [...new Set([...editorialPaths, ...menuPaths, ...itemPaths])]
 const barePath = (path) => path === '/en' ? '/' : path.startsWith('/en/') ? path.slice(3) : path
 
@@ -226,7 +232,8 @@ for (const path of dynamicPaths) {
 const indexablePaths = paths.filter((path) => !ssr.PUBLIC_ROUTES.some((route) => !route.indexable && (path === route.path || path === `/en${route.path}`)))
 // Only pages actually rendered in this build plus the public booking start page.
 // Inactive dishes and private/token-driven flows must never leak into llms.txt.
-const markdownPaths = [...new Set([...paths, ...ssr.publicMarkdownPaths().filter((path) => barePath(path) === '/reservas')])]
+// Unavailable dishes keep their page but stay out of the sitemap and llms.txt.
+const markdownPaths = [...new Set([...paths.filter((path) => !unavailableItemPaths.has(path)), ...ssr.publicMarkdownPaths().filter((path) => barePath(path) === '/reservas')])]
 const absolute = (value) => `${ssr.SITE_ORIGIN}${value}`
 // Coordination id: seo_item_routes_v1 - the Markdown and the sitemap of a
 // dish or a wine use its own title, description and canonical.
@@ -266,5 +273,6 @@ const robots = [
   '',
 ].join('\n')
 await writeFile(join(dist, 'robots.txt'), robots)
-await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ lastModified: Object.fromEntries(geoEntries.map((entry) => [entry.path, entry.lastModified])), markdownPaths: Object.fromEntries(geoEntries.map((entry) => [entry.path, markdownPath(entry.path)])), redirects: withEnglish, gonePaths: [...new Set([...ssr.GONE_PATHS, ...retiredLegacyPaths])].flatMap((path) => [path, `/en${path}`]), menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), groupMenuPaths: Object.fromEntries(groupMenus.filter((menu) => menus[String(menu.id)]).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
-console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexablePaths.length} sitemap URLs and ${geoEntries.length} Markdown alternatives`)
+await writeFile(join(dist, 'seo-routes.json'), JSON.stringify({ lastModified: Object.fromEntries(geoEntries.map((entry) => [entry.path, entry.lastModified])), markdownPaths: Object.fromEntries(geoEntries.map((entry) => [entry.path, markdownPath(entry.path)])), redirects: withEnglish, gonePaths: [...new Set([...ssr.GONE_PATHS, ...retiredLegacyPaths, ...(itemRoutesResponse.gone || [])])].flatMap((path) => [path, `/en${path}`]), menuPaths: Object.fromEntries(Object.values(menus).map((menu) => [menu.id, ssr.menuPath(menu)])), groupMenuPaths: Object.fromEntries(groupMenus.filter((menu) => menus[String(menu.id)]).map((menu) => [menu.id, ssr.menuPath(menu)])), appPaths }, null, 2))
+console.log(`[prerender] seo_item_unavailable_v1 unavailable=${unavailableItemRoutes.length} redirected=${Object.keys(itemRoutesResponse.redirects || {}).length} gone=${(itemRoutesResponse.gone || []).length}`)
+console.log(`[prerender] rendered ${paths.length} pages, ${Object.keys(menus).length} menus, ${indexableGeoEntries.length} sitemap URLs and ${geoEntries.length} Markdown alternatives`)

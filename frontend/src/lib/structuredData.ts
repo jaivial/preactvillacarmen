@@ -111,7 +111,7 @@ export function structuredData(pathname: string, menus: MenuRouteEntry[] = [], i
   const item = items.find((entry) => entry.path === path)
   if (item) {
     const offer = item.price && item.price > 0
-      ? { '@type': 'Offer', price: item.price.toFixed(2), priceCurrency: 'EUR', url: canonical, availability: 'https://schema.org/InStock' }
+      ? { '@type': 'Offer', price: item.price.toFixed(2), priceCurrency: 'EUR', url: canonical, availability: item.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' }
       : undefined
     const properties: Record<string, unknown>[] = []
     if (item.denominacion) properties.push({ '@type': 'PropertyValue', name: lang === 'es' ? 'Denominación de origen' : 'Appellation', value: item.denominacion })
