@@ -32,6 +32,8 @@ const [sidebarResponse, homeResponse, groupResponse, postresResponse, cafesRespo
 // per active wine. The endpoint is optional: an older backend simply means no
 // item pages, never a broken build.
 const itemRoutesResponse = await getJson('/api/seo/item-routes').catch(() => ({ items: [] }))
+// Coordination id: cafes_page_seo_v1 - optional too: no endpoint keeps the defaults.
+const cafesSeo = (await getJson('/api/public/cafes-seo').catch(() => ({}))).seo || {}
 const sidebar = {
   menus: sidebarResponse.menus || [], visible_sections: sidebarResponse.visible_sections || [],
   cafe_page_active: Boolean(sidebarResponse.cafe_page_active), bebidas_page_active: Boolean(sidebarResponse.bebidas_page_active),
@@ -90,7 +92,7 @@ for (const [source, menu] of Object.entries({ ...legacyMenus, ...seasonalLegacyM
 if (sidebar.postres_page_active) redirects['/confpostres.php'] = '/postres'
 else retiredLegacyPaths.push('/confpostres.php')
 const withEnglish = Object.fromEntries(Object.entries(redirects).flatMap(([from, to]) => [[from, to], [`/en${from}`, `/en${to === '/' ? '' : to}`]]))
-const baseData = { menus, sidebar, redirects: withEnglish, itemRoutes }
+const baseData = { menus, sidebar, redirects: withEnglish, itemRoutes, cafesSeo }
 const foodActive = { '/postres': sidebar.postres_page_active, '/vinos': sidebar.vinos_page_active, '/cafes': sidebar.cafe_page_active, '/bebidas': sidebar.bebidas_page_active }
 const routes = ssr.PUBLIC_ROUTES.filter((route) => foodActive[route.path] !== false)
 const editorialPaths = routes.filter((route) => route.prerender).flatMap((route) => route.localized ? [route.path, `/en${route.path === '/' ? '' : route.path}`] : [route.path])

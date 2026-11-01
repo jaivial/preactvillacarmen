@@ -109,6 +109,7 @@ export function MenusDeGruposConvencional(props: { menu: PublicMenu; headingLeve
                       subtitle={localized(section.subtitle ?? '', section.subtitle_english ?? '', lang)}
                       dishes={section.dishes}
                       annotations={localizedArray(section.annotations, section.annotations_english, lang)}
+                        cta={section.cta}
                     />
                   ),
                 }))}

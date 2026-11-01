@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { createPortal } from 'preact/compat'
 import { Link } from 'wouter-preact'
-import type { Dish, SeoItemRoute } from '../../lib/types'
+import type { Dish, MenuSectionCta, SeoItemRoute } from '../../lib/types'
 import { cdnUrl } from '../../lib/cdn'
 import { useI18n, localized } from '../../lib/i18n'
 import { addMenuPickItem, type MenuPickCategory } from '../../lib/menuPick'
 import { prerenderData } from '../../lib/prerenderData'
+import { useAtomValue } from 'jotai'
+import { cafePageActiveAtom } from '../../lib/config'
 import { ChefHat, Plus } from 'lucide-react'
 
 const ALLERGEN_LABELS: Record<string, { es: string; en: string }> = {
@@ -215,6 +217,22 @@ export function dishItemPath(dishId?: number): string {
     dishRouteIndex = { source, index }
   }
   return dishRouteIndex.index.get(dishId) || ''
+}
+
+// Coordination id: menu_section_cta_v1 - button under a section, set in the
+// menu settings. A button to a food page is hidden while that page is off.
+export function MenuSectionCtaButton(props: { cta?: MenuSectionCta }) {
+  const cafesActive = useAtomValue(cafePageActiveAtom) ?? prerenderData().sidebar?.cafe_page_active
+  const cta = props.cta
+  if (!cta?.enabled || !cta.href) return null
+  if (cta.target === 'cafes' && cafesActive === false) return null
+  return (
+    <div class="menuSectionCta" data-testid={`menu-section-cta-${cta.target}`} data-coordination-id="menu_section_cta_v1">
+      <Link href={cta.href} class="btn primary menuSectionCtaBtn" data-testid={`menu-section-cta-link-${cta.target}`}>
+        {cta.label}
+      </Link>
+    </div>
+  )
 }
 
 function DishName(props: { dish: Dish; className?: string }) {
@@ -481,6 +499,7 @@ export function MenuSection(props: {
   // seo_heading_hierarchy_v1: h2 only when the section is a page-level
   // keyword (editorial rice pages); inside a menu page it hangs as h3.
   headingLevel?: 'h2' | 'h3'
+  cta?: MenuSectionCta
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
@@ -508,6 +527,7 @@ export function MenuSection(props: {
         </ul>
       ) : null}
       <SectionAnnotations annotations={props.annotations} />
+      <MenuSectionCtaButton cta={props.cta} />
     </section>
   )
 }
@@ -742,6 +762,7 @@ export function GroupStyleDishSection(props: {
   showAllergens?: boolean
   annotations?: string[]
   subtitle?: string
+  cta?: MenuSectionCta
 }) {
   const items = props.dishes || []
   if (items.length === 0) return null
@@ -770,6 +791,7 @@ export function GroupStyleDishSection(props: {
         ))}
       </ul>
       <SectionAnnotations annotations={props.annotations} />
+      <MenuSectionCtaButton cta={props.cta} />
     </section>
   )
 }

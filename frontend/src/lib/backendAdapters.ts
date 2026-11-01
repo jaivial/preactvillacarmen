@@ -1,6 +1,7 @@
 import type {
   Dish,
   MenuResponse,
+  MenuSectionCta,
   MenuVisibility,
   PublicMenu,
   PublicMenuDish,
@@ -220,6 +221,7 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
     kind: toText(record.kind) || 'custom',
     position: Math.max(0, Math.trunc(toNumber(record.position, 0))),
     annotations: toStringArray(record.annotations),
+    cta: normalizeMenuSectionCta(record.cta),
     dishes,
     title_english: toText(record.title_english) || undefined,
     display_title_english: toText(record.display_title_english) || undefined,
@@ -227,6 +229,14 @@ function normalizePublicMenuSection(value: unknown): PublicMenuSection | null {
     tab_label_english: toText(record.tab_label_english) || undefined,
     annotations_english: toStringArray(record.annotations_english),
   }
+}
+
+// Coordination id: menu_section_cta_v1 - only enabled buttons with a site path.
+function normalizeMenuSectionCta(value: unknown): MenuSectionCta | undefined {
+  const record = toRecord(value)
+  const href = toText(record.href)
+  if (record.enabled !== true || !href.startsWith('/')) return undefined
+  return { enabled: true, label: toText(record.label), target: toText(record.target), href }
 }
 
 function normalizePublicMenuSettings(value: unknown): PublicMenuSettings {

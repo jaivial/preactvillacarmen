@@ -72,6 +72,7 @@ export function MenusDeGruposCarta(props: { menu: PublicMenu; headingLevel?: 'h1
                         subtitle={localized(section.subtitle ?? '', section.subtitle_english ?? '', lang)}
                         dishes={section.dishes}
                         annotations={localizedArray(section.annotations, section.annotations_english, lang)}
+                        cta={section.cta}
                         showDishPrice={true}
                       />
                     ),

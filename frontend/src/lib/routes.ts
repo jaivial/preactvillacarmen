@@ -1,3 +1,4 @@
+import { prerenderData } from './prerenderData'
 export const SITE_ORIGIN = 'https://www.alqueriavillacarmen.com'
 export const SOCIAL_IMAGE = 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_4.webp'
 export type Language = 'es' | 'en'
@@ -169,8 +170,21 @@ export function routeMetadata(pathname: string, menus: MenuRouteEntry[] = [], it
   }
   const routePath = aliases[normalized] || (normalized.startsWith('/backoffice') ? '/backoffice' : normalized)
   const found = PUBLIC_ROUTES.find((route) => route.path === routePath)
-  if (found) return { ...found, canonicalPath: localizedPath(found.path, lang) }
+  if (found) return { ...withPageSEO(found), canonicalPath: localizedPath(found.path, lang) }
   return { ...page(normalized, ['Página no encontrada | Villa Carmen', 'Page not found | Villa Carmen'], ['La página solicitada no está disponible.', 'The requested page is not available.'], { indexable: false, prerender: false, localized: false }), canonicalPath: localizedPath(normalized, lang) }
+}
+
+// Coordination id: cafes_page_seo_v1 - title/description set in the backoffice
+// (/app/comida/cafes > Configuración) replace the defaults; empty keeps them.
+function withPageSEO(route: RouteMetadata): RouteMetadata {
+  const seo = route.path === '/cafes' ? prerenderData().cafesSeo : undefined
+  if (!seo) return route
+  const pick = (value: string | undefined, fallback: string) => value?.trim() || fallback
+  return {
+    ...route,
+    title: { es: pick(seo.seo_title, route.title.es), en: pick(seo.seo_title_english, route.title.en) },
+    description: { es: pick(seo.seo_description, route.description.es), en: pick(seo.seo_description_english, route.description.en) },
+  }
 }
 
 export function canonicalUrl(pathname: string, menus: MenuRouteEntry[] = [], items: ItemRouteEntry[] = []): string {
