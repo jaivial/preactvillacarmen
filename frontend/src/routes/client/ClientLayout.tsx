@@ -5,6 +5,7 @@ import { ClientHeader } from '../../components/ClientHeader'
 import { Breadcrumbs } from '../../components/Breadcrumbs'
 import { useLocation } from 'wouter-preact'
 import { PublicAdPopover } from '../../components/PublicAdPopover'
+import { CookieConsent } from '../../components/CookieConsent'
 import { fetchPublicAds, fetchPreviewAd, isAdSeen, markAdSeen, type PublicAd } from '../../lib/publicAds'
 
 export function ClientLayout(props: { children: ComponentChildren }) {
@@ -67,6 +68,7 @@ export function ClientLayout(props: { children: ComponentChildren }) {
         {props.children}
       </main>
       <ClientFooter />
+      <CookieConsent />
       {activeAd && isHome ? <PublicAdPopover ad={activeAd} onClose={() => { if (!previewAdId) markAdSeen(activeAd.id); setActiveAd(null) }} /> : null}
     </div>
   )

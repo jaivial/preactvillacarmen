@@ -30,6 +30,17 @@
       function gtag() {
         dataLayer.push(arguments);
       }
+      // Coordination id: cookie_consent_v1 - Consent Mode v2: denied until the banner grants it.
+      var vcConsent = 'denied';
+      try {
+        if (localStorage.getItem('vc_cookie_consent') === 'granted') vcConsent = 'granted';
+      } catch (e) {}
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: vcConsent,
+      });
       gtag('js', new Date());
       gtag('config', 'G-0B9N606V7M');
     </script>

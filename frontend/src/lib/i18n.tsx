@@ -207,12 +207,15 @@ const DICT: Dictionary = {
     es: 'Cu\u00e9ntanos la idea y preparamos una propuesta personalizada para vuestro d\u00eda.',
     en: 'Share your idea and we will prepare a tailored proposal for your day.',
   },
-  'events.cookies.text': {
+  'cookies.text': {
     es: 'Usamos cookies para mejorar tu experiencia',
     en: 'We use cookies to enhance your experience',
   },
-  'events.cookies.accept': { es: 'Aceptar', en: 'Accept all' },
-  'events.cookies.reject': { es: 'Rechazar', en: 'Reject all' },
+  'cookies.accept': { es: 'Aceptar', en: 'Accept all' },
+  'cookies.reject': { es: 'Rechazar', en: 'Reject all' },
+  'cookies.label': { es: 'Consentimiento de cookies', en: 'Cookie consent' },
+  'cookies.more': { es: 'Cookies anal\u00edticas de Google Analytics. M\u00e1s informaci\u00f3n', en: 'Google Analytics cookies. More information' },
+  'cookies.settings': { es: 'Configurar cookies', en: 'Cookie settings' },
 
   'home.story.kicker': { es: 'La Alquer\u00eda', en: 'The Alqueria' },
   'home.story.title': { es: 'Jardines, salones y huerta', en: 'Gardens, rooms, and orchard' },
