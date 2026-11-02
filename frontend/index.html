@@ -20,6 +20,19 @@
       data-domains="alqueriavillacarmen.com,www.alqueriavillacarmen.com"
       data-testid="umami-analytics-script"
     ></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-0B9N606V7M"
+      data-testid="google-analytics-gtag-loader"
+    ></script>
+    <script data-testid="google-analytics-gtag-config">
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', 'G-0B9N606V7M');
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
