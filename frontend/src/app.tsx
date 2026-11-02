@@ -28,6 +28,7 @@ import { ConfirmBooking } from './routes/client/ConfirmBooking.tsx'
 import { CancelBooking } from './routes/client/CancelBooking.tsx'
 import { UpdateRice } from './routes/client/UpdateRice.tsx'
 import { ProteccionDatos } from './routes/client/ProteccionDatos.tsx'
+import { PoliticaCookies } from './routes/client/PoliticaCookies.tsx'
 import { ReservasEspecialesPolitica } from './routes/client/ReservasEspecialesPolitica.tsx'
 import { Unsubscribe } from './routes/Unsubscribe.tsx'
 import { Vinos } from './routes/client/Vinos.tsx'
@@ -92,6 +93,7 @@ function ClientApp() {
         <Route path="/update-rice" component={UpdateRice} />
         <Route path="/protecciondatos" component={ProteccionDatos} />
         <Route path="/protecciondatos.html" component={ProteccionDatos} />
+        <Route path="/politica-cookies" component={PoliticaCookies} />
         <Route path="/reservas-especiales-politica" component={ReservasEspecialesPolitica} />
         <Route path="/reservas-especiales-politica.html" component={ReservasEspecialesPolitica} />
         <Route path="/baja-publicidad" component={Unsubscribe} />

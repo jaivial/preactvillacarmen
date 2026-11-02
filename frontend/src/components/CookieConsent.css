@@ -55,6 +55,46 @@
   border-color: #1e1e22;
 }
 
+.footer-legal-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.footer-legal-links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.legalCookieTableWrap {
+  overflow-x: auto;
+  margin: 12px 0 18px;
+}
+
+.legalCookieTable {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.legalCookieTable th,
+.legalCookieTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.legalCookieTable th {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(20, 37, 32, 0.8);
+}
+
 .footer-cookie-settings {
   appearance: none;
   padding: 0;

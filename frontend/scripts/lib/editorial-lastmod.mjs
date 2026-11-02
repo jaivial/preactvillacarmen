@@ -28,4 +28,5 @@ export const EDITORIAL_LASTMOD = {
   '/cafes': '2026-11-01',
   '/bebidas': '2026-10-25',
   '/vinos': '2026-10-25',
+  '/politica-cookies': '2026-11-02',
 }
