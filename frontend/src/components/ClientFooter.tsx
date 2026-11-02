@@ -1,6 +1,7 @@
 import { MapPin, Phone } from 'lucide-react'
 import { Link } from 'wouter-preact'
 import { useI18n } from '../lib/i18n'
+import { openCookieConsent } from '../lib/consent'
 import { OPENING_HOURS, RESTAURANT } from '../lib/restaurant'
 
 export function ClientFooter() {
@@ -73,6 +74,7 @@ export function ClientFooter() {
       </nav>
       <div class="container footer-bottom">
         <span>© {new Date().getFullYear()} Alqueria Villa Carmen</span>
+        <button type="button" class="footer-cookie-settings" onClick={openCookieConsent} data-testid="footer-cookie-settings">{t('cookies.settings')}</button>
       </div>
     </footer>
   )
