@@ -74,7 +74,10 @@ export function ClientFooter() {
       </nav>
       <div class="container footer-bottom">
         <span>© {new Date().getFullYear()} Alqueria Villa Carmen</span>
-        <button type="button" class="footer-cookie-settings" onClick={openCookieConsent} data-testid="footer-cookie-settings">{t('cookies.settings')}</button>
+        <span class="footer-legal-links" data-testid="footer-legal-links">
+          <Link href="/politica-cookies" data-testid="footer-cookie-policy-link">{t('cookies.more')}</Link>
+          <button type="button" class="footer-cookie-settings" onClick={openCookieConsent} data-testid="footer-cookie-settings">{t('cookies.settings')}</button>
+        </span>
       </div>
     </footer>
   )

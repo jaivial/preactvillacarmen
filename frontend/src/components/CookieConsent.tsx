@@ -26,7 +26,7 @@ export function CookieConsent() {
   return (
     <div class="vcCookie" role="dialog" aria-label={t('cookies.label')} data-testid="cookie-consent-banner">
       <p data-testid="cookie-consent-text">{t('cookies.text')}</p>
-      <Link href="/protecciondatos" class="vcCookieMore" data-testid="cookie-consent-privacy-link">{t('cookies.more')}</Link>
+      <Link href="/politica-cookies" class="vcCookieMore" data-testid="cookie-consent-policy-link">{t('cookies.more')}</Link>
       <div class="vcCookieActions" data-testid="cookie-consent-actions">
         <button type="button" class="vcCookieBtn" onClick={() => choose('denied')} data-testid="cookie-consent-reject">{t('cookies.reject')}</button>
         <button type="button" class="vcCookieBtn vcCookieBtn--solid" onClick={() => choose('granted')} data-testid="cookie-consent-accept">{t('cookies.accept')}</button>

@@ -214,7 +214,7 @@ const DICT: Dictionary = {
   'cookies.accept': { es: 'Aceptar', en: 'Accept all' },
   'cookies.reject': { es: 'Rechazar', en: 'Reject all' },
   'cookies.label': { es: 'Consentimiento de cookies', en: 'Cookie consent' },
-  'cookies.more': { es: 'Cookies anal\u00edticas de Google Analytics. M\u00e1s informaci\u00f3n', en: 'Google Analytics cookies. More information' },
+  'cookies.more': { es: 'Pol\u00edtica de cookies', en: 'Cookie policy' },
   'cookies.settings': { es: 'Configurar cookies', en: 'Cookie settings' },
 
   'home.story.kicker': { es: 'La Alquer\u00eda', en: 'The Alqueria' },

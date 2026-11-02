@@ -137,6 +137,7 @@ const editorialFiles = new Map([
   ['/cafes', 'src/routes/client/Cafes.tsx'],
   ['/bebidas', 'src/routes/client/Bebidas.tsx'],
   ['/vinos', 'src/routes/client/Vinos.tsx'],
+  ['/politica-cookies', 'src/routes/client/PoliticaCookies.tsx'],
 ])
 const dateOnly = (value) => String(value || '').slice(0, 10)
 const validDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly(value)) ? dateOnly(value) : '')
