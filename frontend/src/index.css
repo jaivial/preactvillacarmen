@@ -3980,6 +3980,23 @@ svg {
     overflow-wrap: anywhere;
 }
 
+/* WhatsApp-only special date: notice + WhatsApp button instead of the
+   party / time selectors. Coordination id: special_date_whatsapp_only_v1 */
+.resvWhatsAppOnly {
+    margin: 0.75rem 1rem 1rem;
+    display: grid;
+    gap: 12px;
+}
+
+.resvWhatsAppOnlyText {
+    margin: 0;
+}
+
+.resvWhatsAppOnlyBtn {
+    justify-self: start;
+    text-decoration: none;
+}
+
 /* The "assigned guests" mismatch warning sits inside the special-menu
    counter block, which is flush with the card edge. Inset it so the notice
    does not touch the sides. Scoped to this notice so other .resvNotice
