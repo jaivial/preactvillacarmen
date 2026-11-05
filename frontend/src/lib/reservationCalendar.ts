@@ -69,7 +69,7 @@ export function normalizeDateSet(values: unknown): Set<string> {
   return out
 }
 
-export type CalendarSpecialDate = { is_active?: boolean; prereserva_enabled?: boolean }
+export type CalendarSpecialDate = { is_active?: boolean; prereserva_enabled?: boolean; whatsapp_only?: boolean }
 
 export type CalendarRuleContext = {
   todayISO: string
@@ -104,12 +104,23 @@ export function isClosedByDefaultISO(
  */
 export function isPrereservaSpecialISO(iso: string, specialDates: Record<string, CalendarSpecialDate>): boolean {
   const sd = specialDates[iso]
-  return Boolean(sd && sd.is_active && sd.prereserva_enabled)
+  return Boolean(sd && sd.is_active && sd.prereserva_enabled && !sd.whatsapp_only)
+}
+
+/**
+ * Coordination id: special_date_whatsapp_only_v1
+ * Active special dates booked only through WhatsApp: always clickable (except
+ * past days) so the guest sees the WhatsApp notice; never a web pre-booking.
+ */
+export function isWhatsAppOnlySpecialISO(iso: string, specialDates: Record<string, CalendarSpecialDate>): boolean {
+  const sd = specialDates[iso]
+  return Boolean(sd && sd.is_active && sd.whatsapp_only)
 }
 
 export function isCalendarDateDisabled(iso: string, inMonth: boolean, ctx: CalendarRuleContext): boolean {
   if (!inMonth) return true
   if (iso < ctx.todayISO) return true
+  if (isWhatsAppOnlySpecialISO(iso, ctx.specialDates)) return false
   const free = ctx.monthAvailability?.[iso]?.freeBookingSeats
   if (isPrereservaSpecialISO(iso, ctx.specialDates)) {
     if (typeof free === 'number' && free <= 0) return true

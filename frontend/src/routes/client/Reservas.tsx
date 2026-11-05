@@ -38,6 +38,7 @@ import {
   SpecialMenusSummary,
   type SpecialMenuSummaryRow,
 } from '../../components/reservas/special/SpecialDateSummaryBlocks'
+import { SpecialDateWhatsAppNotice } from '../../components/reservas/special/SpecialDateWhatsAppNotice'
 import { lookupDuplicateReservation, storeSelfServiceProof, type DuplicateCheckResponse } from '../../lib/reservationSelfService'
 import { onlyDigits } from '../../lib/phone'
 import { fetchMenuByID } from '../../lib/menuApi'
@@ -45,6 +46,7 @@ import {
   addDaysLocal,
   isClosedByDefaultISO,
   isPrereservaSpecialISO,
+  isWhatsAppOnlySpecialISO,
   normalizeDateSet,
   isoFromLocalDate,
   parseISODateLocal,
@@ -460,6 +462,8 @@ export function Reservas() {
   // unbounded growth when many special dates are scheduled.
   const SPECIAL_MAX_DAYS = 183
   const [specialDatesMap, setSpecialDatesMap] = useState<Record<string, SpecialDateSummary>>({})
+  // Coordination id: special_date_whatsapp_only_v1 - WhatsApp the notice links to.
+  const [specialWhatsAppPhone, setSpecialWhatsAppPhone] = useState('')
   const maxDate = useMemo(() => {
     let furthest = addDaysLocal(today, BOOKING_MAX_DAYS)
     const cap = addDaysLocal(today, SPECIAL_MAX_DAYS)
@@ -849,6 +853,8 @@ export function Reservas() {
   // Special-terms gating: only required when the booking targets an active
   // special date. Forced false otherwise to keep the submit button available
   // on the legacy flow even if the user toggled it before navigating away.
+  // Coordination id: special_date_whatsapp_only_v1
+  const whatsAppOnlySelected = Boolean(selectedDate && isWhatsAppOnlySpecialISO(selectedDate, specialDatesMap))
   const specialTermsRequired = isSpecialActiveForSelected && Boolean(activeSpecialSummary?.prereserva_enabled)
 
   // Coordination id: special_menu_principales_step_v1 - does any counted
@@ -1268,6 +1274,7 @@ export function Reservas() {
           map[s.date] = s
         }
         setSpecialDatesMap(map)
+        setSpecialWhatsAppPhone(typeof d.whatsapp_phone === 'string' ? d.whatsapp_phone : '')
       })
       .catch(() => {
         if (cancelled) return
@@ -1558,6 +1565,11 @@ export function Reservas() {
       }
       // The endpoint 404s for inactive dates, so a payload that parsed at all
       // is already active; `is_active` is only checked when present.
+      // Coordination id: special_date_whatsapp_only_v1 - no web flow to restore.
+      if (sd?.whatsapp_only) {
+        setStep('date')
+        return
+      }
       const isSpecialPrereserva = Boolean(sd && sd.is_active !== false && sd.prereserva_enabled)
 
       // Steps that are reachable for this date, in order.
@@ -1645,6 +1657,13 @@ export function Reservas() {
       return
     }
     if (!inMonth) return
+    // Coordination id: special_date_whatsapp_only_v1 - booked only by
+    // WhatsApp: select the day so the notice replaces the selectors.
+    if (iso > todayISO && isWhatsAppOnlySpecialISO(iso, specialDatesMap)) {
+      console.log('[checkpoint] special_date_whatsapp_only_v1 date_picked', iso)
+      void loadDateContext(iso)
+      return
+    }
 
     const free = monthAvailability?.[iso]?.freeBookingSeats
     if (typeof free === 'number' && free <= 0) {
@@ -2335,9 +2354,19 @@ export function Reservas() {
                 transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
               >
                 <div class="resvCardHead" data-testid="reservas-booking-card-head">
-                  <div class="resvCardTitle" data-testid="reservas-booking-card-title">{specialTermsRequired ? text('Tu prereserva', 'Your pre-booking') : text('Tu reserva', 'Your reservation')}</div>
+                  <div class="resvCardTitle" data-testid="reservas-booking-card-title">{whatsAppOnlySelected ? text('Reserva por WhatsApp', 'Book on WhatsApp') : specialTermsRequired ? text('Tu prereserva', 'Your pre-booking') : text('Tu reserva', 'Your reservation')}</div>
                   <div class="resvCardSub" data-testid="reservas-booking-card-subtitle">{selectedDate ? dateDisplay : text('Elige fecha, personas y hora.', 'Choose date, guests and time.')}</div>
                 </div>
+
+                {/* Coordination id: special_date_whatsapp_only_v1 - the notice
+                    replaces the party / time selectors on this date. */}
+                {whatsAppOnlySelected ? (
+                  <SpecialDateWhatsAppNotice
+                    title={specialDatesMap[selectedDate]?.title || text('esta fecha', 'this date')}
+                    dateLabel={dateDisplay}
+                    phone={specialWhatsAppPhone}
+                  />
+                ) : (<>
 
                 {showUpperFloorWarning ? (
                   <div class="resvNotice warn" data-testid="reservas-booking-upper-floor-warning">{specialTermsRequired
@@ -2484,6 +2513,7 @@ export function Reservas() {
                     </button>
                   </motion.div>
                 ) : null}
+                </>)}
               </motion.div>
             ) : null}
           </div>

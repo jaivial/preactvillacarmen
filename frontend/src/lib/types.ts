@@ -622,6 +622,8 @@ export type SpecialDateSummary = {
   date: string
   is_active: boolean
   prereserva_enabled: boolean
+  /** Booked only through WhatsApp. Coordination id: special_date_whatsapp_only_v1 */
+  whatsapp_only?: boolean
   title: string
   max_per_table_enabled: boolean
   max_per_table?: number | null
@@ -636,6 +638,8 @@ export type SpecialDateSummary = {
 export type SpecialDatesResponse = {
   success: true
   special_dates: SpecialDateSummary[]
+  /** Digits of the WhatsApp the notice links to. Coordination id: special_date_whatsapp_only_v1 */
+  whatsapp_phone?: string
 }
 
 export type SpecialDateMenuPublic = {
@@ -680,6 +684,9 @@ export type SpecialDatePublic = {
   /** The handler only returns active rows, but it does send the flag. */
   is_active?: boolean
   prereserva_enabled: boolean
+  /** Coordination id: special_date_whatsapp_only_v1 */
+  whatsapp_only?: boolean
+  whatsapp_phone?: string
   max_per_table_enabled: boolean
   max_per_table?: number | null
   /** Coordination id: mobility_issues_v1 */
