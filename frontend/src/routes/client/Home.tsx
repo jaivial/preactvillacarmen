@@ -835,7 +835,8 @@ export function Home() {
         if (!cancelled) setHomeMenus(menus)
       })
       .catch(() => {
-        if (!cancelled) setHomeMenus(null)
+        // Googlebot cannot fetch /api/ (robots.txt): keep prerendered data on failure (legal_page_prerender_fallback_v1).
+        if (!cancelled) setHomeMenus((prev) => prev ?? null)
       })
     return () => {
       cancelled = true
