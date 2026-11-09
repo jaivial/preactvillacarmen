@@ -34,6 +34,7 @@ export function LegalPage({ slug }: { slug: LegalPageSlug }) {
         })
       })
       .catch(() => {
+        console.warn('[legal_page_prerender_fallback_v1] legal page API failed', slug)
         if (alive) setError(true)
       })
     return () => {
@@ -41,7 +42,9 @@ export function LegalPage({ slug }: { slug: LegalPageSlug }) {
     }
   }, [slug])
 
-  if (error) {
+  // Googlebot cannot fetch /api/ (robots.txt): keep the prerendered text instead of an error page (Soft 404).
+  // Coordination id: legal_page_prerender_fallback_v1
+  if (error && !data) {
     return (
       <div class="page legalPage">
         <div class="containeravisolegal">

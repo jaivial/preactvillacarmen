@@ -18,7 +18,8 @@ export function Postres() {
       })
       .catch(() => {
         if (cancelled) return
-        setItems(null)
+        // Googlebot cannot fetch /api/ (robots.txt): keep prerendered data on failure (legal_page_prerender_fallback_v1).
+        setItems((prev) => prev ?? null)
       })
     return () => {
       cancelled = true

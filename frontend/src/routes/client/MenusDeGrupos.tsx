@@ -22,7 +22,7 @@ export function MenusDeGrupos() {
     let cancelled = false
     apiGetJson<GroupMenusDisplayResponse>('/api/menuDeGruposBackend/getActiveMenusForDisplay', { noStore: true })
       .then((data) => { if (!cancelled) setGroupMenus(data.success ? data.menus : null) })
-      .catch(() => { if (!cancelled) setGroupMenus(null) })
+      .catch(() => { if (!cancelled) setGroupMenus((prev) => prev ?? null) }) // keep prerendered data (legal_page_prerender_fallback_v1)
     return () => { cancelled = true }
   }, [])
 

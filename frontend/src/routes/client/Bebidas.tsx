@@ -153,7 +153,7 @@ export function Bebidas() {
             />
           )}
 
-          {state.error ? (
+          {state.error && !hasContent ? (
             <EmptyState title={t('bebidas.error')} />
           ) : items === undefined ? (
             <div class="menuState">{t('menus.preview.loading')}</div>

@@ -66,7 +66,8 @@ export function MenuCatalogRoute(props: MenuCatalogRouteProps) {
       })
       .catch((err) => {
         checkpoint('menu_catalog_fetch_failed', { menu_key: menuKey, error: String(err) })
-        if (!cancelled) setMenu(null)
+        // Googlebot cannot fetch /api/ (robots.txt): keep prerendered data on failure (legal_page_prerender_fallback_v1).
+        if (!cancelled) setMenu((prev) => prev || null)
       })
     return () => {
       cancelled = true
