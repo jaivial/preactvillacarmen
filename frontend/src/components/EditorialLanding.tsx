@@ -15,6 +15,7 @@ export type EditorialContent = {
   imageWidth?: number
   imageHeight?: number
   downloads?: { href: string; label: string; filename: string }[]
+  links?: { href: string; label: string }[]
   sections: EditorialSection[]
   faq: { question: string; answer: string }[]
 }
@@ -49,6 +50,9 @@ export function EditorialLanding({ content, children, id }: {
           </section>
         ))}
       </div>
+      {content.links?.length ? <nav class="container editorial-actions" aria-label={t('home.discovery.title')} data-testid={`editorial-related-${id}`} data-coordination-id="local_search_intents_20261116">
+        {content.links.map((link, index) => <Link key={link.href} href={link.href} className="btn" data-testid={`editorial-related-${id}-${index}`}>{link.label}</Link>)}
+      </nav> : null}
       {content.downloads ? <nav class="container editorial-downloads" aria-label={t('resource.downloads')}>
         {content.downloads.map((file) => <a key={file.href} class="btn" href={file.href} download={file.filename}>{file.label}</a>)}
       </nav> : null}

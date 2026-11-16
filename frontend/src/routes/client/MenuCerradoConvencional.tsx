@@ -1,3 +1,4 @@
+import { WeekendMenuIntro } from '../../components/WeekendMenuIntro'
 import { useMemo } from 'preact/hooks'
 import type { PublicMenu } from '../../lib/types'
 import { localized, localizedArray, useI18n } from '../../lib/i18n'
@@ -37,6 +38,8 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
           <p class="page-subtitle">{subtitle}</p>
         </div>
       </section>
+
+      {(props.headingLevel || 'h1') === 'h1' ? <WeekendMenuIntro menu={props.menu} /> : null}
 
       <MenuHeroSlider images={props.menu.slider_images} hidden={props.menu.slider_mode === 'hidden'} />
 
