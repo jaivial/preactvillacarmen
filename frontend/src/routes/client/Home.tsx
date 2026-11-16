@@ -40,6 +40,8 @@ const HERO_FADE_MS = 1200
 const HERO_PRE_TRANSITION_MS = 700
 
 const HOME_DISCOVERY_CARDS = [
+ { href: '/menu/menu-fin-de-semana', label: 'home.discovery.weekend', id: 'home-commercial-weekend', image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/42/preview-1787245966196.webp', alt: { es: 'Menú de fin de semana de Alquería Villa Carmen', en: 'Weekend menu at Alqueria Villa Carmen' }, copy: { es: 'Comer el fin de semana en Catarroja, sin mínimo de comensales. Arroces por encargo, mínimo 2 personas.', en: 'Weekend lunch in Catarroja with no minimum party size. Rice orders for at least 2 people.' } },
+ { href: '/restaurante-albufera-catarroja', label: 'resource.albufera', id: 'home-commercial-albufera', image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp', alt: { es: 'Arroz de Villa Carmen para una comida en Catarroja', en: 'Villa Carmen rice for lunch in Catarroja' }, copy: { es: 'Combina la visita al Port de Catarroja con una comida de arroces. Estamos en Catarroja, no en el puerto.', en: 'Combine a visit to Catarroja port with a rice lunch. We are in Catarroja, not at the port.' } },
  { href: '/arroces-y-paellas', label: 'home.discovery.rice', id: 'home-commercial-rice', image: 'https://villacarmenmedia.b-cdn.net/1/pictures/menupreviewpictures/1/preview-1787247695442.webp', alt: { es: 'Arroz en paellera preparado en Alquería Villa Carmen', en: 'Rice in a paella pan at Alqueria Villa Carmen' }, copy: { es: 'Conoce nuestros arroces y las condiciones de cada propuesta.', en: 'Explore our rice dishes and the conditions of each menu.' } },
  { href: '#menus', label: 'home.discovery.menus', id: 'home-commercial-menus', image: 'https://villacarmenmedia.b-cdn.net/images/comida/16%3A9/ChatGPT%20Image%2017%20feb%202026%2C%2002_28_19%20%281%29.webp', alt: { es: 'Plato de cocina mediterránea de Alquería Villa Carmen', en: 'A Mediterranean dish at Alqueria Villa Carmen' }, copy: { es: 'Consulta la carta y los menús publicados.', en: 'Browse the published dishes and menus.' } },
  { href: '/menusdegrupos', label: 'home.discovery.groups', id: 'home-commercial-groups', image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', alt: { es: 'Salón preparado para una comida de grupo en Villa Carmen', en: 'A room prepared for a group meal at Villa Carmen' }, copy: { es: 'Compara propuestas, precios y mínimos para tu grupo.', en: 'Compare menus, prices and minimum party sizes.' } },
@@ -854,7 +856,9 @@ export function Home() {
       .filter((menu) => menu.active)
       .map((menu) => {
         const previewImage = resolveMenuPreviewImage(menu)
-        const subtitle = resolveMenuSubtitle(menu, lang)
+        const subtitle = buildPublicMenuHref(menu) === '/menu/menu-fin-de-semana'
+          ? (lang === 'es' ? 'Sábado, domingo y festivos. Sin mínimo de comensales; arroces por encargo, mínimo 2 personas.' : 'Saturday, Sunday and holidays. No minimum party size; rice orders for at least 2 people.')
+          : resolveMenuSubtitle(menu, lang)
         const isSpecial = normalizeMenuType(menu.menu_type) === MENU_TYPE_SPECIAL
         const isGroupMenu = isGroupMenuType(menu.menu_type)
 

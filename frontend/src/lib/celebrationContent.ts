@@ -5,13 +5,15 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
   '/bodas': {
     es: {
       kicker: 'Celebraciones en Alquería Villa Carmen',
-      title: 'Bodas en Catarroja',
-      intro: 'Una boda se construye con vuestro ritmo, vuestros invitados y vuestro estilo. En Villa Carmen ponemos los salones, los jardines, la cocina mediterránea y un equipo que os acompaña desde la primera propuesta.',
+      title: 'Bodas en Catarroja: salones y jardines',
+      intro: 'Vuestra boda en Catarroja, cerca de Valencia, se construye con vuestro ritmo, vuestros invitados y vuestro estilo. En Villa Carmen ponemos los salones, los jardines, la cocina mediterránea y un equipo que os acompaña desde la primera propuesta.',
       image: 'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_2.webp',
       imageAlt: 'Celebración de boda en los espacios de Alquería Villa Carmen',
+      links: [{ href: '/contacto', label: 'Cómo llegar y pedir información' }, { href: '/checklist-celebraciones', label: 'Checklist para tu celebración' }],
       sections: [
         { heading: 'Ceremonia, cóctel y banquete en un mismo entorno', body: 'Podemos plantear la celebración entre jardines y salones según la fecha, el número de invitados y el ambiente que busquéis. La distribución definitiva se acuerda con el equipo para que cada momento tenga su espacio.' },
         { heading: 'Una propuesta gastronómica para compartir', body: 'La cocina mediterránea y los arroces forman parte de la identidad de la casa. Revisad los menús publicados y contadnos vuestras preferencias; el equipo os orientará sobre platos, bebidas, suplementos y alérgenos.' },
+        { heading: 'Qué confirmar antes de decidir', body: 'Pedid por escrito el aforo para vuestro montaje, los espacios de ceremonia y banquete que se puedan usar, la alternativa en caso de lluvia, horarios, exclusividad si se ofrece, precio, señal y cancelación. Estos puntos se acuerdan para cada boda; no se dan por incluidos.' },
         { heading: 'Del primer contacto al montaje del día', body: 'Contadnos la fecha, el aforo previsto y cómo imagináis la ceremonia y la comida. Después concretaremos disponibilidad, espacios, recorrido de la celebración, montaje y condiciones por escrito.', items: ['Primera conversación y comprobación de disponibilidad.', 'Propuesta de espacio, menú y organización.', 'Confirmación de invitados, montaje y necesidades especiales.'] },
       ],
       faq: [
@@ -22,11 +24,13 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
     },
     en: {
       kicker: 'Celebrations at Alqueria Villa Carmen', title: 'Weddings in Catarroja',
-      intro: 'Your wedding should follow your pace, your guests and your style. Villa Carmen offers rooms, gardens, Mediterranean cuisine and a team to guide you from the first proposal.',
+      intro: 'Your wedding in Catarroja, near Valencia, should follow your pace, your guests and your style. Villa Carmen offers rooms, gardens, Mediterranean cuisine and a team to guide you from the first proposal.',
       image: 'https://villacarmenmedia.b-cdn.net/images/eventos/bodas/16%3A9/boda16-9_2.webp', imageAlt: 'Wedding celebration at Alqueria Villa Carmen',
+      links: [{ href: '/contacto', label: 'Directions and enquiries' }, { href: '/checklist-celebraciones', label: 'Celebration checklist' }],
       sections: [
         { heading: 'Ceremony, drinks reception and wedding breakfast', body: 'We can plan your celebration across gardens and rooms according to the date, guest count and atmosphere you want. The final layout is agreed with our team so each moment has its own space.' },
         { heading: 'Food made for sharing', body: 'Mediterranean cooking and rice dishes are part of our identity. Browse the published menus and tell us your preferences; we will advise on dishes, drinks, supplements and allergens.' },
+        { heading: 'What to confirm before deciding', body: 'Request written confirmation of capacity for your layout, ceremony and meal spaces, a wet-weather alternative, times, exclusivity if offered, price, deposit and cancellation. These are agreed for each wedding and are not automatically included.' },
         { heading: 'From first enquiry to the day itself', body: 'Tell us your date, estimated guest count and how you picture the ceremony and meal. We will then confirm availability, spaces, flow, layout and written terms.', items: ['Initial conversation and availability check.', 'Space, menu and planning proposal.', 'Confirmation of guests, layout and special requirements.'] },
       ],
       faq: [
@@ -39,11 +43,13 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
   '/comuniones': {
     es: {
       kicker: 'Una comida para disfrutar en familia', title: 'Restaurante para comuniones en Catarroja',
-      intro: 'Celebrad la comunión con una comida pensada para juntar a familia y amigos. Os ayudamos a elegir espacio y menú para que mayores y pequeños disfrutéis del día con tranquilidad.',
+      intro: 'Celebrad la comunión en Catarroja, cerca de Valencia, con una comida pensada para juntar a familia y amigos. Os ayudamos a elegir espacio y menú para que mayores y pequeños disfrutéis del día con tranquilidad.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Salón para una celebración familiar en Alquería Villa Carmen',
+      links: [{ href: '/contacto', label: 'Cómo llegar y pedir información' }, { href: '/checklist-celebraciones', label: 'Checklist para tu celebración' }],
       sections: [
         { heading: 'El espacio se adapta a vuestra celebración', body: 'La alquería cuenta con salones y jardines. Según la fecha, el número de asistentes y el tipo de comida, propondremos la ubicación y el montaje adecuados, sin dar por supuesta una capacidad única.' },
-        { heading: 'Menús para compartir sin complicaciones', body: 'Consulta los menús de grupos publicados con precios, mínimo de comensales, bebidas y condiciones. Nuestro equipo puede explicarte la elección de platos y atender consultas sobre alérgenos antes de confirmar.' },
+        { heading: 'Menús para compartir sin complicaciones', body: 'Los menús de grupos publicados sirven como referencia, no como menú confirmado de comunión. Pide la propuesta aplicable a tu fecha, con precio, platos, bebidas, adultos, niños y condiciones; el equipo resolverá las consultas sobre alérgenos antes de confirmar.' },
+        { heading: 'Qué concretar para adultos y niños', body: 'Indicad cuántos adultos y niños asistirán y preguntad por menú infantil, animación, accesibilidad y montaje si los necesitáis. No se dan por incluidos; la propuesta debe detallar lo disponible, la señal y la cancelación.' },
         { heading: 'Una planificación clara para las familias', body: 'Al escribirnos, indica la fecha, los adultos y niños previstos y cualquier necesidad importante. Confirmaremos disponibilidad, horario, menú y espacio para que sepas qué esperar antes del día.' },
       ],
       faq: [
@@ -54,11 +60,13 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
     },
     en: {
       kicker: 'A meal for the whole family', title: 'Communion restaurant in Catarroja',
-      intro: 'Celebrate a communion with a meal that brings family and friends together. We will help you choose the space and menu so adults and children can enjoy a relaxed day.',
+      intro: 'Celebrate a communion in Catarroja, near Valencia, with a meal that brings family and friends together. We will help you choose the space and menu so adults and children can enjoy a relaxed day.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_2.webp', imageAlt: 'Room for a family celebration at Alqueria Villa Carmen',
+      links: [{ href: '/contacto', label: 'Directions and enquiries' }, { href: '/checklist-celebraciones', label: 'Celebration checklist' }],
       sections: [
         { heading: 'A space suited to your celebration', body: 'The alqueria has rooms and gardens. Depending on the date, party size and meal, we will suggest a suitable location and layout rather than assuming one fixed capacity.' },
-        { heading: 'Straightforward menus for sharing', body: 'Browse published group menus with prices, minimum party sizes, drinks and conditions. Our team can explain dish choices and answer allergen questions before you confirm.' },
+        { heading: 'Straightforward menus for sharing', body: 'Published group menus are a reference, not a confirmed communion menu. Request the proposal for your date with prices, dishes, drinks, adults, children and terms; our team can answer allergen questions before you confirm.' },
+        { heading: 'Details for adults and children', body: 'Tell us how many adults and children are coming and ask about children’s food, entertainment, accessibility and layout if needed. These are not automatically included; your proposal should confirm availability, deposit and cancellation.' },
         { heading: 'Clear planning for families', body: 'When you write, include the date, expected adults and children and any important needs. We will confirm availability, timing, menu and space so you know what to expect.' },
       ],
       faq: [
@@ -73,9 +81,11 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       kicker: 'Una comida familiar para recibir al bebé', title: 'Restaurante para bautizos en Catarroja',
       intro: 'Celebra el bautizo con una comida familiar tranquila en Catarroja, cerca de Valencia. Os ayudamos a elegir salón o jardín y menú para que la familia disfrute del día y vosotros podáis atender al bebé con calma.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp', imageAlt: 'Salón decorado con luces y plantas para una celebración familiar en Alquería Villa Carmen',
+      links: [{ href: '/contacto', label: 'Cómo llegar y pedir información' }, { href: '/checklist-celebraciones', label: 'Checklist para tu celebración' }],
       sections: [
         { heading: 'Salón o jardín según la fecha y los invitados', body: 'La alquería tiene salones y jardines. Según la época del año, el número de invitados y el horario después de la ceremonia, os propondremos el espacio y el montaje adecuados.' },
-        { heading: 'Menús de grupo con precio cerrado', body: 'Consulta los menús de grupos publicados con precio por persona, mínimo de comensales, bebidas y condiciones. Os orientamos sobre platos para compartir, opciones para los más pequeños y alérgenos antes de confirmar.' },
+        { heading: 'Menús de grupo con precio cerrado', body: 'Consulta los menús publicados como referencia y pide la propuesta aplicable al bautizo. Antes de confirmar, revisad precio por persona, bebidas, suplementos, adultos, niños, horario y necesidades alimentarias con el equipo.' },
+        { heading: 'Antes de cerrar la comida familiar', body: 'Comunica si necesitáis espacio para carritos o tronas y pregunta qué se puede ofrecer. Confirma por escrito el montaje, la señal, la cancelación y la atención a los más pequeños; una solicitud no confirma la fecha.' },
         { heading: 'Organizado en torno a la ceremonia', body: 'Indícanos la fecha, la hora aproximada de la ceremonia, cuántos adultos y niños vendréis y cualquier necesidad especial. Confirmaremos disponibilidad, horario, menú y espacio para que todo esté preparado cuando lleguéis.', items: ['Fecha y hora prevista de la ceremonia.', 'Adultos, niños y bebés que asistirán.', 'Necesidades de montaje, como espacio para carritos o tronas.'] },
       ],
       faq: [
@@ -88,9 +98,11 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       kicker: 'A family meal to welcome the baby', title: 'Christening restaurant in Catarroja',
       intro: 'Celebrate a christening with a relaxed family meal in Catarroja, near Valencia. We will help you choose a room or garden and a menu so your family can enjoy the day while you look after the baby calmly.',
       image: 'https://villacarmenmedia.b-cdn.net/images/salones/16%3A9/salones16-9_1.webp', imageAlt: 'Room decorated with lights and plants for a family celebration at Alqueria Villa Carmen',
+      links: [{ href: '/contacto', label: 'Directions and enquiries' }, { href: '/checklist-celebraciones', label: 'Celebration checklist' }],
       sections: [
         { heading: 'A room or garden to suit your date and guests', body: 'The alqueria has rooms and gardens. Depending on the season, guest count and timing after the ceremony, we will suggest a suitable space and layout.' },
-        { heading: 'Group menus at a set price', body: 'Browse published group menus with per-person prices, minimum party sizes, drinks and conditions. We will advise on sharing dishes, options for younger guests and allergens before you confirm.' },
+        { heading: 'Group menus at a set price', body: 'Browse published menus as a reference and request the proposal for your christening. Confirm per-person prices, drinks, supplements, adults, children, timing and dietary needs with our team before booking.' },
+        { heading: 'Before confirming the family meal', body: 'Tell us if you need room for prams or high chairs and ask what is available. Confirm layout, deposit, cancellation and arrangements for younger guests in writing; an enquiry does not secure a date.' },
         { heading: 'Planned around the ceremony', body: 'Tell us the date, approximate ceremony time, how many adults and children are coming and any special needs. We will confirm availability, timing, menu and space so everything is ready when you arrive.', items: ['Date and expected ceremony time.', 'Adults, children and babies attending.', 'Layout needs such as space for prams or high chairs.'] },
       ],
       faq: [
@@ -101,18 +113,20 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
     },
   },
   '/eventos-empresa': {    es: {
-      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Comidas y cenas de empresa en Catarroja',
-      intro: 'Organiza una comida de equipo, una cena de Navidad, un encuentro con clientes o la celebración de tu empresa en Villa Carmen, en Catarroja, cerca de Valencia. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
+      kicker: 'Reuniones y celebraciones con cocina mediterránea', title: 'Comidas de empresa en Catarroja, cerca de Valencia',
+      intro: 'Organiza una comida de equipo, un encuentro con clientes o la celebración de tu empresa en Villa Carmen, en Catarroja, cerca de Valencia. Combinamos espacios, cocina y coordinación para que el objetivo del encuentro marque la propuesta.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
       imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
       imageSizes: '(max-width: 800px) calc(100vw - 40px), 1280px',
       imageWidth: 800, imageHeight: 600,
       imageAlt: 'Mesa de banquete dorado preparada para un evento de empresa en Alquería Villa Carmen',
+      links: [{ href: '/contacto', label: 'Cómo llegar y pedir información' }, { href: '/checklist-celebraciones', label: 'Checklist para tu celebración' }],
       sections: [
         { heading: 'Un formato para cada encuentro', body: 'No todos los eventos necesitan el mismo montaje. Cuéntanos si se trata de una comida de equipo, presentación, reunión o celebración y revisaremos contigo el uso de salones y jardines.' },
         { heading: 'Menús y condiciones fáciles de consultar', body: 'Las fichas de grupos muestran las propuestas activas, precios por persona, mínimos, bebidas y suplementos. El equipo confirmará la selección final, los horarios y las necesidades alimentarias.' },
-        { heading: 'Comidas y cenas de empresa de Navidad', body: 'Diciembre es la época más solicitada. Consulta el menú de grupos de Navidad publicado en Menús de grupos y escríbenos cuanto antes con la fecha y el número de asistentes para confirmar disponibilidad.' },
+        { heading: 'Comidas y cenas de empresa de Navidad', body: 'Consulta el menú de grupos de Navidad publicado en Menús de grupos y escríbenos con la fecha y el número de asistentes. El horario ordinario es a mediodía; las cenas y otros horarios requieren confirmación expresa del equipo.' },
+        { heading: 'Qué incluir en la solicitud de empresa', body: 'Indica fecha, asistentes y horario, si necesitáis factura, una distribución concreta o equipo para presentaciones. La propuesta debe confirmar qué está incluido, suplementos, señal y cancelación. No se garantiza equipamiento ni un horario extraordinario sin confirmación.' },
         { heading: 'Una propuesta ajustada a vuestro programa', body: 'Envíanos fecha, horario, asistentes, objetivo del evento y cualquier necesidad técnica o de montaje. Con esa información podremos valorar el espacio y responder con una propuesta concreta; cualquier equipamiento especial se confirma previamente.' },
       ],
       faq: [
@@ -122,18 +136,20 @@ export const celebrationContent: Record<string, Record<Lang, EditorialContent>> 
       ],
     },
     en: {
-      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company lunches and dinners in Catarroja',
-      intro: 'Organise a team meal, Christmas dinner, client gathering or company celebration at Villa Carmen in Catarroja, near Valencia. We combine spaces, cuisine and coordination around the purpose of your event.',
+      kicker: 'Meetings and celebrations with Mediterranean cuisine', title: 'Company lunches in Catarroja, near Valencia',
+      intro: 'Organise a team meal, client gathering or company celebration at Villa Carmen in Catarroja, near Valencia. We combine spaces, cuisine and coordination around the purpose of your event.',
       image: '/images/discovery/banquete-dorado-800.jpg',
       imageSrcSet: '/images/discovery/banquete-dorado-480.webp 480w, /images/discovery/banquete-dorado-800.webp 800w',
       imageFallbackSrcSet: '/images/discovery/banquete-dorado-480.jpg 480w, /images/discovery/banquete-dorado-800.jpg 800w',
       imageSizes: '(max-width: 800px) calc(100vw - 40px), 1280px',
       imageWidth: 800, imageHeight: 600,
       imageAlt: 'Golden banquet table set for a company event at Alquería Villa Carmen',
+      links: [{ href: '/contacto', label: 'Directions and enquiries' }, { href: '/checklist-celebraciones', label: 'Celebration checklist' }],
       sections: [
         { heading: 'A format for every gathering', body: 'Not every event needs the same layout. Tell us whether it is a team meal, presentation, meeting or celebration and we will review how our rooms and gardens could work.' },
         { heading: 'Clear menus and conditions', body: 'Group menu pages show current options, per-person prices, minimums, drinks and supplements. Our team will confirm the final selection, schedule and dietary requirements.' },
-        { heading: 'Christmas company lunches and dinners', body: 'December is the busiest season. Check the Christmas group menu under Group menus and contact us early with your date and guest count to confirm availability.' },
+        { heading: 'Christmas company lunches and dinners', body: 'Check the Christmas group menu under Group menus and contact us with your date and guest count. Regular opening hours are for lunch; dinners and other times require express confirmation from our team.' },
+        { heading: 'What to include in a company enquiry', body: 'Include date, guest count and timing, and say if you need an invoice, a particular layout or presentation equipment. Your proposal should confirm inclusions, supplements, deposit and cancellation. Equipment and special opening hours need confirmation.' },
         { heading: 'A proposal shaped around your programme', body: 'Send your date, timing, guest count, event purpose and technical or layout needs. We can then assess the space and provide a specific proposal; special equipment is always confirmed in advance.' },
       ],
       faq: [

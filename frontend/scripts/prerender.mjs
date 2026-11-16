@@ -146,7 +146,7 @@ const validDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly(value)) ? date
 // manda; git solo pisa cuando aporta una fecha mas reciente.
 const editorialDates = new Map([
   ...Object.entries(EDITORIAL_LASTMOD).map(([route, date]) => [route, validDate(date)]),
-  ...[...editorialFiles].map(([route, file]) => [route, validDate(gitDate(file))]).filter(([, date]) => date),
+  ...[...editorialFiles].map(([route, file]) => [route, [validDate(EDITORIAL_LASTMOD[route]), validDate(gitDate(file))].filter(Boolean).sort().at(-1)]).filter(([, date]) => date),
 ])
 // Ultimo recurso para que ninguna URL del sitemap se quede sin fecha: la
 // revision mas reciente del sitio.

@@ -74,7 +74,7 @@ const DICT: Dictionary = {
 
   'home.hero.kicker': { es: 'Catarroja \u00b7 Valencia', en: 'Catarroja \u00b7 Valencia' },
   'home.hero.title': { es: 'Alquer\u00eda Villa Carmen', en: 'Alqueria Villa Carmen' },
-  'home.hero.intent': { es: 'Restaurante en Catarroja', en: 'Restaurant in Catarroja' },
+  'home.hero.intent': { es: 'Restaurante de arroces en Catarroja', en: 'Rice restaurant in Catarroja' },
   'home.hero.tagline': { es: 'Tradici\u00f3n y gastronom\u00eda mediterr\u00e1nea', en: 'Mediterranean tradition and gastronomy' },
   'home.hero.scroll': { es: 'Ad\u00e9ntrate en la alquer\u00eda', en: 'Step into the alqueria' },
 
@@ -85,6 +85,7 @@ const DICT: Dictionary = {
     en: 'A restaurant in Catarroja, Valencia, serving Mediterranean cuisine, rice dishes and menus, with spaces for celebrations. Dine among the gardens or explore our menus for sharing with a group.',
   },
   'home.discovery.explore': { es: 'Descubrir', en: 'Explore' },
+  'home.discovery.weekend': { es: 'Comer el fin de semana', en: 'Weekend lunch' },
   'home.discovery.title': { es: 'Elige c\u00f3mo disfrutar de Villa Carmen', en: 'Choose your Villa Carmen experience' },
   'home.discovery.rice': { es: 'Arroces y paellas', en: 'Rice dishes and paellas' },
   'home.discovery.menus': { es: 'Carta y men\u00fas', en: 'Menus and \u00e0 la carte' },
