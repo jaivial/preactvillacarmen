@@ -5,8 +5,6 @@ import { localized, localizedArray, useI18n } from '../../lib/i18n'
 import { AllergensLegend, MenuHeroSlider, MenuPriceCard, MenuSection } from './MenuShared'
 import { formatMenuPrice, publicMenuH1, splitClosedConventionalSections } from './menuPublicHelpers'
 import { MenuSectionTabs } from './MenuSectionTabs'
-import { CdnGallery } from '../../components/CdnGallery'
-import { WEEKEND_MENU_ID, weekendKitchenGallery } from '../../lib/galleryContent'
 
 export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?: 'h1' | 'h2' }) {
   const { t, lang } = useI18n()
@@ -57,9 +55,6 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
               ariaLabel={localized(props.menu.menu_title, props.menu.menu_title_english, lang)}
               bubbleId="menuSectionTabBubble"
               testId="menu-cerrado-section-tabs"
-              afterTabs={props.menu.id === WEEKEND_MENU_ID ? (
-                <CdnGallery bare id="menu-finde" label={weekendKitchenGallery[lang].label} items={weekendKitchenGallery[lang].items} note={lang === 'en' ? 'A sample of the house kitchen' : 'Muestra de la cocina de la casa'} />
-              ) : null}
               panels={[
                 {
                   key: 'starters',
