@@ -30,6 +30,7 @@ export function MenuSectionTabs(props: {
   ariaLabel: string
   bubbleId: string
   testId: string
+  afterTabs?: ComponentChildren
 }) {
   const visible = props.panels.filter((panel) => !panel.hidden)
   const [selectedKey, setSelectedKey] = useState<string>('')
@@ -55,6 +56,7 @@ export function MenuSectionTabs(props: {
           controlsPrefix={props.testId}
         />
       ) : null}
+      {props.afterTabs ?? null}
       {visible.map((panel, index) => {
         if (!tabbed) return <Fragment key={panel.key}>{panel.content}</Fragment>
         // Coordination id: seo_item_routes_v1 - the inactive panels stay in the

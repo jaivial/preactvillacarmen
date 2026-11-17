@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'preact/hooks'
 import { Link } from 'wouter-preact'
 import { activeRiceContent } from '../lib/activeRiceMenus'
+import { CdnGallery } from './CdnGallery'
+import { riceGallery } from '../lib/galleryContent'
 import { normalizePublicMenu } from '../lib/backendAdapters'
 import { localized, useI18n } from '../lib/i18n'
 import { prerenderData } from '../lib/prerenderData'
@@ -39,7 +41,7 @@ export function ActiveRiceMenus() {
       {current.dishes.length || current.links.length ? (
         <div class="container editorial-menu-list" data-testid="active-rice-menus">
           {current.dishes.length && current.menu ? (
-            <MenuSection headingLevel="h2" title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice />
+            <MenuSection headingLevel="h2" title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice gallery={<CdnGallery bare portrait id="arroces" label={riceGallery[lang].label} items={riceGallery[lang].items} />} />
           ) : null}
           {current.links.length ? (
             <nav class="editorial-rice-links" aria-label={t('rice.menusNavigation')}>
