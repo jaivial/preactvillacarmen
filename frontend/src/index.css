@@ -6970,3 +6970,5 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
 .rice-gallery-intro { margin-top: 2rem; }
 
 .rice-gallery-intro ~ .editorial-menu-marker .editorial-menu-list .menuSectionHeading { display: none; }
+
+.cdn-gallery-item img { height: auto; }
