@@ -37,11 +37,15 @@ export function ActiveRiceMenus() {
   const current = activeRiceContent(menus)
   return (
     <>
+      {current.dishes.length ? <div class="container rice-gallery-intro">
+        <h2 class="menuSectionHeading">{t('rice.activeTitle')}</h2>
+        <CdnGallery bare portrait id="arroces" label={riceGallery[lang].label} items={riceGallery[lang].items} />
+      </div> : null}
       <div class="editorial-menu-marker" dangerouslySetInnerHTML={marker('start')} />
       {current.dishes.length || current.links.length ? (
         <div class="container editorial-menu-list" data-testid="active-rice-menus">
           {current.dishes.length && current.menu ? (
-            <MenuSection headingLevel="h2" title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice gallery={<CdnGallery bare portrait id="arroces" label={riceGallery[lang].label} items={riceGallery[lang].items} />} />
+            <MenuSection headingLevel="h2" title={t('rice.activeTitle')} dishes={current.dishes} showImage={current.menu.show_dish_images} showDishPrice />
           ) : null}
           {current.links.length ? (
             <nav class="editorial-rice-links" aria-label={t('rice.menusNavigation')}>

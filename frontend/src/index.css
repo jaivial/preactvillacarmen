@@ -6964,3 +6964,9 @@ button.publicAdAction { background: #24342b; color: #fff; border: 0; cursor: poi
 .cdn-gallery-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; display: block; }
 .cdn-gallery--portrait .cdn-gallery-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
 .cdn-gallery--portrait .cdn-gallery-item img { aspect-ratio: 3 / 4; }
+
+/* Rice gallery remains outside the origin-revalidated dish fragment. */
+.rice-gallery-intro + .editorial-menu-marker + .editorial-menu-list .menuSectionHeading { display: none; }
+.rice-gallery-intro { margin-top: 2rem; }
+
+.rice-gallery-intro ~ .editorial-menu-marker .editorial-menu-list .menuSectionHeading { display: none; }
