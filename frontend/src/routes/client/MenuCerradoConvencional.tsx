@@ -58,7 +58,7 @@ export function MenuCerradoConvencional(props: { menu: PublicMenu; headingLevel?
               bubbleId="menuSectionTabBubble"
               testId="menu-cerrado-section-tabs"
               afterTabs={props.menu.id === WEEKEND_MENU_ID ? (
-                <CdnGallery bare id="menu-finde" label={weekendKitchenGallery[lang].label} items={weekendKitchenGallery[lang].items} />
+                <CdnGallery bare id="menu-finde" label={weekendKitchenGallery[lang].label} items={weekendKitchenGallery[lang].items} note={lang === 'en' ? 'A sample of the house kitchen' : 'Muestra de la cocina de la casa'} />
               ) : null}
               panels={[
                 {

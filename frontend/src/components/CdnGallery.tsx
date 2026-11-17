@@ -10,6 +10,7 @@ export type CdnGalleryItem = {
 export function CdnGallery(props: {
   id: string
   label: string
+  note?: string
   items: CdnGalleryItem[]
   portrait?: boolean
   bare?: boolean
@@ -22,6 +23,7 @@ export function CdnGallery(props: {
       data-testid={`cdn-gallery-${props.id}`}
       data-coordination-id="galerias_seo_locales_20261117"
     >
+      {props.note ? <p class="cdn-gallery-note">{props.note}</p> : null}
       <div class="cdn-gallery-grid">
         {props.items.map((item, index) => (
           <figure class="cdn-gallery-item" key={item.src}>
