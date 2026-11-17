@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
 import { createPortal } from 'preact/compat'
 import { Link } from 'wouter-preact'
 import type { Dish, MenuSectionCta, SeoItemRoute } from '../../lib/types'
@@ -496,6 +497,7 @@ export function MenuSection(props: {
   showDishPrice?: boolean
   annotations?: string[]
   subtitle?: string
+  gallery?: ComponentChildren
   // seo_heading_hierarchy_v1: h2 only when the section is a page-level
   // keyword (editorial rice pages); inside a menu page it hangs as h3.
   headingLevel?: 'h2' | 'h3'
@@ -512,6 +514,7 @@ export function MenuSection(props: {
       {subtitle ? (
         <p class="menuSectionLead" data-testid="menu-section-lead">{subtitle}</p>
       ) : null}
+      {props.gallery ?? null}
       {props.showImage ? (
         <DishCardGridWithImage dishes={items} pickCategory={props.pickCategory} showImage={props.showImage} showDishPrice={props.showDishPrice} />
       ) : (
